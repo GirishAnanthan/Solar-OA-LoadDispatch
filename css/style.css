@@ -1839,6 +1839,11 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   box-shadow: none !important;
 }
 
+.map-search-input::-webkit-calendar-picker-indicator {
+  display: none !important;
+  opacity: 0 !important;
+}
+
 .btn-map-search {
   background: rgba(56, 189, 248, 0.15);
   border: none;

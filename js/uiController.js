@@ -76,6 +76,47 @@ const OA_PRESETS = {
   dholera: OA_SOLAR_PARK_DIRECTORY[5]
 };
 
+const INDIA_REGIONAL_GEO = [
+  // Major Solar Hubs & Districts across India
+  { keywords: ["bhadla", "phalodi", "jodhpur", "marwar"], lat: 27.5385, lon: 71.9168, region: "Jodhpur/Phalodi, Rajasthan", substation: "Bhadla-II 765/400kV PGCIL Substation" },
+  { keywords: ["pavagada", "tumakuru", "tumkur", "shakti sthala"], lat: 14.2811, lon: 77.2758, region: "Pavagada, Tumakuru, Karnataka", substation: "Pavagada 400/220kV Pooling Substation" },
+  { keywords: ["charanka", "patan", "santalpur", "radhanpur"], lat: 23.9056, lon: 71.2008, region: "Patan, Gujarat", substation: "Charanka 400/220kV GETCO Substation" },
+  { keywords: ["rewa", "gurh", "rumsl"], lat: 24.4789, lon: 81.5768, region: "Rewa, Madhya Pradesh", substation: "Rewa 400/220kV PGCIL Pooling Station" },
+  { keywords: ["kurnool", "gani", "sakunala"], lat: 15.6822, lon: 78.2861, region: "Kurnool, Andhra Pradesh", substation: "Gani 400/220kV APTRANSCO Substation" },
+  { keywords: ["dholera", "khambhat", "bhavnagar"], lat: 22.2534, lon: 72.2238, region: "Dholera SIR, Gujarat", substation: "Dholera 400kV Coastal Pooling Station" },
+  { keywords: ["khavda", "kutch", "kachchh", "bhuj", "rann"], lat: 23.8340, lon: 69.7210, region: "Khavda / Kutch, Gujarat", substation: "Khavda 765/400kV PGCIL Substation" },
+  { keywords: ["bikaner", "barsingsar", "lunkaransar", "nokha", "kolayat"], lat: 28.0229, lon: 73.3119, region: "Bikaner Mega Solar Hub, Rajasthan", substation: "Bikaner-II 765/400kV PGCIL Substation" },
+  { keywords: ["jaisalmer", "fatehgarh", "pokhran", "nokh", "ramgarh"], lat: 26.6800, lon: 71.2100, region: "Fatehgarh/Jaisalmer, Rajasthan", substation: "Fatehgarh-II 765/400kV Pooling Substation" },
+  { keywords: ["barmer", "balotra", "baytu"], lat: 25.7532, lon: 71.4181, region: "Barmer, Rajasthan", substation: "Barmer 400kV RVPNL Substation" },
+  { keywords: ["ananthapuramu", "anantapur", "kadiri", "tadipatri", "np kunta", "nambulapulakunta"], lat: 14.8860, lon: 77.9860, region: "Ananthapuramu, AP", substation: "NP Kunta 400/220kV PGCIL Station" },
+  { keywords: ["kadapa", "ysr", "galiveedu", "rayachoty", "pulivendula", "jammalamadugu"], lat: 14.4673, lon: 78.8242, region: "Kadapa Ultra Solar Zone, AP", substation: "Galiveedu 400/220kV APTRANSCO Substation" },
+  { keywords: ["tirunelveli", "kayathar", "gangaikondan", "tuticorin", "thoothukudi"], lat: 8.7139, lon: 77.7567, region: "Tirunelveli/Kayathar, Tamil Nadu", substation: "Kayathar 400/230kV TANTRANSCO Substation" },
+  { keywords: ["kamuthi", "ramanathapuram", "paramakudi"], lat: 9.3510, lon: 78.3960, region: "Kamuthi, Ramanathapuram, Tamil Nadu", substation: "Kamuthi 400/230kV TANTRANSCO Substation" },
+  { keywords: ["neemuch", "mandsaur", "ratlam"], lat: 24.4600, lon: 74.8700, region: "Neemuch/Mandsaur, Madhya Pradesh", substation: "Neemuch 220kV MPPTCL Substation" },
+  { keywords: ["agar", "shajapur", "susner"], lat: 23.7144, lon: 76.0150, region: "Agar Malwa, Madhya Pradesh", substation: "Agar 220kV MPPTCL Substation" },
+  { keywords: ["rajnandgaon", "durg", "bhilai", "raipur", "chhattisgarh"], lat: 21.0970, lon: 81.0350, region: "Rajnandgaon, Chhattisgarh", substation: "Rajnandgaon 220kV CSPTCL Substation" },
+  { keywords: ["solapur", "pandharpur", "barshi", "karmala", "madha", "mohol"], lat: 17.6599, lon: 75.9064, region: "Solapur Solar Belt, Maharashtra", substation: "Solapur 400/220kV MSETCL Substation" },
+  { keywords: ["beed", "dharashiv", "osmanabad", "latur", "parbhani"], lat: 18.9891, lon: 75.7601, region: "Marathwada Solar Zone, Maharashtra", substation: "Parli 400/220kV MSETCL Substation" },
+  { keywords: ["dhule", "sakri", "jalgaon", "nandurbar", "khandesh"], lat: 20.9042, lon: 74.7749, region: "Sakri/Dhule Solar Hub, Maharashtra", substation: "Dhule 400/220kV MSETCL Substation" },
+  { keywords: ["bellary", "ballari", "kudligi", "hospet", "vijayanagara", "toranagallu"], lat: 15.1394, lon: 76.9214, region: "Ballari Solar Cluster, Karnataka", substation: "Kudligi 220kV KPTCL Substation" },
+  { keywords: ["chitradurga", "challakere", "hiriyur", "holalkere"], lat: 14.2251, lon: 76.3980, region: "Chitradurga RE Hub, Karnataka", substation: "Challakere 220kV KPTCL Substation" },
+  { keywords: ["koppal", "raichur", "kushtagi", "gangavathi"], lat: 15.3524, lon: 76.1550, region: "Koppal/Raichur Solar Belt, Karnataka", substation: "Koppal 400kV PGCIL Substation" },
+  { keywords: ["bijapur", "vijayapura", "indi", "sindagi"], lat: 16.8302, lon: 75.7100, region: "Vijayapura Solar Zone, Karnataka", substation: "Vijayapura 220kV KPTCL Substation" },
+  { keywords: ["kalaburagi", "gulbarga", "yadgir"], lat: 17.3297, lon: 76.8343, region: "Kalaburagi/Yadgir, Karnataka", substation: "Gulbarga 220kV KPTCL Substation" },
+  { keywords: ["mahbubnagar", "wanaparthy", "gadwal", "nagarkurnool"], lat: 16.7488, lon: 78.0035, region: "Mahbubnagar Solar Cluster, Telangana", substation: "Wanaparthy 220kV TSTRANSCO Substation" },
+  { keywords: ["jhansi", "lalitpur", "jalaun", "orai", "bundelkhand", "mirzapur"], lat: 25.4484, lon: 78.5685, region: "Bundelkhand Solar Belt, UP", substation: "Orai 400/220kV UPPTCL Substation" },
+  { keywords: ["surendranagar", "wadhwan", "halvad", "dhrangadhra"], lat: 22.7278, lon: 71.6370, region: "Surendranagar, Gujarat", substation: "Halvad 220kV GETCO Substation" },
+  { keywords: ["banaskantha", "palanpur", "deesa"], lat: 24.1724, lon: 72.4346, region: "Banaskantha Solar Zone, Gujarat", substation: "Deesa 220kV GETCO Substation" },
+  { keywords: ["nagpur", "wardha", "chandrapur", "amravati", "butibori"], lat: 21.1458, lon: 79.0882, region: "Vidarbha Industrial Hub, Maharashtra", substation: "Butibori 132/33kV MSEDCL Substation" },
+  { keywords: ["coimbatore", "tirupur", "erode", "salem", "karur"], lat: 11.0168, lon: 76.9558, region: "Kongu Solar & Textile Corridor, TN", substation: "Kurichi 110/11kV TANGEDCO Substation" },
+  { keywords: ["pune", "chakan", "bhosari", "hinjewadi", "talegaon", "ranjangaon", "pimpri"], lat: 18.5204, lon: 73.8567, region: "Pune MIDC Chakan Corridor, Maharashtra", substation: "Chakan 33/11kV MSEDCL Substation" },
+  { keywords: ["mumbai", "navi mumbai", "thane", "taloja", "turbhe", "rabale"], lat: 19.0760, lon: 72.8777, region: "Mumbai MMR / Taloja Industrial Belt", substation: "Taloja 100/33kV MSEDCL Substation" },
+  { keywords: ["bengaluru", "bangalore", "peenya", "whitefield", "hosur", "bidadi"], lat: 12.9716, lon: 77.5946, region: "Bengaluru Peenya Corridor, Karnataka", substation: "Peenya 66/11kV KPTCL Substation" },
+  { keywords: ["chennai", "sriperumbudur", "oragadam", "guindy", "ambattur"], lat: 13.0827, lon: 80.2707, region: "Chennai SIPCOT Corridor, Tamil Nadu", substation: "Sriperumbudur 110/33kV Substation" },
+  { keywords: ["ahmedabad", "sanand", "changodar", "gandhinagar", "vatva"], lat: 23.0225, lon: 72.5714, region: "Ahmedabad Sanand GIDC Hub, Gujarat", substation: "Sanand 66/11kV GETCO Substation" },
+  { keywords: ["delhi", "ncr", "gurugram", "gurgaon", "manesar", "noida", "faridabad"], lat: 28.6139, lon: 77.2090, region: "Delhi NCR / Manesar IMT Hub", substation: "IMT Manesar 66kV HVPNL Substation" }
+];
+
 class UIController {
   constructor(app) {
     this.app = app;
@@ -662,10 +703,11 @@ class UIController {
       const lon = parseFloat(coordMatch[2]);
       if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
         this.applyRooftopLocation({
-          name: `Custom (${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E)`,
+          name: query,
           lat,
           lon,
-          address: `Coordinates: ${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`
+          address: `Coordinates: ${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`,
+          preserveUserInput: true
         });
         return;
       }
@@ -673,7 +715,7 @@ class UIController {
 
     const qLower = query.toLowerCase();
 
-    // 2. Fast local lookup in INDIAN_GEO_DIRECTORY
+    // 2. Local lookup in INDIAN_GEO_DIRECTORY
     const localMatch = INDIAN_GEO_DIRECTORY.find(item => {
       if (item.name.toLowerCase().includes(qLower)) return true;
       if (item.aliases && item.aliases.some(alias => qLower.includes(alias) || alias.includes(qLower))) return true;
@@ -681,11 +723,33 @@ class UIController {
     });
 
     if (localMatch) {
-      this.applyRooftopLocation(localMatch);
+      this.applyRooftopLocation({
+        ...localMatch,
+        preserveUserInput: true
+      });
       return;
     }
 
-    // 3. Online Geocoding via OpenStreetMap Nominatim API
+    // 3. Regional / District match from INDIA_REGIONAL_GEO
+    const regionalMatch = INDIA_REGIONAL_GEO.find(item => {
+      if (item.keywords && item.keywords.some(k => qLower.includes(k))) return true;
+      if (item.region && item.region.toLowerCase().includes(qLower)) return true;
+      return false;
+    });
+
+    if (regionalMatch) {
+      this.applyRooftopLocation({
+        name: regionalMatch.region,
+        lat: regionalMatch.lat,
+        lon: regionalMatch.lon,
+        address: `${query} (${regionalMatch.region})`,
+        substation: regionalMatch.substation,
+        preserveUserInput: true
+      });
+      return;
+    }
+
+    // 4. Online Geocoding via OpenStreetMap Nominatim API
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6000);
@@ -705,30 +769,41 @@ class UIController {
             name: shortName,
             lat: parseFloat(item.lat),
             lon: parseFloat(item.lon),
-            address: item.display_name
+            address: item.display_name,
+            preserveUserInput: true
           });
           return;
         }
       }
     } catch (err) {
-      console.warn("Online geocoding failed, falling back to local directory:", err);
+      console.warn("Online geocoding failed, falling back to local region match:", err);
     }
 
-    // 4. Fallback to default Pune MIDC if search yields no results
-    const fallbackMatch = INDIAN_GEO_DIRECTORY[0];
-    this.applyRooftopLocation({
-      ...fallbackMatch,
-      isApprox: true
-    });
+    // 5. If no coordinates matched, KEEP user's typed address intact and notify user to verify Lat/Lon
+    if (this.btnGeocodeRooftop) {
+      this.btnGeocodeRooftop.classList.remove("searching");
+    }
+    const curLat = this.rooftopLatInput ? (parseFloat(this.rooftopLatInput.value) || 18.5204) : 18.5204;
+    const optTilt = calculateOptimalTilt(curLat);
+    if (this.rooftopTiltBadge) this.rooftopTiltBadge.textContent = `Opt: ${optTilt}°`;
+    if (this.rooftopGeoStatus) {
+      this.rooftopGeoStatus.textContent = `Address saved • Verify Lat/Lon below (Opt: ${optTilt}°)`;
+      this.rooftopGeoStatus.style.color = "var(--solar-gold)";
+    }
+    this.app.recalculate();
   }
 
-  applyRooftopLocation({ name, lat, lon, address, substation, isApprox = false }) {
+  applyRooftopLocation({ name, lat, lon, address, substation, isApprox = false, preserveUserInput = false }) {
     if (this.btnGeocodeRooftop) {
       this.btnGeocodeRooftop.classList.remove("searching");
     }
 
-    if (this.rooftopLatInput) this.rooftopLatInput.value = parseFloat(lat).toFixed(4);
-    if (this.rooftopLonInput) this.rooftopLonInput.value = parseFloat(lon).toFixed(4);
+    if (this.rooftopLatInput && lat !== undefined && !isNaN(lat)) {
+      this.rooftopLatInput.value = parseFloat(lat).toFixed(4);
+    }
+    if (this.rooftopLonInput && lon !== undefined && !isNaN(lon)) {
+      this.rooftopLonInput.value = parseFloat(lon).toFixed(4);
+    }
 
     // Compute optimal tilt angle for this site's latitude
     const optimalTilt = calculateOptimalTilt(lat);
@@ -745,7 +820,8 @@ class UIController {
       this.rooftopTiltBadge.textContent = `Opt: ${optimalTilt}°`;
     }
 
-    if (this.rooftopAddressSearchInput && name && !this.rooftopAddressSearchInput.value.includes(name)) {
+    // Only set address search input if not preserving user's typed address
+    if (!preserveUserInput && this.rooftopAddressSearchInput && name) {
       this.rooftopAddressSearchInput.value = name;
     }
 
@@ -758,10 +834,10 @@ class UIController {
 
     if (this.rooftopGeoStatus) {
       if (isApprox) {
-        this.rooftopGeoStatus.textContent = `Closest match (Opt: ${optimalTilt}°)`;
+        this.rooftopGeoStatus.textContent = `Closest match (${parseFloat(lat).toFixed(2)}°N, ${parseFloat(lon).toFixed(2)}°E • Opt: ${optimalTilt}°)`;
         this.rooftopGeoStatus.style.color = "var(--solar-gold)";
       } else {
-        this.rooftopGeoStatus.textContent = `✓ Located (Opt: ${optimalTilt}°)`;
+        this.rooftopGeoStatus.textContent = `✓ Located (${parseFloat(lat).toFixed(2)}°N, ${parseFloat(lon).toFixed(2)}°E • Opt: ${optimalTilt}°)`;
         this.rooftopGeoStatus.style.color = "var(--oa-emerald)";
       }
     }
@@ -775,7 +851,7 @@ class UIController {
     if (!query) return;
 
     if (this.oaGeoStatus) {
-      this.oaGeoStatus.textContent = "Locating park...";
+      this.oaGeoStatus.textContent = "Locating site...";
       this.oaGeoStatus.style.color = "var(--text-accent)";
     }
     if (this.btnGeocodeOA) {
@@ -789,9 +865,10 @@ class UIController {
       const lon = parseFloat(coordMatch[2]);
       if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
         this.applyOALocation({
-          name: `Custom Solar Park (${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E)`,
+          name: query,
           lat,
-          lon
+          lon,
+          preserveUserInput: true
         });
         return;
       }
@@ -807,11 +884,32 @@ class UIController {
     });
 
     if (localMatch) {
-      this.applyOALocation(localMatch);
+      this.applyOALocation({
+        ...localMatch,
+        preserveUserInput: true
+      });
       return;
     }
 
-    // 3. Online Geocoding via OpenStreetMap Nominatim API
+    // 3. Regional / District match from INDIA_REGIONAL_GEO
+    const regionalMatch = INDIA_REGIONAL_GEO.find(item => {
+      if (item.keywords && item.keywords.some(k => qLower.includes(k))) return true;
+      if (item.region && item.region.toLowerCase().includes(qLower)) return true;
+      return false;
+    });
+
+    if (regionalMatch) {
+      this.applyOALocation({
+        name: regionalMatch.region,
+        lat: regionalMatch.lat,
+        lon: regionalMatch.lon,
+        substation: regionalMatch.substation,
+        preserveUserInput: true
+      });
+      return;
+    }
+
+    // 4. Online Geocoding via OpenStreetMap Nominatim API
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 6000);
@@ -831,7 +929,8 @@ class UIController {
             name: shortName,
             lat: parseFloat(item.lat),
             lon: parseFloat(item.lon),
-            substation: `${shortName} Pooling Substation`
+            substation: `${shortName} Pooling Substation`,
+            preserveUserInput: true
           });
           return;
         }
@@ -840,35 +939,47 @@ class UIController {
       console.warn("Online geocoding for OA Solar Park failed, falling back to local directory:", err);
     }
 
-    // 4. Fallback to default Bhadla if search yields no results
-    const fallbackMatch = OA_SOLAR_PARK_DIRECTORY[0];
-    this.applyOALocation({
-      ...fallbackMatch,
-      isApprox: true
-    });
+    // 5. If search yields no coordinates, DO NOT reset to Bhadla! KEEP user's typed address and let them adjust Lat/Lon directly
+    if (this.btnGeocodeOA) {
+      this.btnGeocodeOA.classList.remove("searching");
+    }
+    const curLat = this.oaLatInput ? (parseFloat(this.oaLatInput.value) || 27.5385) : 27.5385;
+    const optTilt = calculateOptimalTilt(curLat);
+    this.updateOaOptimalTilt(optTilt);
+    if (this.oaGeoStatus) {
+      this.oaGeoStatus.textContent = `Address saved • Verify Lat/Lon below (Opt: ${optTilt}°)`;
+      this.oaGeoStatus.style.color = "var(--solar-gold)";
+    }
+    this.app.recalculate();
   }
 
-  applyOALocation({ name, lat, lon, substation, isApprox = false }) {
+  applyOALocation({ name, lat, lon, substation, isApprox = false, preserveUserInput = false }) {
     if (this.btnGeocodeOA) {
       this.btnGeocodeOA.classList.remove("searching");
     }
 
-    if (this.oaLatInput) this.oaLatInput.value = parseFloat(lat).toFixed(4);
-    if (this.oaLonInput) this.oaLonInput.value = parseFloat(lon).toFixed(4);
+    if (this.oaLatInput && lat !== undefined && !isNaN(lat)) {
+      this.oaLatInput.value = parseFloat(lat).toFixed(4);
+    }
+    if (this.oaLonInput && lon !== undefined && !isNaN(lon)) {
+      this.oaLonInput.value = parseFloat(lon).toFixed(4);
+    }
 
-    const optimalTilt = calculateOptimalTilt(lat);
+    const currentLat = this.oaLatInput ? parseFloat(this.oaLatInput.value) : (lat || 27.5385);
+    const optimalTilt = calculateOptimalTilt(currentLat);
     this.updateOaOptimalTilt(optimalTilt);
 
-    if (this.oaAddressSearchInput && name && !this.oaAddressSearchInput.value.includes(name)) {
+    // Only set address search input if not preserving user's typed address
+    if (!preserveUserInput && this.oaAddressSearchInput && name) {
       this.oaAddressSearchInput.value = name;
     }
 
     if (this.oaGeoStatus) {
       if (isApprox) {
-        this.oaGeoStatus.textContent = `Closest match (Opt: ${optimalTilt}°)`;
+        this.oaGeoStatus.textContent = `Closest match (${parseFloat(lat).toFixed(2)}°N, ${parseFloat(lon).toFixed(2)}°E • Opt: ${optimalTilt}°)`;
         this.oaGeoStatus.style.color = "var(--solar-gold)";
       } else {
-        this.oaGeoStatus.textContent = `✓ Located (Opt: ${optimalTilt}°)`;
+        this.oaGeoStatus.textContent = `✓ Located (${parseFloat(lat).toFixed(2)}°N, ${parseFloat(lon).toFixed(2)}°E • Opt: ${optimalTilt}°)`;
         this.oaGeoStatus.style.color = "var(--oa-emerald)";
       }
     }
