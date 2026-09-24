@@ -49,43 +49,31 @@ const ROOFTOP_PRESETS = {
   manesar: INDIAN_GEO_DIRECTORY[4]
 };
 
+const OA_SOLAR_PARK_DIRECTORY = [
+  { name: "Bhadla Solar Park, Phalodi/Jodhpur, Rajasthan", aliases: ["bhadla", "jodhpur", "phalodi"], lat: 27.5385, lon: 71.9168, substation: "Bhadla-II 765/400kV PGCIL Substation (ISTS)" },
+  { name: "Pavagada Solar Park (Shakti Sthala), Tumakuru, Karnataka", aliases: ["pavagada", "tumakuru", "tumkur", "shakti sthala"], lat: 14.2811, lon: 77.2758, substation: "Pavagada 400/220kV KSPDCL Pooling Substation" },
+  { name: "Charanka Solar Park, Patan, Gujarat", aliases: ["charanka", "patan"], lat: 23.9056, lon: 71.2008, substation: "Charanka 400/220kV GETCO Substation" },
+  { name: "Rewa Ultra Mega Solar (RUMSL), Gurh, MP", aliases: ["rewa", "gurh", "rumsl"], lat: 24.4789, lon: 81.5768, substation: "Rewa 400/220kV PGCIL Pooling Station" },
+  { name: "Kurnool Ultra Mega Solar Park, Gani/Sakunala, AP", aliases: ["kurnool", "gani", "sakunala"], lat: 15.6822, lon: 78.2861, substation: "Gani 400/220kV APTRANSCO Pooling Substation" },
+  { name: "Dholera SIR Solar Park, Gulf of Khambhat, Gujarat", aliases: ["dholera", "khambhat"], lat: 22.2534, lon: 72.2238, substation: "Dholera 400kV Coastal Pooling Station" },
+  { name: "Khavda Renewable Energy Park, Kutch, Gujarat", aliases: ["khavda", "kutch", "bhuj"], lat: 23.8340, lon: 69.7210, substation: "Khavda 765/400kV PGCIL Pooling Station" },
+  { name: "Bikaner Mega Solar Hub, Rajasthan", aliases: ["bikaner", "barsingsar"], lat: 28.0229, lon: 73.3119, substation: "Bikaner-II 765/400kV PGCIL Substation" },
+  { name: "Fatehgarh Solar Park, Jaisalmer, Rajasthan", aliases: ["fatehgarh", "jaisalmer", "pokhran"], lat: 26.6800, lon: 71.2100, substation: "Fatehgarh-II 765/400kV Pooling Substation" },
+  { name: "Ananthapuramu Ultra Mega Solar Park, AP", aliases: ["ananthapuramu", "anantapur", "tadipatri"], lat: 14.8860, lon: 77.9860, substation: "NP Kunta 400/220kV PGCIL Pooling Station" },
+  { name: "Tirunelveli Solar Hub, Tamil Nadu", aliases: ["tirunelveli", "gangaikondan", "tuticorin", "thoothukudi"], lat: 8.7139, lon: 77.7567, substation: "Kayathar 400/230kV TANTRANSCO Substation" },
+  { name: "Kamuthi Solar Power Project, Ramanathapuram, Tamil Nadu", aliases: ["kamuthi", "ramanathapuram"], lat: 9.3510, lon: 78.3960, substation: "Kamuthi 400/230kV TANTRANSCO Substation" },
+  { name: "Neemuch Solar Park, Madhya Pradesh", aliases: ["neemuch", "mandsaur"], lat: 24.4600, lon: 74.8700, substation: "Neemuch 220kV MPPTCL Substation" },
+  { name: "Nokh Solar Park, Jaisalmer, Rajasthan", aliases: ["nokh"], lat: 27.5600, lon: 72.2500, substation: "Nokh 765kV Pooling Station" },
+  { name: "Rajnandgaon Solar Park, Chhattisgarh", aliases: ["rajnandgaon", "chhattisgarh"], lat: 21.0970, lon: 81.0350, substation: "Rajnandgaon 220kV CSPTCL Substation" }
+];
+
 const OA_PRESETS = {
-  bhadla: {
-    lat: 27.5385,
-    lon: 71.9168,
-    name: "Bhadla Solar Park, Phalodi/Jodhpur, Rajasthan",
-    substation: "Bhadla-II 765/400kV PGCIL Substation (ISTS)"
-  },
-  pavagada: {
-    lat: 14.2811,
-    lon: 77.2758,
-    name: "Pavagada Solar Park (Shakti Sthala), Tumakuru, Karnataka",
-    substation: "Pavagada 400/220kV KSPDCL Pooling Substation"
-  },
-  charanka: {
-    lat: 23.9056,
-    lon: 71.2008,
-    name: "Charanka Solar Park, Patan, Gujarat",
-    substation: "Charanka 400/220kV GETCO Substation"
-  },
-  rewa: {
-    lat: 24.4789,
-    lon: 81.5768,
-    name: "Rewa Ultra Mega Solar (RUMSL), Gurh, MP",
-    substation: "Rewa 400/220kV PGCIL Pooling Station"
-  },
-  kurnool: {
-    lat: 15.6822,
-    lon: 78.2861,
-    name: "Kurnool Ultra Mega Solar Park, Gani/Sakunala, AP",
-    substation: "Gani 400/220kV APTRANSCO Pooling Substation"
-  },
-  dholera: {
-    lat: 22.2534,
-    lon: 72.2238,
-    name: "Dholera SIR Solar Park, Gulf of Khambhat, Gujarat",
-    substation: "Dholera 400kV Coastal Pooling Station"
-  }
+  bhadla: OA_SOLAR_PARK_DIRECTORY[0],
+  pavagada: OA_SOLAR_PARK_DIRECTORY[1],
+  charanka: OA_SOLAR_PARK_DIRECTORY[2],
+  rewa: OA_SOLAR_PARK_DIRECTORY[3],
+  kurnool: OA_SOLAR_PARK_DIRECTORY[4],
+  dholera: OA_SOLAR_PARK_DIRECTORY[5]
 };
 
 class UIController {
@@ -124,7 +112,10 @@ class UIController {
     this.rooftopTiltInput = document.getElementById("rooftopTilt");
     this.btnDetectRooftopGPS = document.getElementById("btnDetectRooftopGPS");
 
-    this.oaPresetSelect = document.getElementById("oaPreset");
+    this.oaAddressSearchInput = document.getElementById("oaAddressSearch");
+    this.btnGeocodeOA = document.getElementById("btnGeocodeOA");
+    this.oaGeoStatus = document.getElementById("oaGeoStatus");
+    this.oaSearchIcon = document.getElementById("oaSearchIcon");
     this.oaLatInput = document.getElementById("oaLat");
     this.oaLonInput = document.getElementById("oaLon");
     this.oaTrackingSelect = document.getElementById("oaTracking");
@@ -371,17 +362,23 @@ class UIController {
       this.rooftopLatInput.addEventListener("change", handleRooftopLatChange);
     }
 
-    // Open Access Solar Park Preset & Optimal Tilt Change
-    if (this.oaPresetSelect) {
-      this.oaPresetSelect.addEventListener("change", (e) => {
-        const key = e.target.value;
-        const preset = OA_PRESETS[key];
-        if (preset) {
-          if (this.oaLatInput) this.oaLatInput.value = preset.lat.toFixed(4);
-          if (this.oaLonInput) this.oaLonInput.value = preset.lon.toFixed(4);
-          const oaOptTilt = calculateOptimalTilt(preset.lat);
-          this.updateOaOptimalTilt(oaOptTilt);
-          this.app.recalculate();
+    // Open Access Solar Park Address Geocoding Search (Google Maps style)
+    if (this.oaAddressSearchInput) {
+      this.oaAddressSearchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this.geocodeOAAddress(this.oaAddressSearchInput.value);
+        }
+      });
+      this.oaAddressSearchInput.addEventListener("change", () => {
+        this.geocodeOAAddress(this.oaAddressSearchInput.value);
+      });
+    }
+
+    if (this.btnGeocodeOA) {
+      this.btnGeocodeOA.addEventListener("click", () => {
+        if (this.oaAddressSearchInput) {
+          this.geocodeOAAddress(this.oaAddressSearchInput.value);
         }
       });
     }
@@ -629,15 +626,13 @@ class UIController {
       }
     }
 
-    if (this.oaPresetSelect && this.oaPresetSelect.value !== "custom") {
-      this.oaPresetSelect.value = oaPreset;
-      const oaData = OA_PRESETS[oaPreset];
-      if (oaData) {
-        if (this.oaLatInput) this.oaLatInput.value = oaData.lat.toFixed(4);
-        if (this.oaLonInput) this.oaLonInput.value = oaData.lon.toFixed(4);
-        const oaOptTilt = calculateOptimalTilt(oaData.lat);
-        this.updateOaOptimalTilt(oaOptTilt);
-      }
+    const oaData = OA_PRESETS[oaPreset];
+    if (oaData) {
+      if (this.oaAddressSearchInput) this.oaAddressSearchInput.value = oaData.name;
+      if (this.oaLatInput) this.oaLatInput.value = oaData.lat.toFixed(4);
+      if (this.oaLonInput) this.oaLonInput.value = oaData.lon.toFixed(4);
+      const oaOptTilt = calculateOptimalTilt(oaData.lat);
+      this.updateOaOptimalTilt(oaOptTilt);
     }
   }
 
@@ -768,6 +763,113 @@ class UIController {
       } else {
         this.rooftopGeoStatus.textContent = `✓ Located (Opt: ${optimalTilt}°)`;
         this.rooftopGeoStatus.style.color = "var(--oa-emerald)";
+      }
+    }
+
+    this.app.recalculate();
+  }
+
+  async geocodeOAAddress(rawQuery) {
+    if (!rawQuery) return;
+    const query = rawQuery.trim();
+    if (!query) return;
+
+    if (this.oaGeoStatus) {
+      this.oaGeoStatus.textContent = "Locating park...";
+      this.oaGeoStatus.style.color = "var(--text-accent)";
+    }
+    if (this.btnGeocodeOA) {
+      this.btnGeocodeOA.classList.add("searching");
+    }
+
+    // 1. Check if user typed coordinates like "27.5385, 71.9168" or "27.53 71.91"
+    const coordMatch = query.match(/^([-+]?\d{1,2}(?:\.\d+)?)[,\s]+([-+]?\d{1,3}(?:\.\d+)?)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lon = parseFloat(coordMatch[2]);
+      if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        this.applyOALocation({
+          name: `Custom Solar Park (${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E)`,
+          lat,
+          lon
+        });
+        return;
+      }
+    }
+
+    const qLower = query.toLowerCase();
+
+    // 2. Fast local lookup in OA_SOLAR_PARK_DIRECTORY
+    const localMatch = OA_SOLAR_PARK_DIRECTORY.find(item => {
+      if (item.name.toLowerCase().includes(qLower)) return true;
+      if (item.aliases && item.aliases.some(alias => qLower.includes(alias) || alias.includes(qLower))) return true;
+      return false;
+    });
+
+    if (localMatch) {
+      this.applyOALocation(localMatch);
+      return;
+    }
+
+    // 3. Online Geocoding via OpenStreetMap Nominatim API
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&limit=1`;
+      const res = await fetch(url, {
+        headers: { "Accept-Language": "en" },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const item = data[0];
+          const shortName = item.display_name.split(",").slice(0, 3).join(",");
+          this.applyOALocation({
+            name: shortName,
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon),
+            substation: `${shortName} Pooling Substation`
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Online geocoding for OA Solar Park failed, falling back to local directory:", err);
+    }
+
+    // 4. Fallback to default Bhadla if search yields no results
+    const fallbackMatch = OA_SOLAR_PARK_DIRECTORY[0];
+    this.applyOALocation({
+      ...fallbackMatch,
+      isApprox: true
+    });
+  }
+
+  applyOALocation({ name, lat, lon, substation, isApprox = false }) {
+    if (this.btnGeocodeOA) {
+      this.btnGeocodeOA.classList.remove("searching");
+    }
+
+    if (this.oaLatInput) this.oaLatInput.value = parseFloat(lat).toFixed(4);
+    if (this.oaLonInput) this.oaLonInput.value = parseFloat(lon).toFixed(4);
+
+    const optimalTilt = calculateOptimalTilt(lat);
+    this.updateOaOptimalTilt(optimalTilt);
+
+    if (this.oaAddressSearchInput && name && !this.oaAddressSearchInput.value.includes(name)) {
+      this.oaAddressSearchInput.value = name;
+    }
+
+    if (this.oaGeoStatus) {
+      if (isApprox) {
+        this.oaGeoStatus.textContent = `Closest match (Opt: ${optimalTilt}°)`;
+        this.oaGeoStatus.style.color = "var(--solar-gold)";
+      } else {
+        this.oaGeoStatus.textContent = `✓ Located (Opt: ${optimalTilt}°)`;
+        this.oaGeoStatus.style.color = "var(--oa-emerald)";
       }
     }
 
@@ -1274,8 +1376,7 @@ class UIController {
     const oaLat = this.oaLatInput ? (parseFloat(this.oaLatInput.value) || 27.5385).toFixed(4) : "27.5385";
     const oaLon = this.oaLonInput ? (parseFloat(this.oaLonInput.value) || 71.9168).toFixed(4) : "71.9168";
     const oaTracking = this.oaTrackingSelect ? this.oaTrackingSelect.value : "fixed";
-    const oaPreset = this.oaPresetSelect ? this.oaPresetSelect.value : "bhadla";
-    const oaParkName = OA_PRESETS[oaPreset] ? OA_PRESETS[oaPreset].name : "Remote Solar Park Node";
+    const oaParkName = this.oaAddressSearchInput ? this.oaAddressSearchInput.value : "Remote Solar Park Node";
     const solarTel = results.solarTelemetry;
     const timeShiftMinutes = solarTel ? solarTel.timeShiftMinutes : 0;
 

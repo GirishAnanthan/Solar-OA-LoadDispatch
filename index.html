@@ -527,17 +527,47 @@
               <strong>2. Open Access Solar Park (Remote)</strong>
             </div>
 
-            <div class="form-group" style="margin-bottom: 0.5rem;">
-              <label class="form-label" for="oaPreset">Mega Solar Park Preset</label>
-              <select id="oaPreset" class="select-control">
-                <option value="bhadla" selected>Bhadla Solar Park, RJ (27.54° N • Opt Tilt 27°)</option>
-                <option value="pavagada">Pavagada Solar Park, KA (14.28° N • Opt Tilt 16°)</option>
-                <option value="charanka">Charanka Solar Park, GJ (23.91° N • Opt Tilt 24°)</option>
-                <option value="rewa">Rewa Ultra Mega Solar, MP (24.48° N • Opt Tilt 24°)</option>
-                <option value="kurnool">Kurnool Ultra Mega Solar, AP (15.68° N • Opt Tilt 17°)</option>
-                <option value="dholera">Dholera Solar Park, GJ (22.25° N • Opt Tilt 22°)</option>
-                <option value="custom">Custom Solar Park...</option>
-              </select>
+            <div class="form-group address-search-group" style="margin-bottom: 0.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <label class="form-label" for="oaAddressSearch" style="margin-bottom: 0;">
+                  Solar Park / Remote Site Address Search
+                </label>
+                <span class="label-hint" id="oaGeoStatus" style="font-size: 0.65rem; color: var(--oa-emerald);">Press Enter ↵ to Locate</span>
+              </div>
+              <div class="map-search-bar">
+                <span class="map-pin-icon" style="color: #F59E0B;" title="Solar Park Location / Geocoding">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </span>
+                <input type="text" id="oaAddressSearch" class="input-control map-search-input" 
+                       placeholder="Enter solar park name, village, district, state..." 
+                       value="Bhadla Solar Park, Rajasthan" list="oaSolarParkList" autocomplete="off">
+                <button type="button" class="btn-map-search" id="btnGeocodeOA" title="Locate Solar Park / Search Coordinates">
+                  <svg id="oaSearchIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </button>
+              </div>
+              <datalist id="oaSolarParkList">
+                <option value="Bhadla Solar Park, Phalodi/Jodhpur, Rajasthan">
+                <option value="Pavagada Solar Park (Shakti Sthala), Tumakuru, Karnataka">
+                <option value="Charanka Solar Park, Patan, Gujarat">
+                <option value="Rewa Ultra Mega Solar (RUMSL), Gurh, MP">
+                <option value="Kurnool Ultra Mega Solar Park, Gani/Sakunala, AP">
+                <option value="Dholera SIR Solar Park, Gulf of Khambhat, Gujarat">
+                <option value="Khavda Renewable Energy Park, Kutch, Gujarat">
+                <option value="Bikaner Mega Solar Hub, Rajasthan">
+                <option value="Fatehgarh Solar Park, Jaisalmer, Rajasthan">
+                <option value="Ananthapuramu Ultra Mega Solar Park, AP">
+                <option value="Tirunelveli Solar Hub, Tamil Nadu">
+                <option value="Kamuthi Solar Power Project, Ramanathapuram, Tamil Nadu">
+                <option value="Neemuch Solar Park, Madhya Pradesh">
+                <option value="Nokh Solar Park, Jaisalmer, Rajasthan">
+                <option value="Rajnandgaon Solar Park, Chhattisgarh">
+              </datalist>
             </div>
 
             <div class="input-grid-3">
