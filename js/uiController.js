@@ -181,9 +181,6 @@ class UIController {
 
     // Sidebar Collapse Elements
     this.mainWrapper = document.querySelector(".main-wrapper");
-    this.btnToggleSidebar = document.getElementById("btnToggleSidebar");
-    this.textToggleSidebar = document.getElementById("textToggleSidebar");
-    this.iconSidebarToggle = document.getElementById("iconSidebarToggle");
     this.btnCollapseSidebarInside = document.getElementById("btnCollapseSidebarInside");
     this.btnCollapseSidebarMain = document.getElementById("btnCollapseSidebarMain");
     this.btnFloatingExpandSidebar = document.getElementById("btnFloatingExpandSidebar");
@@ -219,18 +216,6 @@ class UIController {
         isCollapsed = this.mainWrapper.classList.toggle("sidebar-collapsed");
       }
 
-      if (this.textToggleSidebar) {
-        this.textToggleSidebar.textContent = isCollapsed ? "Show Sidebar" : "Hide Sidebar";
-      }
-      if (this.btnToggleSidebar) {
-        this.btnToggleSidebar.title = isCollapsed ? "Expand Configuration Sidebar (Ctrl + B)" : "Collapse Configuration Sidebar (Ctrl + B)";
-        if (isCollapsed) {
-          this.btnToggleSidebar.classList.add("primary");
-        } else {
-          this.btnToggleSidebar.classList.remove("primary");
-        }
-      }
-
       // Persist state in localStorage
       try {
         localStorage.setItem("solar_oa_sidebar_collapsed", isCollapsed ? "1" : "0");
@@ -253,9 +238,6 @@ class UIController {
       }
     } catch (e) {}
 
-    if (this.btnToggleSidebar) {
-      this.btnToggleSidebar.addEventListener("click", () => toggleSidebar());
-    }
     if (this.btnCollapseSidebarInside) {
       this.btnCollapseSidebarInside.addEventListener("click", () => toggleSidebar(true));
     }
