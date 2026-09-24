@@ -830,9 +830,27 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
 /* KPI Metrics Grid (Fluid Auto-Filling Cards) */
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(145px, 12vw, 190px), 1fr));
-  gap: clamp(0.5rem, 0.8vw, 0.75rem);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: clamp(0.45rem, 0.7vw, 0.65rem);
   width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .kpi-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 400px) {
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .kpi-card {
@@ -840,10 +858,12 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   backdrop-filter: blur(16px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: clamp(0.55rem, 0.75vw, 0.7rem) clamp(0.7rem, 0.9vw, 0.85rem);
+  padding: clamp(0.55rem, 0.75vw, 0.7rem) clamp(0.6rem, 0.8vw, 0.75rem);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  align-items: center;
+  text-align: center;
   position: relative;
   overflow: hidden;
   transition: transform var(--trans-fast), border-color var(--trans-fast);
@@ -860,11 +880,11 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.35rem;
-  gap: 0.35rem;
+  width: 100%;
 }
 
 .kpi-label {
-  font-size: clamp(0.68rem, 0.78vw, 0.72rem);
+  font-size: clamp(0.66rem, 0.76vw, 0.70rem);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -872,6 +892,9 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: center;
+  flex: 1;
+  margin-left: 24px; /* Counterbalance the 24px icon pill on right for perfect optical centering */
 }
 
 .kpi-icon-pill {
@@ -892,8 +915,11 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   color: var(--text-primary);
   display: flex;
   align-items: baseline;
+  justify-content: center;
+  text-align: center;
   gap: 0.25rem;
   white-space: nowrap;
+  width: 100%;
 }
 
 .kpi-unit {
@@ -908,10 +934,13 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   margin-top: 0.35rem;
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 0.25rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  width: 100%;
 }
 
 .kpi-card.solar .kpi-icon-pill { color: var(--solar-gold); background: rgba(251, 191, 36, 0.15); }
