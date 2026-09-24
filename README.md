@@ -36,10 +36,10 @@ The platform simulates 15-minute time-block (96-block) load dispatch, SERC Devia
    - **Collapsible Sidebar**:
      - Dedicated **"Collapse"** button in sidebar header.
      - Navbar **"Hide Sidebar" / "Show Sidebar"** toggle with `Ctrl + B` keyboard shortcut.
-     - Persistent **Floating Left-Edge Docked Tab** (`Open Settings`) when collapsed.
+     - Quick **"Show Sidebar"** action button when collapsed.
      - **Accordion Sections**: Each card in the sidebar can be individually folded or unfolded.
    - **Side-by-Side Analytics Split View**:
-     - Load dispatch graph (~40% width) and 96-block table (~60% width) placed side-by-side.
+     - Load dispatch graph (~30% width) and 96-block table (~70% width) placed side-by-side.
      - 24-hour interactive slider player and instant power flow meter positioned at the bottom.
      - Synchronized compact height ensuring all components fit simultaneously within screen height without vertical scrolling.
 

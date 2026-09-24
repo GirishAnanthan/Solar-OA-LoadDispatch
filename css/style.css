@@ -300,42 +300,7 @@ body {
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
 }
 
-/* Floating Left-Edge Docked Tab when Sidebar is Collapsed */
-.sidebar-docked-tab {
-  display: none;
-  position: fixed;
-  left: 0;
-  top: 130px;
-  z-index: 99;
-  background: rgba(14, 22, 38, 0.96);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(56, 189, 248, 0.45);
-  border-left: none;
-  border-radius: 0 8px 8px 0;
-  padding: 0.65rem 0.85rem;
-  color: var(--grid-sky);
-  font-size: 0.76rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 4px 0 18px rgba(0, 0, 0, 0.45), 0 0 14px rgba(56, 189, 248, 0.25);
-  align-items: center;
-  gap: 0.45rem;
-  transition: all var(--trans-fast);
-}
-
-.sidebar-docked-tab:hover {
-  background: rgba(18, 28, 48, 0.98);
-  border-color: var(--grid-sky);
-  color: #FFFFFF;
-  padding-left: 1rem;
-  box-shadow: 6px 0 22px rgba(0, 0, 0, 0.6), 0 0 18px rgba(56, 189, 248, 0.4);
-}
-
-.main-wrapper.sidebar-collapsed .sidebar-docked-tab {
-  display: inline-flex;
-}
-
-/* Floating Expand Sidebar Button (Workspace header) */
+/* Quick Uncollapse Sidebar Button (Workspace header) */
 .btn-floating-expand-sidebar {
   display: none;
   align-items: center;

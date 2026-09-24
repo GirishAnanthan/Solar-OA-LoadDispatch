@@ -187,7 +187,6 @@ class UIController {
     this.btnCollapseSidebarInside = document.getElementById("btnCollapseSidebarInside");
     this.btnCollapseSidebarMain = document.getElementById("btnCollapseSidebarMain");
     this.btnFloatingExpandSidebar = document.getElementById("btnFloatingExpandSidebar");
-    this.btnDockedExpandSidebar = document.getElementById("btnDockedExpandSidebar");
 
     // Modal
     this.btnPolicyModal = document.getElementById("btnPolicyModal");
@@ -265,9 +264,6 @@ class UIController {
     }
     if (this.btnFloatingExpandSidebar) {
       this.btnFloatingExpandSidebar.addEventListener("click", () => toggleSidebar(false));
-    }
-    if (this.btnDockedExpandSidebar) {
-      this.btnDockedExpandSidebar.addEventListener("click", () => toggleSidebar(false));
     }
 
     // Keyboard shortcut (Ctrl + B or Alt + S or [) to toggle sidebar
