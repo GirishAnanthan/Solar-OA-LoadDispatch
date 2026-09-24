@@ -204,7 +204,8 @@ class DSMEngine {
         warningBlockCount,
         okBlockCount,
         complianceScorePct: Math.round((okBlockCount / 96) * 100)
-      }
+      },
+      solarTelemetry: this.solarModel.lastSolarTelemetry
     };
   }
 }

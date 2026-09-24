@@ -4,6 +4,83 @@
  * table filtering, and CSV dispatch schedule download.
  */
 
+const ROOFTOP_PRESETS = {
+  pune: {
+    lat: 18.5204,
+    lon: 73.8567,
+    tilt: 15,
+    address: "Plot B-14, MIDC Chakan Industrial Corridor, Pune, Maharashtra",
+    substation: "Chakan 33/11kV MSEDCL Substation"
+  },
+  chennai: {
+    lat: 12.9675,
+    lon: 79.9436,
+    tilt: 12,
+    address: "SIPCOT Industrial Complex, Phase-II, Sriperumbudur, Tamil Nadu",
+    substation: "Sriperumbudur 110/33kV TANTRANSCO Substation"
+  },
+  sanand: {
+    lat: 22.9868,
+    lon: 72.3787,
+    tilt: 20,
+    address: "GIDC Industrial Estate, Sanand-II, Ahmedabad, Gujarat",
+    substation: "Sanand 66/11kV GETCO Substation"
+  },
+  peenya: {
+    lat: 13.0285,
+    lon: 77.5197,
+    tilt: 13,
+    address: "Peenya Industrial Area, Phase-III, Bengaluru, Karnataka",
+    substation: "Peenya 66/11kV KPTCL Substation"
+  },
+  manesar: {
+    lat: 28.3548,
+    lon: 76.9377,
+    tilt: 25,
+    address: "HSIIDC Industrial Model Township (IMT), Sector-8, Manesar, Haryana",
+    substation: "IMT Manesar 66kV HVPNL Substation"
+  }
+};
+
+const OA_PRESETS = {
+  bhadla: {
+    lat: 27.5385,
+    lon: 71.9168,
+    name: "Bhadla Solar Park, Phalodi/Jodhpur, Rajasthan",
+    substation: "Bhadla-II 765/400kV PGCIL Substation (ISTS)"
+  },
+  pavagada: {
+    lat: 14.2811,
+    lon: 77.2758,
+    name: "Pavagada Solar Park (Shakti Sthala), Tumakuru, Karnataka",
+    substation: "Pavagada 400/220kV KSPDCL Pooling Substation"
+  },
+  charanka: {
+    lat: 23.9056,
+    lon: 71.2008,
+    name: "Charanka Solar Park, Patan, Gujarat",
+    substation: "Charanka 400/220kV GETCO Substation"
+  },
+  rewa: {
+    lat: 24.4789,
+    lon: 81.5768,
+    name: "Rewa Ultra Mega Solar (RUMSL), Gurh, MP",
+    substation: "Rewa 400/220kV PGCIL Pooling Station"
+  },
+  kurnool: {
+    lat: 15.6822,
+    lon: 78.2861,
+    name: "Kurnool Ultra Mega Solar Park, Gani/Sakunala, AP",
+    substation: "Gani 400/220kV APTRANSCO Pooling Substation"
+  },
+  dholera: {
+    lat: 22.2534,
+    lon: 72.2238,
+    name: "Dholera SIR Solar Park, Gulf of Khambhat, Gujarat",
+    substation: "Dholera 400kV Coastal Pooling Station"
+  }
+};
+
 class UIController {
   constructor(app) {
     this.app = app;
@@ -28,6 +105,27 @@ class UIController {
     this.gridTariffInput = document.getElementById("gridTariff");
     this.oaPpaRateInput = document.getElementById("oaPpaRate");
     this.transmissionLossInput = document.getElementById("transmissionLoss");
+
+    // Solar Site Coordinates & PVGIS Met Elements
+    this.rooftopPresetSelect = document.getElementById("rooftopPreset");
+    this.rooftopLatInput = document.getElementById("rooftopLat");
+    this.rooftopLonInput = document.getElementById("rooftopLon");
+    this.rooftopTiltInput = document.getElementById("rooftopTilt");
+    this.btnDetectRooftopGPS = document.getElementById("btnDetectRooftopGPS");
+
+    this.oaPresetSelect = document.getElementById("oaPreset");
+    this.oaLatInput = document.getElementById("oaLat");
+    this.oaLonInput = document.getElementById("oaLon");
+    this.oaTrackingSelect = document.getElementById("oaTracking");
+
+    this.btnFetchPVGIS = document.getElementById("btnFetchPVGIS");
+    this.pvgisSyncIcon = document.getElementById("pvgisSyncIcon");
+    this.pvgisMetBadge = document.getElementById("pvgisMetBadge");
+    this.pvgisModelTitle = document.getElementById("pvgisModelTitle");
+    this.pvgisTimeShiftVal = document.getElementById("pvgisTimeShiftVal");
+    this.pvgisRooftopInsolationVal = document.getElementById("pvgisRooftopInsolationVal");
+    this.pvgisOAInsolationVal = document.getElementById("pvgisOAInsolationVal");
+    this.pvgisOaCufVal = document.getElementById("pvgisOaCufVal");
 
     // Sliders
     this.loadSlider = document.getElementById("loadSlider");
@@ -217,7 +315,14 @@ class UIController {
       this.openAccessKWpInput,
       this.gridTariffInput,
       this.oaPpaRateInput,
-      this.transmissionLossInput
+      this.transmissionLossInput,
+      this.rooftopLatInput,
+      this.rooftopLonInput,
+      this.rooftopTiltInput,
+      this.oaLatInput,
+      this.oaLonInput,
+      this.oaTrackingSelect,
+      this.custScheduleDateInput
     ];
 
     triggerInputs.forEach(input => {
@@ -226,8 +331,83 @@ class UIController {
           this.updateSliderKwLabel();
           this.app.recalculate();
         });
+        input.addEventListener("change", () => {
+          this.app.recalculate();
+        });
       }
     });
+
+    // Rooftop Industrial Hub Preset Change
+    if (this.rooftopPresetSelect) {
+      this.rooftopPresetSelect.addEventListener("change", (e) => {
+        const key = e.target.value;
+        const preset = ROOFTOP_PRESETS[key];
+        if (preset) {
+          if (this.rooftopLatInput) this.rooftopLatInput.value = preset.lat.toFixed(4);
+          if (this.rooftopLonInput) this.rooftopLonInput.value = preset.lon.toFixed(4);
+          if (this.rooftopTiltInput) this.rooftopTiltInput.value = preset.tilt;
+          if (this.custAddressInput && (!this.custAddressInput.value || this.custAddressInput.value.includes("Industrial"))) {
+            this.custAddressInput.value = preset.address;
+          }
+          if (this.custSubstationInput && (!this.custSubstationInput.value || this.custSubstationInput.value.includes("Substation"))) {
+            this.custSubstationInput.value = preset.substation;
+          }
+          this.app.recalculate();
+        }
+      });
+    }
+
+    // Open Access Solar Park Preset Change
+    if (this.oaPresetSelect) {
+      this.oaPresetSelect.addEventListener("change", (e) => {
+        const key = e.target.value;
+        const preset = OA_PRESETS[key];
+        if (preset) {
+          if (this.oaLatInput) this.oaLatInput.value = preset.lat.toFixed(4);
+          if (this.oaLonInput) this.oaLonInput.value = preset.lon.toFixed(4);
+          this.app.recalculate();
+        }
+      });
+    }
+
+    // Detect GPS Location for Rooftop Solar Site
+    if (this.btnDetectRooftopGPS) {
+      this.btnDetectRooftopGPS.addEventListener("click", () => {
+        if ("geolocation" in navigator) {
+          this.btnDetectRooftopGPS.textContent = "Detecting...";
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              if (this.rooftopLatInput) this.rooftopLatInput.value = pos.coords.latitude.toFixed(4);
+              if (this.rooftopLonInput) this.rooftopLonInput.value = pos.coords.longitude.toFixed(4);
+              if (this.rooftopPresetSelect) this.rooftopPresetSelect.value = "custom";
+              this.btnDetectRooftopGPS.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> GPS`;
+              this.app.recalculate();
+            },
+            () => {
+              alert("Device GPS unavailable. You can enter exact plant coordinates manually.");
+              this.btnDetectRooftopGPS.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg> GPS`;
+            },
+            { timeout: 8000 }
+          );
+        } else {
+          alert("Geolocation is not supported by your browser.");
+        }
+      });
+    }
+
+    // Live PVGIS Satellite Data Re-sync Button
+    if (this.btnFetchPVGIS) {
+      this.btnFetchPVGIS.addEventListener("click", async () => {
+        if (this.pvgisSyncIcon) this.pvgisSyncIcon.classList.add("pvgis-spinning");
+        const lat = parseFloat(this.rooftopLatInput.value) || 18.5204;
+        const lon = parseFloat(this.rooftopLonInput.value) || 73.8567;
+        const tilt = parseFloat(this.rooftopTiltInput.value) || 15;
+        
+        await this.app.dsmEngine.solarModel.fetchLivePVGIS(lat, lon, 1, tilt);
+        if (this.pvgisSyncIcon) this.pvgisSyncIcon.classList.remove("pvgis-spinning");
+        this.app.recalculate();
+      });
+    }
 
     // Interactive Sliders
     this.loadSlider.addEventListener("input", (e) => {
@@ -380,6 +560,43 @@ class UIController {
     const headerStateBadge = document.getElementById("headerStateBadge");
     if (headerStateBadge) {
       headerStateBadge.textContent = `${policy.regulator} Regulations (${policy.stateName})`;
+    }
+
+    // Auto-align location presets based on state (unless user manually chose custom)
+    if (this.rooftopPresetSelect && this.rooftopPresetSelect.value !== "custom") {
+      let rPreset = "pune";
+      let oaPreset = "bhadla";
+      if (stateKey === "gujarat") { rPreset = "sanand"; oaPreset = "charanka"; }
+      else if (stateKey === "karnataka") { rPreset = "peenya"; oaPreset = "pavagada"; }
+      else if (stateKey === "tamilnadu") { rPreset = "chennai"; oaPreset = "pavagada"; }
+      else if (stateKey === "rajasthan") { rPreset = "manesar"; oaPreset = "bhadla"; }
+      else if (stateKey === "haryana") { rPreset = "manesar"; oaPreset = "bhadla"; }
+      else if (stateKey === "andhrapradesh") { rPreset = "chennai"; oaPreset = "kurnool"; }
+      else if (stateKey === "telangana") { rPreset = "pune"; oaPreset = "kurnool"; }
+      else if (stateKey === "uttarpradesh") { rPreset = "manesar"; oaPreset = "rewa"; }
+
+      this.rooftopPresetSelect.value = rPreset;
+      const rData = ROOFTOP_PRESETS[rPreset];
+      if (rData) {
+        if (this.rooftopLatInput) this.rooftopLatInput.value = rData.lat.toFixed(4);
+        if (this.rooftopLonInput) this.rooftopLonInput.value = rData.lon.toFixed(4);
+        if (this.rooftopTiltInput) this.rooftopTiltInput.value = rData.tilt;
+        if (this.custAddressInput && (!this.custAddressInput.value || this.custAddressInput.value.includes("Industrial") || this.custAddressInput.value.includes("MIDC") || this.custAddressInput.value.includes("SIPCOT") || this.custAddressInput.value.includes("GIDC") || this.custAddressInput.value.includes("Peenya") || this.custAddressInput.value.includes("HSIIDC"))) {
+          this.custAddressInput.value = rData.address;
+        }
+        if (this.custSubstationInput && (!this.custSubstationInput.value || this.custSubstationInput.value.includes("Substation"))) {
+          this.custSubstationInput.value = rData.substation;
+        }
+      }
+
+      if (this.oaPresetSelect && this.oaPresetSelect.value !== "custom") {
+        this.oaPresetSelect.value = oaPreset;
+        const oaData = OA_PRESETS[oaPreset];
+        if (oaData) {
+          if (this.oaLatInput) this.oaLatInput.value = oaData.lat.toFixed(4);
+          if (this.oaLonInput) this.oaLonInput.value = oaData.lon.toFixed(4);
+        }
+      }
     }
   }
 
@@ -714,6 +931,15 @@ class UIController {
     const customGridTariff = parseFloat(this.gridTariffInput.value);
     const customOaRate = parseFloat(this.oaPpaRateInput.value);
 
+    // Site Coordinates & Meteorological Parameters
+    const rooftopLat = this.rooftopLatInput ? (parseFloat(this.rooftopLatInput.value) || 18.5204) : 18.5204;
+    const rooftopLon = this.rooftopLonInput ? (parseFloat(this.rooftopLonInput.value) || 73.8567) : 73.8567;
+    const rooftopTilt = this.rooftopTiltInput ? (parseFloat(this.rooftopTiltInput.value) || 15) : 15;
+    const oaLat = this.oaLatInput ? (parseFloat(this.oaLatInput.value) || 27.5385) : 27.5385;
+    const oaLon = this.oaLonInput ? (parseFloat(this.oaLonInput.value) || 71.9168) : 71.9168;
+    const oaTracking = this.oaTrackingSelect ? this.oaTrackingSelect.value : "fixed";
+    const scheduleDate = this.custScheduleDateInput ? this.custScheduleDateInput.value : null;
+
     return {
       sanctionedLoadKW,
       baseConnectedLoadKW,
@@ -724,8 +950,57 @@ class UIController {
       lossPct,
       actualIrradiancePct,
       customGridTariff,
-      customOaRate
+      customOaRate,
+      rooftopLat,
+      rooftopLon,
+      rooftopTilt,
+      oaLat,
+      oaLon,
+      oaTracking,
+      scheduleDate
     };
+  }
+
+  /**
+   * Updates PVGIS and Astronomical Solar Telemetry Chips in the Sidebar
+   */
+  updateSolarTelemetryView(solarTelemetry) {
+    if (!solarTelemetry) return;
+    const { rooftop, oa, timeShiftMinutes, isLivePvgisSynced } = solarTelemetry;
+
+    if (this.pvgisTimeShiftVal) {
+      if (timeShiftMinutes === 0) {
+        this.pvgisTimeShiftVal.textContent = "In-Sync (0 min)";
+      } else if (timeShiftMinutes > 0) {
+        this.pvgisTimeShiftVal.textContent = `OA Lags by ${timeShiftMinutes} min`;
+      } else {
+        this.pvgisTimeShiftVal.textContent = `OA Leads by ${Math.abs(timeShiftMinutes)} min`;
+      }
+    }
+
+    if (this.pvgisRooftopInsolationVal && rooftop) {
+      this.pvgisRooftopInsolationVal.textContent = `${rooftop.dailyInsolationKWh} kWh/m²`;
+    }
+
+    if (this.pvgisOAInsolationVal && oa) {
+      this.pvgisOAInsolationVal.textContent = `${oa.dailyInsolationKWh} kWh/m²`;
+    }
+
+    if (this.pvgisOaCufVal && oa) {
+      this.pvgisOaCufVal.textContent = `CUF: ${oa.cuf}% (${oa.isTracker ? '1-Axis' : 'Fixed'})`;
+    }
+
+    if (this.pvgisMetBadge) {
+      if (isLivePvgisSynced) {
+        this.pvgisMetBadge.textContent = "PVGIS Live";
+        this.pvgisMetBadge.style.background = "rgba(59, 130, 246, 0.25)";
+        this.pvgisMetBadge.style.color = "#60A5FA";
+      } else {
+        this.pvgisMetBadge.textContent = "PVGIS Active";
+        this.pvgisMetBadge.style.background = "rgba(16, 185, 129, 0.18)";
+        this.pvgisMetBadge.style.color = "#34D399";
+      }
+    }
   }
 
   /**
@@ -809,6 +1084,17 @@ class UIController {
     const oaKWp = this.openAccessKWpInput ? this.openAccessKWpInput.value : "1500";
     const lossPct = this.transmissionLossInput ? this.transmissionLossInput.value : "4.10";
 
+    const rooftopLat = this.rooftopLatInput ? (parseFloat(this.rooftopLatInput.value) || 18.5204).toFixed(4) : "18.5204";
+    const rooftopLon = this.rooftopLonInput ? (parseFloat(this.rooftopLonInput.value) || 73.8567).toFixed(4) : "73.8567";
+    const rooftopTilt = this.rooftopTiltInput ? this.rooftopTiltInput.value : "15";
+    const oaLat = this.oaLatInput ? (parseFloat(this.oaLatInput.value) || 27.5385).toFixed(4) : "27.5385";
+    const oaLon = this.oaLonInput ? (parseFloat(this.oaLonInput.value) || 71.9168).toFixed(4) : "71.9168";
+    const oaTracking = this.oaTrackingSelect ? this.oaTrackingSelect.value : "fixed";
+    const oaPreset = this.oaPresetSelect ? this.oaPresetSelect.value : "bhadla";
+    const oaParkName = OA_PRESETS[oaPreset] ? OA_PRESETS[oaPreset].name : "Remote Solar Park Node";
+    const solarTel = results.solarTelemetry;
+    const timeShiftMinutes = solarTel ? solarTel.timeShiftMinutes : 0;
+
     // Build 96 rows for print table
     let rowsHtml = "";
     blocks.forEach(b => {
@@ -873,9 +1159,15 @@ class UIController {
           </tr>
           <tr>
             <td class="meta-label">Rooftop Solar Plant (BTM):</td>
-            <td class="meta-val"><strong>${rooftopKWp} kWp</strong> (Zero-Export Mode / RPR Protected)</td>
+            <td class="meta-val">
+              <strong>${rooftopKWp} kWp</strong> (Zero-Export Mode / Class 0.2s RPR Protected)<br>
+              <span style="font-size: 0.72rem; color: #475569;">GPS: ${rooftopLat}° N, ${rooftopLon}° E | Tilt: ${rooftopTilt}° South (Yield: ${solarTel && solarTel.rooftop ? solarTel.rooftop.dailyGenKWhPerKWp : '5.2'} kWh/kWp)</span>
+            </td>
             <td class="meta-label">Captive Open Access Solar:</td>
-            <td class="meta-val"><strong>${oaKWp} kWp</strong> (Scheduled Injection)</td>
+            <td class="meta-val">
+              <strong>${oaKWp} kWp</strong> (${oaTracking === 'tracker' ? 'Single-Axis Tracking' : 'Fixed Tilt 22°'})<br>
+              <span style="font-size: 0.72rem; color: #475569;">GPS: ${oaLat}° N, ${oaLon}° E | ${oaParkName} (Offset: ${timeShiftMinutes >= 0 ? '+' : ''}${timeShiftMinutes} min)</span>
+            </td>
           </tr>
         </table>
 

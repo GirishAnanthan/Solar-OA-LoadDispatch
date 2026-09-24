@@ -48,6 +48,11 @@ class SolarSchedulingApp {
 
     // Update Live Scrubber Telemetry (never scroll table or window during data input)
     this.ui.updateScrubberView(false);
+
+    // Update PVGIS Solar Telemetry & Site Indicators
+    if (this.lastEvaluationResults && this.lastEvaluationResults.solarTelemetry) {
+      this.ui.updateSolarTelemetryView(this.lastEvaluationResults.solarTelemetry);
+    }
   }
 
   updateKPICards(summary) {

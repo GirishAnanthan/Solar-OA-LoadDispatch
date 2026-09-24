@@ -424,6 +424,164 @@
         </div>
       </section>
 
+      <!-- Solar Plant Site Coordinates & Meteorological Simulation (PVGIS) -->
+      <section class="glass-panel" id="panelSolarMet">
+        <div class="panel-title-bar panel-accordion-header" title="Click to collapse / expand site coordinates & meteorological settings">
+          <h2 class="panel-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            Site Coordinates & Met (PVGIS)
+          </h2>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <span class="badge-mini-accent" id="pvgisMetBadge">PVGIS Active</span>
+            <button class="btn-panel-accordion" title="Toggle section">
+              <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-accordion-content">
+          <!-- Rooftop Solar Plant Location -->
+          <div class="site-met-subblock">
+            <div class="site-met-subtitle">
+              <span class="site-dot rooftop-dot"></span>
+              <strong>1. Rooftop Solar Site (BTM)</strong>
+              <button type="button" class="btn-detect-gps" id="btnDetectRooftopGPS" title="Detect device GPS coordinates">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+                GPS
+              </button>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+              <label class="form-label" for="rooftopPreset">Industrial Hub Preset</label>
+              <select id="rooftopPreset" class="select-control">
+                <option value="pune" selected>Pune MIDC, MH (18.52° N, 73.85° E)</option>
+                <option value="chennai">Chennai Sriperumbudur, TN (12.97° N, 79.94° E)</option>
+                <option value="sanand">Ahmedabad Sanand, GJ (22.99° N, 72.38° E)</option>
+                <option value="peenya">Bengaluru Peenya, KA (13.03° N, 77.52° E)</option>
+                <option value="manesar">NCR Manesar, HR (28.35° N, 76.94° E)</option>
+                <option value="custom">Custom Site Coordinates...</option>
+              </select>
+            </div>
+
+            <div class="input-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="rooftopLat">Latitude</label>
+                <div class="input-with-unit">
+                  <input type="number" id="rooftopLat" class="input-control" value="18.5204" step="0.0001" min="-90" max="90">
+                  <span class="input-unit">°N</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="rooftopLon">Longitude</label>
+                <div class="input-with-unit">
+                  <input type="number" id="rooftopLon" class="input-control" value="73.8567" step="0.0001" min="-180" max="180">
+                  <span class="input-unit">°E</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="rooftopTilt">Roof Tilt</label>
+                <div class="input-with-unit">
+                  <input type="number" id="rooftopTilt" class="input-control" value="15" step="1" min="0" max="60">
+                  <span class="input-unit">°</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Open Access Solar Park Location -->
+          <div class="site-met-subblock" style="margin-top: 0.75rem;">
+            <div class="site-met-subtitle">
+              <span class="site-dot oa-dot"></span>
+              <strong>2. Open Access Solar Park (Remote)</strong>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+              <label class="form-label" for="oaPreset">Mega Solar Park Preset</label>
+              <select id="oaPreset" class="select-control">
+                <option value="bhadla" selected>Bhadla Solar Park, Rajasthan (27.54° N, 71.92° E)</option>
+                <option value="pavagada">Pavagada Solar Park, Karnataka (14.28° N, 77.28° E)</option>
+                <option value="charanka">Charanka Solar Park, Gujarat (23.91° N, 71.20° E)</option>
+                <option value="rewa">Rewa Ultra Mega Solar, MP (24.48° N, 81.58° E)</option>
+                <option value="kurnool">Kurnool Ultra Mega Solar, AP (15.68° N, 78.29° E)</option>
+                <option value="dholera">Dholera Solar Park, Gujarat (22.25° N, 72.22° E)</option>
+                <option value="custom">Custom Solar Park...</option>
+              </select>
+            </div>
+
+            <div class="input-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="oaLat">Latitude</label>
+                <div class="input-with-unit">
+                  <input type="number" id="oaLat" class="input-control" value="27.5385" step="0.0001" min="-90" max="90">
+                  <span class="input-unit">°N</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="oaLon">Longitude</label>
+                <div class="input-with-unit">
+                  <input type="number" id="oaLon" class="input-control" value="71.9168" step="0.0001" min="-180" max="180">
+                  <span class="input-unit">°E</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="oaTracking">Mounting</label>
+                <select id="oaTracking" class="select-control" style="font-size: 0.74rem; padding: 0.42rem 0.25rem;">
+                  <option value="fixed" selected>Fixed (22°)</option>
+                  <option value="tracker">1-Axis Tracker</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- PVGIS Meteorological SolSync Telemetry Box -->
+          <div class="pvgis-telemetry-box">
+            <div class="pvgis-telemetry-header">
+              <div style="display: flex; align-items: center; gap: 0.4rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                <span class="pvgis-telemetry-title" id="pvgisModelTitle">PVGIS Satellite Radiation Model</span>
+              </div>
+              <button type="button" class="btn-pvgis-sync" id="btnFetchPVGIS" title="Fetch / re-sync live PVGIS meteorological data for these coordinates">
+                <svg id="pvgisSyncIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                Sync PVGIS
+              </button>
+            </div>
+            
+            <div class="pvgis-chips-grid">
+              <div class="pvgis-chip">
+                <span class="pvgis-chip-label">Longitudinal Shift</span>
+                <span class="pvgis-chip-val" id="pvgisTimeShiftVal">OA Lags by 8 min</span>
+              </div>
+              <div class="pvgis-chip">
+                <span class="pvgis-chip-label">Rooftop Insolation</span>
+                <span class="pvgis-chip-val" id="pvgisRooftopInsolationVal">5.22 kWh/m²</span>
+              </div>
+              <div class="pvgis-chip">
+                <span class="pvgis-chip-label">OA Park Insolation</span>
+                <span class="pvgis-chip-val" id="pvgisOAInsolationVal">6.15 kWh/m²</span>
+              </div>
+              <div class="pvgis-chip">
+                <span class="pvgis-chip-label">OA CUF Boost</span>
+                <span class="pvgis-chip-val" id="pvgisOaCufVal">+18.5% Factor</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </aside>
 
     <!-- Floating Left-Edge Docked Tab (Appears when sidebar is collapsed) -->
