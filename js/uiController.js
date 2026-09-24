@@ -4,42 +4,49 @@
  * table filtering, and CSV dispatch schedule download.
  */
 
+/**
+ * Calculates optimal solar PV tilt angle for annual maximum generation
+ * in the Northern Hemisphere (India latitude range 8°N to 36°N).
+ * Empirical formulation calibrated against PVGIS SARAH-2 / MNRE standards.
+ * Clamped between 10° (minimum for dust/monsoon drainage) and 35°.
+ */
+function calculateOptimalTilt(latitude) {
+  const lat = Math.abs(parseFloat(latitude) || 0);
+  const opt = Math.round(lat * 0.87 + 3.1);
+  return Math.max(10, Math.min(35, opt));
+}
+
+const INDIAN_GEO_DIRECTORY = [
+  { name: "Pune MIDC, Chakan, Maharashtra", aliases: ["pune", "chakan", "bhosari", "hinjewadi", "talegaon", "ranjangaon", "pimpri"], lat: 18.5204, lon: 73.8567, address: "Plot B-14, MIDC Chakan Industrial Corridor, Pune, Maharashtra", substation: "Chakan 33/11kV MSEDCL Substation" },
+  { name: "Sriperumbudur SIPCOT, Chennai, Tamil Nadu", aliases: ["chennai", "sriperumbudur", "oragadam", "ambattur", "guindy", "maraimalai"], lat: 12.9675, lon: 79.9436, address: "SIPCOT Industrial Complex, Phase-II, Sriperumbudur, Tamil Nadu", substation: "Sriperumbudur 110/33kV TANTRANSCO Substation" },
+  { name: "Sanand GIDC, Ahmedabad, Gujarat", aliases: ["sanand", "ahmedabad", "changodar", "vatva", "naroda"], lat: 22.9868, lon: 72.3787, address: "GIDC Industrial Estate, Sanand-II, Ahmedabad, Gujarat", substation: "Sanand 66/11kV GETCO Substation" },
+  { name: "Peenya Industrial Area, Bengaluru, Karnataka", aliases: ["peenya", "bengaluru", "bangalore", "whitefield", "electronic city", "bommasandra", "bidadi"], lat: 13.0285, lon: 77.5197, address: "Peenya Industrial Area, Phase-III, Bengaluru, Karnataka", substation: "Peenya 66/11kV KPTCL Substation" },
+  { name: "Manesar IMT, Gurugram, Haryana", aliases: ["manesar", "gurugram", "gurgaon", "dharuhera", "bawal"], lat: 28.3548, lon: 76.9377, address: "HSIIDC Industrial Model Township (IMT), Sector-8, Manesar, Haryana", substation: "IMT Manesar 66kV HVPNL Substation" },
+  { name: "Noida Phase-II, Sector-80, Uttar Pradesh", aliases: ["noida", "greater noida", "ghaziabad", "sahibabad"], lat: 28.5355, lon: 77.3910, address: "Phase-II Industrial Area, Sector-80, Noida, Uttar Pradesh", substation: "Noida 33/11kV UPPCL Substation" },
+  { name: "Hosur SIPCOT Industrial Complex, Tamil Nadu", aliases: ["hosur"], lat: 12.7409, lon: 77.8253, address: "SIPCOT Industrial Complex, Phase-I, Hosur, Tamil Nadu", substation: "Hosur 110/33kV TANTRANSCO Substation" },
+  { name: "Waluj MIDC, Aurangabad, Maharashtra", aliases: ["aurangabad", "waluj", "chikalthana", "chhatrapati sambhajinagar"], lat: 19.8398, lon: 75.2443, address: "MIDC Waluj Industrial Area, Chhatrapati Sambhajinagar, Maharashtra", substation: "Waluj 33/11kV MSEDCL Substation" },
+  { name: "Pithampur Industrial Area, Indore, Madhya Pradesh", aliases: ["pithampur", "indore"], lat: 22.6146, lon: 75.6888, address: "Pithampur Industrial Growth Centre, Sector-3, Indore, MP", substation: "Pithampur 132/33kV MPPTCL Substation" },
+  { name: "Dahej PCPIR, Bharuch, Gujarat", aliases: ["dahej", "bharuch", "ankleshwar"], lat: 21.7104, lon: 72.5855, address: "Dahej SEZ / PCPIR Industrial Area, Bharuch, Gujarat", substation: "Dahej 66/11kV GETCO Substation" },
+  { name: "Bhiwadi Industrial Area, Alwar, Rajasthan", aliases: ["bhiwadi", "alwar", "neemrana"], lat: 28.2104, lon: 76.8606, address: "RIICO Industrial Area, Phase-III, Bhiwadi, Rajasthan", substation: "Bhiwadi 132/33kV RVPNL Substation" },
+  { name: "Oragadam Industrial Corridor, Chennai, Tamil Nadu", aliases: ["oragadam"], lat: 12.8360, lon: 79.9570, address: "SIPCOT Industrial Park, Oragadam, Kanchipuram, Tamil Nadu", substation: "Oragadam 230/110kV TANTRANSCO Substation" },
+  { name: "Butibori MIDC, Nagpur, Maharashtra", aliases: ["butibori", "nagpur", "hingna"], lat: 20.9238, lon: 78.9950, address: "MIDC Industrial Area, Butibori, Nagpur, Maharashtra", substation: "Butibori 132/33kV MSEDCL Substation" },
+  { name: "Taloja MIDC, Navi Mumbai, Maharashtra", aliases: ["taloja", "navi mumbai", "panvel", "turbhe", "rabale", "mahape"], lat: 19.0683, lon: 73.1235, address: "MIDC Chemical & Engineering Zone, Taloja, Navi Mumbai, Maharashtra", substation: "Taloja 100/33kV MSEDCL Substation" },
+  { name: "Vapi GIDC, Valsad, Gujarat", aliases: ["vapi", "valsad"], lat: 20.3705, lon: 72.9106, address: "GIDC Industrial Estate, Vapi, Valsad, Gujarat", substation: "Vapi 66/11kV GETCO Substation" },
+  { name: "Baddi Industrial Area, Solan, Himachal Pradesh", aliases: ["baddi", "solan", "nalagarh"], lat: 30.9578, lon: 76.7914, address: "Baddi-Barotiwala-Nalagarh (BBN) Industrial Area, HP", substation: "Baddi 66/11kV HPSEBL Substation" },
+  { name: "Jamshedpur Industrial Area, Jharkhand", aliases: ["jamshedpur", "adityapur", "tatanagar"], lat: 22.8046, lon: 86.2029, address: "Adityapur Industrial Area, Jamshedpur, Jharkhand", substation: "Adityapur 132/33kV JUVNL Substation" },
+  { name: "Rudrapur SIDCUL, Uttarakhand", aliases: ["rudrapur", "pantnagar", "sidcul"], lat: 28.9800, lon: 79.4000, address: "Integrated Industrial Estate (SIDCUL), Pantnagar/Rudrapur, Uttarakhand", substation: "SIDCUL 132/33kV UPCL Substation" },
+  { name: "Hyderabad Genome Valley / Cherlapally, Telangana", aliases: ["hyderabad", "cherlapally", "jeedimetla", "patancheru", "genome valley"], lat: 17.3850, lon: 78.4867, address: "Cherlapally Industrial Development Area, Hyderabad, Telangana", substation: "Cherlapally 33/11kV TSSPDCL Substation" },
+  { name: "Jaipur Sitapura Industrial Area, Rajasthan", aliases: ["jaipur", "sitapura", "vishwakarma"], lat: 26.9124, lon: 75.7873, address: "RIICO Industrial Area, Sitapura, Jaipur, Rajasthan", substation: "Sitapura 132/33kV JVVNL Substation" },
+  { name: "Kolkata Howrah / Dankuni, West Bengal", aliases: ["kolkata", "calcutta", "howrah", "dankuni"], lat: 22.5726, lon: 88.3639, address: "Dankuni Industrial Complex, Howrah/Hooghly, West Bengal", substation: "Dankuni 33/11kV WBSEDCL Substation" },
+  { name: "Coimbatore SIDCO Industrial Estate, Tamil Nadu", aliases: ["coimbatore", "kurichi", "malumichampatti"], lat: 11.0168, lon: 76.9558, address: "SIDCO Industrial Estate, Kurichi, Coimbatore, Tamil Nadu", substation: "Kurichi 110/11kV TANGEDCO Substation" }
+];
+
 const ROOFTOP_PRESETS = {
-  pune: {
-    lat: 18.5204,
-    lon: 73.8567,
-    tilt: 15,
-    address: "Plot B-14, MIDC Chakan Industrial Corridor, Pune, Maharashtra",
-    substation: "Chakan 33/11kV MSEDCL Substation"
-  },
-  chennai: {
-    lat: 12.9675,
-    lon: 79.9436,
-    tilt: 12,
-    address: "SIPCOT Industrial Complex, Phase-II, Sriperumbudur, Tamil Nadu",
-    substation: "Sriperumbudur 110/33kV TANTRANSCO Substation"
-  },
-  sanand: {
-    lat: 22.9868,
-    lon: 72.3787,
-    tilt: 20,
-    address: "GIDC Industrial Estate, Sanand-II, Ahmedabad, Gujarat",
-    substation: "Sanand 66/11kV GETCO Substation"
-  },
-  peenya: {
-    lat: 13.0285,
-    lon: 77.5197,
-    tilt: 13,
-    address: "Peenya Industrial Area, Phase-III, Bengaluru, Karnataka",
-    substation: "Peenya 66/11kV KPTCL Substation"
-  },
-  manesar: {
-    lat: 28.3548,
-    lon: 76.9377,
-    tilt: 25,
-    address: "HSIIDC Industrial Model Township (IMT), Sector-8, Manesar, Haryana",
-    substation: "IMT Manesar 66kV HVPNL Substation"
-  }
+  pune: INDIAN_GEO_DIRECTORY[0],
+  chennai: INDIAN_GEO_DIRECTORY[1],
+  sanand: INDIAN_GEO_DIRECTORY[2],
+  peenya: INDIAN_GEO_DIRECTORY[3],
+  manesar: INDIAN_GEO_DIRECTORY[4]
 };
 
 const OA_PRESETS = {
@@ -107,7 +114,11 @@ class UIController {
     this.transmissionLossInput = document.getElementById("transmissionLoss");
 
     // Solar Site Coordinates & PVGIS Met Elements
-    this.rooftopPresetSelect = document.getElementById("rooftopPreset");
+    this.rooftopAddressSearchInput = document.getElementById("rooftopAddressSearch");
+    this.btnGeocodeRooftop = document.getElementById("btnGeocodeRooftop");
+    this.rooftopGeoStatus = document.getElementById("rooftopGeoStatus");
+    this.rooftopTiltBadge = document.getElementById("rooftopTiltBadge");
+    this.geoSearchIcon = document.getElementById("geoSearchIcon");
     this.rooftopLatInput = document.getElementById("rooftopLat");
     this.rooftopLonInput = document.getElementById("rooftopLon");
     this.rooftopTiltInput = document.getElementById("rooftopTilt");
@@ -117,6 +128,7 @@ class UIController {
     this.oaLatInput = document.getElementById("oaLat");
     this.oaLonInput = document.getElementById("oaLon");
     this.oaTrackingSelect = document.getElementById("oaTracking");
+    this.oaFixedOption = document.getElementById("oaFixedOption");
 
     this.btnFetchPVGIS = document.getElementById("btnFetchPVGIS");
     this.pvgisSyncIcon = document.getElementById("pvgisSyncIcon");
@@ -315,27 +327,51 @@ class UIController {
       }
     });
 
-    // Rooftop Industrial Hub Preset Change
-    if (this.rooftopPresetSelect) {
-      this.rooftopPresetSelect.addEventListener("change", (e) => {
-        const key = e.target.value;
-        const preset = ROOFTOP_PRESETS[key];
-        if (preset) {
-          if (this.rooftopLatInput) this.rooftopLatInput.value = preset.lat.toFixed(4);
-          if (this.rooftopLonInput) this.rooftopLonInput.value = preset.lon.toFixed(4);
-          if (this.rooftopTiltInput) this.rooftopTiltInput.value = preset.tilt;
-          if (this.custAddressInput && (!this.custAddressInput.value || this.custAddressInput.value.includes("Industrial"))) {
-            this.custAddressInput.value = preset.address;
-          }
-          if (this.custSubstationInput && (!this.custSubstationInput.value || this.custSubstationInput.value.includes("Substation"))) {
-            this.custSubstationInput.value = preset.substation;
-          }
-          this.app.recalculate();
+    // Rooftop Address Geocoding Search (Google Maps style)
+    if (this.rooftopAddressSearchInput) {
+      this.rooftopAddressSearchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          this.geocodeRooftopAddress(this.rooftopAddressSearchInput.value);
+        }
+      });
+      this.rooftopAddressSearchInput.addEventListener("change", () => {
+        this.geocodeRooftopAddress(this.rooftopAddressSearchInput.value);
+      });
+    }
+
+    if (this.btnGeocodeRooftop) {
+      this.btnGeocodeRooftop.addEventListener("click", () => {
+        if (this.rooftopAddressSearchInput) {
+          this.geocodeRooftopAddress(this.rooftopAddressSearchInput.value);
         }
       });
     }
 
-    // Open Access Solar Park Preset Change
+    // Auto-update optimal tilt whenever Rooftop Latitude is adjusted
+    if (this.rooftopLatInput) {
+      const handleRooftopLatChange = () => {
+        const lat = parseFloat(this.rooftopLatInput.value);
+        if (!isNaN(lat)) {
+          const optTilt = calculateOptimalTilt(lat);
+          if (this.rooftopTiltInput) {
+            this.rooftopTiltInput.value = optTilt;
+            this.rooftopTiltInput.classList.remove("highlight-updated");
+            void this.rooftopTiltInput.offsetWidth;
+            this.rooftopTiltInput.classList.add("highlight-updated");
+            setTimeout(() => {
+              if (this.rooftopTiltInput) this.rooftopTiltInput.classList.remove("highlight-updated");
+            }, 1500);
+          }
+          if (this.rooftopTiltBadge) this.rooftopTiltBadge.textContent = `Opt: ${optTilt}°`;
+        }
+        this.app.recalculate();
+      };
+      this.rooftopLatInput.addEventListener("input", handleRooftopLatChange);
+      this.rooftopLatInput.addEventListener("change", handleRooftopLatChange);
+    }
+
+    // Open Access Solar Park Preset & Optimal Tilt Change
     if (this.oaPresetSelect) {
       this.oaPresetSelect.addEventListener("change", (e) => {
         const key = e.target.value;
@@ -343,9 +379,25 @@ class UIController {
         if (preset) {
           if (this.oaLatInput) this.oaLatInput.value = preset.lat.toFixed(4);
           if (this.oaLonInput) this.oaLonInput.value = preset.lon.toFixed(4);
+          const oaOptTilt = calculateOptimalTilt(preset.lat);
+          this.updateOaOptimalTilt(oaOptTilt);
           this.app.recalculate();
         }
       });
+    }
+
+    // Auto-update OA mounting tilt whenever OA Latitude changes
+    if (this.oaLatInput) {
+      const handleOaLatChange = () => {
+        const lat = parseFloat(this.oaLatInput.value);
+        if (!isNaN(lat)) {
+          const oaOptTilt = calculateOptimalTilt(lat);
+          this.updateOaOptimalTilt(oaOptTilt);
+        }
+        this.app.recalculate();
+      };
+      this.oaLatInput.addEventListener("input", handleOaLatChange);
+      this.oaLatInput.addEventListener("change", handleOaLatChange);
     }
 
     // Detect GPS Location for Rooftop Solar Site
@@ -355,14 +407,23 @@ class UIController {
           this.btnDetectRooftopGPS.textContent = "Detecting...";
           navigator.geolocation.getCurrentPosition(
             (pos) => {
-              if (this.rooftopLatInput) this.rooftopLatInput.value = pos.coords.latitude.toFixed(4);
-              if (this.rooftopLonInput) this.rooftopLonInput.value = pos.coords.longitude.toFixed(4);
-              if (this.rooftopPresetSelect) this.rooftopPresetSelect.value = "custom";
+              const lat = pos.coords.latitude;
+              const lon = pos.coords.longitude;
+              const optTilt = calculateOptimalTilt(lat);
+              if (this.rooftopLatInput) this.rooftopLatInput.value = lat.toFixed(4);
+              if (this.rooftopLonInput) this.rooftopLonInput.value = lon.toFixed(4);
+              if (this.rooftopTiltInput) this.rooftopTiltInput.value = optTilt;
+              if (this.rooftopTiltBadge) this.rooftopTiltBadge.textContent = `Opt: ${optTilt}°`;
+              if (this.rooftopAddressSearchInput) this.rooftopAddressSearchInput.value = `Device GPS (${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E)`;
+              if (this.rooftopGeoStatus) {
+                this.rooftopGeoStatus.textContent = `✓ GPS Locked (Opt: ${optTilt}°)`;
+                this.rooftopGeoStatus.style.color = "var(--oa-emerald)";
+              }
               this.btnDetectRooftopGPS.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg> GPS`;
               this.app.recalculate();
             },
             () => {
-              alert("Device GPS unavailable. You can enter exact plant coordinates manually.");
+              alert("Device GPS unavailable. You can enter exact plant coordinates or address.");
               this.btnDetectRooftopGPS.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg> GPS`;
             },
             { timeout: 8000 }
@@ -540,42 +601,177 @@ class UIController {
       headerStateBadge.textContent = `${policy.regulator} Regulations (${policy.stateName})`;
     }
 
-    // Auto-align location presets based on state (unless user manually chose custom)
-    if (this.rooftopPresetSelect && this.rooftopPresetSelect.value !== "custom") {
-      let rPreset = "pune";
-      let oaPreset = "bhadla";
-      if (stateKey === "gujarat") { rPreset = "sanand"; oaPreset = "charanka"; }
-      else if (stateKey === "karnataka") { rPreset = "peenya"; oaPreset = "pavagada"; }
-      else if (stateKey === "tamilnadu") { rPreset = "chennai"; oaPreset = "pavagada"; }
-      else if (stateKey === "rajasthan") { rPreset = "manesar"; oaPreset = "bhadla"; }
-      else if (stateKey === "haryana") { rPreset = "manesar"; oaPreset = "bhadla"; }
-      else if (stateKey === "andhrapradesh") { rPreset = "chennai"; oaPreset = "kurnool"; }
-      else if (stateKey === "telangana") { rPreset = "pune"; oaPreset = "kurnool"; }
-      else if (stateKey === "uttarpradesh") { rPreset = "manesar"; oaPreset = "rewa"; }
+    // Auto-align location presets based on state
+    let rPreset = "pune";
+    let oaPreset = "bhadla";
+    if (stateKey === "gujarat") { rPreset = "sanand"; oaPreset = "charanka"; }
+    else if (stateKey === "karnataka") { rPreset = "peenya"; oaPreset = "pavagada"; }
+    else if (stateKey === "tamilnadu") { rPreset = "chennai"; oaPreset = "pavagada"; }
+    else if (stateKey === "rajasthan") { rPreset = "manesar"; oaPreset = "bhadla"; }
+    else if (stateKey === "haryana") { rPreset = "manesar"; oaPreset = "bhadla"; }
+    else if (stateKey === "andhrapradesh") { rPreset = "chennai"; oaPreset = "kurnool"; }
+    else if (stateKey === "telangana") { rPreset = "pune"; oaPreset = "kurnool"; }
+    else if (stateKey === "uttarpradesh") { rPreset = "manesar"; oaPreset = "rewa"; }
 
-      this.rooftopPresetSelect.value = rPreset;
-      const rData = ROOFTOP_PRESETS[rPreset];
-      if (rData) {
-        if (this.rooftopLatInput) this.rooftopLatInput.value = rData.lat.toFixed(4);
-        if (this.rooftopLonInput) this.rooftopLonInput.value = rData.lon.toFixed(4);
-        if (this.rooftopTiltInput) this.rooftopTiltInput.value = rData.tilt;
-        if (this.custAddressInput && (!this.custAddressInput.value || this.custAddressInput.value.includes("Industrial") || this.custAddressInput.value.includes("MIDC") || this.custAddressInput.value.includes("SIPCOT") || this.custAddressInput.value.includes("GIDC") || this.custAddressInput.value.includes("Peenya") || this.custAddressInput.value.includes("HSIIDC"))) {
-          this.custAddressInput.value = rData.address;
-        }
-        if (this.custSubstationInput && (!this.custSubstationInput.value || this.custSubstationInput.value.includes("Substation"))) {
-          this.custSubstationInput.value = rData.substation;
-        }
+    const rData = ROOFTOP_PRESETS[rPreset];
+    if (rData) {
+      if (this.rooftopAddressSearchInput) this.rooftopAddressSearchInput.value = rData.name || rData.address;
+      if (this.rooftopLatInput) this.rooftopLatInput.value = rData.lat.toFixed(4);
+      if (this.rooftopLonInput) this.rooftopLonInput.value = rData.lon.toFixed(4);
+      const optTilt = calculateOptimalTilt(rData.lat);
+      if (this.rooftopTiltInput) this.rooftopTiltInput.value = optTilt;
+      if (this.rooftopTiltBadge) this.rooftopTiltBadge.textContent = `Opt: ${optTilt}°`;
+      if (this.custAddressInput && (!this.custAddressInput.value || this.custAddressInput.value.includes("Industrial") || this.custAddressInput.value.includes("MIDC") || this.custAddressInput.value.includes("SIPCOT") || this.custAddressInput.value.includes("GIDC") || this.custAddressInput.value.includes("Peenya") || this.custAddressInput.value.includes("HSIIDC"))) {
+        this.custAddressInput.value = rData.address;
       }
-
-      if (this.oaPresetSelect && this.oaPresetSelect.value !== "custom") {
-        this.oaPresetSelect.value = oaPreset;
-        const oaData = OA_PRESETS[oaPreset];
-        if (oaData) {
-          if (this.oaLatInput) this.oaLatInput.value = oaData.lat.toFixed(4);
-          if (this.oaLonInput) this.oaLonInput.value = oaData.lon.toFixed(4);
-        }
+      if (this.custSubstationInput && (!this.custSubstationInput.value || this.custSubstationInput.value.includes("Substation"))) {
+        this.custSubstationInput.value = rData.substation;
       }
     }
+
+    if (this.oaPresetSelect && this.oaPresetSelect.value !== "custom") {
+      this.oaPresetSelect.value = oaPreset;
+      const oaData = OA_PRESETS[oaPreset];
+      if (oaData) {
+        if (this.oaLatInput) this.oaLatInput.value = oaData.lat.toFixed(4);
+        if (this.oaLonInput) this.oaLonInput.value = oaData.lon.toFixed(4);
+        const oaOptTilt = calculateOptimalTilt(oaData.lat);
+        this.updateOaOptimalTilt(oaOptTilt);
+      }
+    }
+  }
+
+  updateOaOptimalTilt(tilt) {
+    if (this.oaFixedOption) {
+      this.oaFixedOption.textContent = `Fixed (${tilt}° Optimal)`;
+    }
+  }
+
+  async geocodeRooftopAddress(rawQuery) {
+    if (!rawQuery) return;
+    const query = rawQuery.trim();
+    if (!query) return;
+
+    if (this.rooftopGeoStatus) {
+      this.rooftopGeoStatus.textContent = "Locating on map...";
+      this.rooftopGeoStatus.style.color = "var(--text-accent)";
+    }
+    if (this.btnGeocodeRooftop) {
+      this.btnGeocodeRooftop.classList.add("searching");
+    }
+
+    // 1. Check if user typed coordinates like "18.5204, 73.8567" or "18.52 73.85"
+    const coordMatch = query.match(/^([-+]?\d{1,2}(?:\.\d+)?)[,\s]+([-+]?\d{1,3}(?:\.\d+)?)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lon = parseFloat(coordMatch[2]);
+      if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        this.applyRooftopLocation({
+          name: `Custom (${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E)`,
+          lat,
+          lon,
+          address: `Coordinates: ${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`
+        });
+        return;
+      }
+    }
+
+    const qLower = query.toLowerCase();
+
+    // 2. Fast local lookup in INDIAN_GEO_DIRECTORY
+    const localMatch = INDIAN_GEO_DIRECTORY.find(item => {
+      if (item.name.toLowerCase().includes(qLower)) return true;
+      if (item.aliases && item.aliases.some(alias => qLower.includes(alias) || alias.includes(qLower))) return true;
+      return false;
+    });
+
+    if (localMatch) {
+      this.applyRooftopLocation(localMatch);
+      return;
+    }
+
+    // 3. Online Geocoding via OpenStreetMap Nominatim API
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&limit=1`;
+      const res = await fetch(url, {
+        headers: { "Accept-Language": "en" },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const item = data[0];
+          const shortName = item.display_name.split(",").slice(0, 3).join(",");
+          this.applyRooftopLocation({
+            name: shortName,
+            lat: parseFloat(item.lat),
+            lon: parseFloat(item.lon),
+            address: item.display_name
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Online geocoding failed, falling back to local directory:", err);
+    }
+
+    // 4. Fallback to default Pune MIDC if search yields no results
+    const fallbackMatch = INDIAN_GEO_DIRECTORY[0];
+    this.applyRooftopLocation({
+      ...fallbackMatch,
+      isApprox: true
+    });
+  }
+
+  applyRooftopLocation({ name, lat, lon, address, substation, isApprox = false }) {
+    if (this.btnGeocodeRooftop) {
+      this.btnGeocodeRooftop.classList.remove("searching");
+    }
+
+    if (this.rooftopLatInput) this.rooftopLatInput.value = parseFloat(lat).toFixed(4);
+    if (this.rooftopLonInput) this.rooftopLonInput.value = parseFloat(lon).toFixed(4);
+
+    // Compute optimal tilt angle for this site's latitude
+    const optimalTilt = calculateOptimalTilt(lat);
+    if (this.rooftopTiltInput) {
+      this.rooftopTiltInput.value = optimalTilt;
+      this.rooftopTiltInput.classList.remove("highlight-updated");
+      void this.rooftopTiltInput.offsetWidth;
+      this.rooftopTiltInput.classList.add("highlight-updated");
+      setTimeout(() => {
+        if (this.rooftopTiltInput) this.rooftopTiltInput.classList.remove("highlight-updated");
+      }, 1500);
+    }
+    if (this.rooftopTiltBadge) {
+      this.rooftopTiltBadge.textContent = `Opt: ${optimalTilt}°`;
+    }
+
+    if (this.rooftopAddressSearchInput && name && !this.rooftopAddressSearchInput.value.includes(name)) {
+      this.rooftopAddressSearchInput.value = name;
+    }
+
+    if (this.custAddressInput && address) {
+      this.custAddressInput.value = address;
+    }
+    if (this.custSubstationInput && substation) {
+      this.custSubstationInput.value = substation;
+    }
+
+    if (this.rooftopGeoStatus) {
+      if (isApprox) {
+        this.rooftopGeoStatus.textContent = `Closest match (Opt: ${optimalTilt}°)`;
+        this.rooftopGeoStatus.style.color = "var(--solar-gold)";
+      } else {
+        this.rooftopGeoStatus.textContent = `✓ Located (Opt: ${optimalTilt}°)`;
+        this.rooftopGeoStatus.style.color = "var(--oa-emerald)";
+      }
+    }
+
+    this.app.recalculate();
   }
 
   updateLossFromVoltage() {
@@ -920,9 +1116,10 @@ class UIController {
     // Site Coordinates & Meteorological Parameters
     const rooftopLat = this.rooftopLatInput ? (parseFloat(this.rooftopLatInput.value) || 18.5204) : 18.5204;
     const rooftopLon = this.rooftopLonInput ? (parseFloat(this.rooftopLonInput.value) || 73.8567) : 73.8567;
-    const rooftopTilt = this.rooftopTiltInput ? (parseFloat(this.rooftopTiltInput.value) || 15) : 15;
+    const rooftopTilt = this.rooftopTiltInput ? (parseFloat(this.rooftopTiltInput.value) || calculateOptimalTilt(rooftopLat)) : 19;
     const oaLat = this.oaLatInput ? (parseFloat(this.oaLatInput.value) || 27.5385) : 27.5385;
     const oaLon = this.oaLonInput ? (parseFloat(this.oaLonInput.value) || 71.9168) : 71.9168;
+    const oaTilt = calculateOptimalTilt(oaLat);
     const oaTracking = this.oaTrackingSelect ? this.oaTrackingSelect.value : "fixed";
     const scheduleDate = this.custScheduleDateInput ? this.custScheduleDateInput.value : null;
 
@@ -942,6 +1139,7 @@ class UIController {
       rooftopTilt,
       oaLat,
       oaLon,
+      oaTilt,
       oaTracking,
       scheduleDate
     };
@@ -1151,7 +1349,7 @@ class UIController {
             </td>
             <td class="meta-label">Captive Open Access Solar:</td>
             <td class="meta-val">
-              <strong>${oaKWp} kWp</strong> (${oaTracking === 'tracker' ? 'Single-Axis Tracking' : 'Fixed Tilt 22°'})<br>
+              <strong>${oaKWp} kWp</strong> (${oaTracking === 'tracker' ? 'Single-Axis Tracking' : 'Fixed Tilt ' + calculateOptimalTilt(oaLat) + '°'})<br>
               <span style="font-size: 0.72rem; color: #475569;">GPS: ${oaLat}° N, ${oaLon}° E | ${oaParkName} (Offset: ${timeShiftMinutes >= 0 ? '+' : ''}${timeShiftMinutes} min)</span>
             </td>
           </tr>

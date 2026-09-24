@@ -442,16 +442,52 @@
               </button>
             </div>
 
-            <div class="form-group" style="margin-bottom: 0.5rem;">
-              <label class="form-label" for="rooftopPreset">Industrial Hub Preset</label>
-              <select id="rooftopPreset" class="select-control">
-                <option value="pune" selected>Pune MIDC, MH (18.52° N, 73.85° E)</option>
-                <option value="chennai">Chennai Sriperumbudur, TN (12.97° N, 79.94° E)</option>
-                <option value="sanand">Ahmedabad Sanand, GJ (22.99° N, 72.38° E)</option>
-                <option value="peenya">Bengaluru Peenya, KA (13.03° N, 77.52° E)</option>
-                <option value="manesar">NCR Manesar, HR (28.35° N, 76.94° E)</option>
-                <option value="custom">Custom Site Coordinates...</option>
-              </select>
+            <div class="form-group address-search-group" style="margin-bottom: 0.5rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                <label class="form-label" for="rooftopAddressSearch" style="margin-bottom: 0;">
+                  Site Address / Location Search
+                </label>
+                <span class="label-hint" id="rooftopGeoStatus" style="font-size: 0.65rem; color: var(--text-accent);">Press Enter ↵ to Locate</span>
+              </div>
+              <div class="map-search-bar">
+                <span class="map-pin-icon" title="Google Maps / OpenStreetMap Geocoding">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </span>
+                <input type="text" id="rooftopAddressSearch" class="input-control map-search-input" 
+                       placeholder="Enter factory address, industrial area, city..." 
+                       value="Pune MIDC, Maharashtra" list="industrialHubList" autocomplete="off">
+                <button type="button" class="btn-map-search" id="btnGeocodeRooftop" title="Locate on Map / Search Coordinates">
+                  <svg id="geoSearchIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </button>
+              </div>
+              <datalist id="industrialHubList">
+                <option value="Pune MIDC, Chakan, Maharashtra">
+                <option value="Sriperumbudur SIPCOT, Chennai, Tamil Nadu">
+                <option value="Sanand GIDC, Ahmedabad, Gujarat">
+                <option value="Peenya Industrial Area, Bengaluru, Karnataka">
+                <option value="Manesar IMT, Gurugram, Haryana">
+                <option value="Noida Phase-II, Sector-80, Uttar Pradesh">
+                <option value="Hosur SIPCOT Industrial Complex, Tamil Nadu">
+                <option value="Waluj MIDC, Aurangabad, Maharashtra">
+                <option value="Pithampur Industrial Area, Indore, Madhya Pradesh">
+                <option value="Dahej PCPIR, Bharuch, Gujarat">
+                <option value="Bhiwadi Industrial Area, Alwar, Rajasthan">
+                <option value="Oragadam Industrial Corridor, Chennai, Tamil Nadu">
+                <option value="Butibori MIDC, Nagpur, Maharashtra">
+                <option value="Taloja MIDC, Navi Mumbai, Maharashtra">
+                <option value="Turbhe TTC Industrial Area, Navi Mumbai">
+                <option value="Vapi GIDC, Valsad, Gujarat">
+                <option value="Ankleshwar GIDC, Bharuch, Gujarat">
+                <option value="Jamshedpur Industrial Area, Jharkhand">
+                <option value="Baddi Industrial Area, Solan, Himachal Pradesh">
+                <option value="Rudrapur SIDCUL, Udham Singh Nagar, Uttarakhand">
+              </datalist>
             </div>
 
             <div class="input-grid-3">
@@ -472,9 +508,12 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="rooftopTilt">Roof Tilt</label>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <label class="form-label" for="rooftopTilt">Roof Tilt</label>
+                  <span id="rooftopTiltBadge" class="badge-opt-tilt" title="Optimal tilt calculated for site latitude">Opt: 19°</span>
+                </div>
                 <div class="input-with-unit">
-                  <input type="number" id="rooftopTilt" class="input-control" value="15" step="1" min="0" max="60">
+                  <input type="number" id="rooftopTilt" class="input-control" value="19" step="1" min="0" max="60">
                   <span class="input-unit">°</span>
                 </div>
               </div>
@@ -491,12 +530,12 @@
             <div class="form-group" style="margin-bottom: 0.5rem;">
               <label class="form-label" for="oaPreset">Mega Solar Park Preset</label>
               <select id="oaPreset" class="select-control">
-                <option value="bhadla" selected>Bhadla Solar Park, Rajasthan (27.54° N, 71.92° E)</option>
-                <option value="pavagada">Pavagada Solar Park, Karnataka (14.28° N, 77.28° E)</option>
-                <option value="charanka">Charanka Solar Park, Gujarat (23.91° N, 71.20° E)</option>
-                <option value="rewa">Rewa Ultra Mega Solar, MP (24.48° N, 81.58° E)</option>
-                <option value="kurnool">Kurnool Ultra Mega Solar, AP (15.68° N, 78.29° E)</option>
-                <option value="dholera">Dholera Solar Park, Gujarat (22.25° N, 72.22° E)</option>
+                <option value="bhadla" selected>Bhadla Solar Park, RJ (27.54° N • Opt Tilt 27°)</option>
+                <option value="pavagada">Pavagada Solar Park, KA (14.28° N • Opt Tilt 16°)</option>
+                <option value="charanka">Charanka Solar Park, GJ (23.91° N • Opt Tilt 24°)</option>
+                <option value="rewa">Rewa Ultra Mega Solar, MP (24.48° N • Opt Tilt 24°)</option>
+                <option value="kurnool">Kurnool Ultra Mega Solar, AP (15.68° N • Opt Tilt 17°)</option>
+                <option value="dholera">Dholera Solar Park, GJ (22.25° N • Opt Tilt 22°)</option>
                 <option value="custom">Custom Solar Park...</option>
               </select>
             </div>
@@ -521,7 +560,7 @@
               <div class="form-group">
                 <label class="form-label" for="oaTracking">Mounting</label>
                 <select id="oaTracking" class="select-control" style="font-size: 0.74rem; padding: 0.42rem 0.25rem;">
-                  <option value="fixed" selected>Fixed (22°)</option>
+                  <option value="fixed" id="oaFixedOption" selected>Fixed (27° Optimal)</option>
                   <option value="tracker">1-Axis Tracker</option>
                 </select>
               </div>

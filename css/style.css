@@ -1795,6 +1795,102 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   color: #93C5FD;
 }
 
+/* Google Maps Style Address Search Bar */
+.map-search-bar {
+  display: flex;
+  align-items: center;
+  position: relative;
+  background: rgba(14, 22, 38, 0.95);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: var(--radius-sm);
+  transition: all var(--trans-fast);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.map-search-bar:focus-within {
+  border-color: var(--text-accent);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+}
+
+.map-pin-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 0.55rem;
+  padding-right: 0.2rem;
+  color: #F87171;
+  flex-shrink: 0;
+}
+
+.map-search-input {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0.45rem 0.4rem !important;
+  font-size: 0.76rem !important;
+  color: var(--text-primary) !important;
+  flex: 1;
+  min-width: 0;
+}
+
+.map-search-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.btn-map-search {
+  background: rgba(56, 189, 248, 0.15);
+  border: none;
+  border-left: 1px solid rgba(56, 189, 248, 0.25);
+  color: var(--grid-sky);
+  padding: 0.42rem 0.65rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--trans-fast);
+  flex-shrink: 0;
+}
+
+.btn-map-search:hover {
+  background: rgba(56, 189, 248, 0.35);
+  color: #FFFFFF;
+}
+
+.btn-map-search.searching svg {
+  animation: pvgis-spin 1s linear infinite;
+}
+
+.badge-opt-tilt {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--oa-emerald);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 4px;
+  padding: 1px 4px;
+  letter-spacing: 0.02em;
+}
+
+.highlight-updated {
+  animation: pulse-tilt-border 1.4s ease-out;
+}
+
+@keyframes pulse-tilt-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.85);
+    border-color: #10B981 !important;
+  }
+  60% {
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+    border-color: #10B981 !important;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
 .pvgis-telemetry-box {
   margin-top: 0.75rem;
   background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.85));
