@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indian Solar PV Load Scheduling & Open Access / BTM Zero-Export Dispatch Simulator</title>
+  <meta name="description" content="Simulate 15-minute 96 time-block load dispatch scheduling, Deviation Settlement Mechanism (DSM) penalties, and BTM zero-export conversion for Indian C&I Solar.">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       Executive Header
+       ========================================================================== -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-wrapper">
+        <div class="brand-icon-box" title="Indian Grid Solar Dispatch Simulator">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <h1>
+            SolarOA Dispatch Pro
+            <span class="badge-tag highlight" id="headerStateBadge">MERC Regulations (Maharashtra)</span>
+          </h1>
+          <p>Indian Solar PV Load Scheduling & BTM Zero-Export DSM Deviation Simulator</p>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <div class="badge-tag">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          96 Time-Blocks (15-Min SLDC)
+        </div>
+        <div class="badge-tag">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          Zero-Export RPR Guarded
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn-header" id="btnToggleSidebar" title="Collapse or Expand Configuration Sidebar">
+          <svg id="iconSidebarToggle" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+            <polyline points="14 9 11 12 14 15"></polyline>
+          </svg>
+          <span id="textToggleSidebar">Hide Sidebar</span>
+        </button>
+        <button class="btn-header" id="btnPolicyModal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          State Policy Hub
+        </button>
+        <button class="btn-header" id="btnPrintSchedule" title="Print official 15-minute load dispatch schedule for SLDC">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          Print SLDC Schedule
+        </button>
+        <button class="btn-header primary" id="btnExportCSV">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Export CSV
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       Main Grid Layout
+       ========================================================================== -->
+  <main class="main-wrapper">
+
+    <!-- ==========================================================================
+         Configuration Sidebar (Left)
+         ========================================================================== -->
+    <aside class="config-sidebar" id="configSidebar">
+
+      <!-- Prominent Master Sidebar Collapse Header -->
+      <div class="sidebar-master-header">
+        <div class="sidebar-master-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+          <span>INPUT PARAMETERS</span>
+        </div>
+        <button class="btn-sidebar-collapse-master" id="btnCollapseSidebarMain" title="Collapse Sidebar to maximize workspace (Ctrl+B)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="11 17 6 12 11 7"></polyline>
+            <polyline points="18 17 13 12 18 7"></polyline>
+          </svg>
+          <span>Collapse</span>
+        </button>
+      </div>
+
+      <!-- Real-Time Interactive Slider Control Center -->
+      <section class="glass-panel controls-card" id="panelControls">
+        <div class="panel-title-bar panel-accordion-header" title="Click to collapse / expand controls">
+          <h2 class="panel-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            Dispatch Controls
+          </h2>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <span class="badge-tag highlight">Live</span>
+            <button class="btn-ctrl" id="btnCollapseSidebarInside" title="Collapse Entire Sidebar" style="width: 24px; height: 24px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button class="btn-panel-accordion" title="Toggle section">
+              <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-accordion-content">
+          <!-- Connected Load Slider -->
+          <div class="slider-container">
+            <div class="slider-header">
+              <span class="slider-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                Connected Load Multiplier
+              </span>
+              <div style="display: flex; gap: 0.35rem; align-items: center;">
+                <span id="loadSliderKw" style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">(1000 kW)</span>
+                <span class="slider-val-badge" id="loadSliderVal">100%</span>
+              </div>
+            </div>
+            <input type="range" id="loadSlider" min="20" max="150" step="1" value="100" aria-label="Connected Load Multiplier Slider">
+            <div class="slider-scale-labels">
+              <span>20% (Shutdown)</span>
+              <span>100% (Nominal)</span>
+              <span>150% (Spike)</span>
+            </div>
+          </div>
+
+          <!-- Solar Irradiance / Cloud Cover Slider -->
+          <div class="slider-container">
+            <div class="slider-header">
+              <span class="slider-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                Solar Irradiance / Weather
+              </span>
+              <span class="slider-val-badge gold" id="solarSliderVal">100%</span>
+            </div>
+            <input type="range" id="solarSlider" class="slider-solar" min="0" max="120" step="2" value="100" aria-label="Solar Irradiance Slider">
+            <div class="slider-scale-labels">
+              <span>0% (Overcast)</span>
+              <span>100% (Clear Sky)</span>
+              <span>120% (Peak Irradiance)</span>
+            </div>
+          </div>
+
+          <!-- Preset Scenarios -->
+          <div class="scenarios-section">
+            <div class="scenarios-title">Quick Stress-Test Scenarios</div>
+            <div class="scenario-buttons-grid">
+              <button class="btn-scenario active" data-scenario="normal">
+                <span>Nominal Baseline</span>
+                <span class="label-hint">100% Load &bull; 100% Sun</span>
+              </button>
+              <button class="btn-scenario" data-scenario="trip">
+                <span>Midday Machine Trip</span>
+                <span class="label-hint">45% Load &bull; Export Risk</span>
+              </button>
+              <button class="btn-scenario" data-scenario="cloud">
+                <span>Cloud Transient Dip</span>
+                <span class="label-hint">105% Load &bull; 30% Sun</span>
+              </button>
+              <button class="btn-scenario" data-scenario="spike">
+                <span>Demand Breach Spike</span>
+                <span class="label-hint">135% Load &bull; Over-drawl</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Customer & Plant Identification Details -->
+      <section class="glass-panel" id="panelCustomer">
+        <div class="panel-title-bar panel-accordion-header" title="Click to collapse / expand customer identification">
+          <h2 class="panel-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            Customer Identification
+          </h2>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <button class="btn-ctrl" id="btnQuickPrintSidebar" title="Print SLDC Load Schedule Document" style="width: 24px; height: 24px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            </button>
+            <button class="btn-panel-accordion" title="Toggle section">
+              <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-accordion-content">
+          <div class="form-group">
+            <label class="form-label" for="custName">
+              Customer / Company Name
+              <span class="label-hint">Legal Entity</span>
+            </label>
+            <input type="text" id="custName" class="select-control" value="Apex Precision Forgings & Alloys Ltd.">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="custConsumerNo">
+              Electricity Consumer Number / ID
+              <span class="label-hint">Service Connection</span>
+            </label>
+            <input type="text" id="custConsumerNo" class="select-control" value="HT-028540091823">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="custAddress">
+              Plant / Site Address
+              <span class="label-hint">Site Location</span>
+            </label>
+            <textarea id="custAddress" class="select-control" rows="2" style="resize: vertical; font-size: 0.78rem;">Plot No. C-14, Phase-II, MIDC Industrial Area, Chakan, Pune, Maharashtra - 410501</textarea>
+          </div>
+
+          <div class="input-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="custSubstation">Substation / Feeder</label>
+              <input type="text" id="custSubstation" class="select-control" value="33 kV Express Feeder">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="custScheduleRevision">Revision No.</label>
+              <select id="custScheduleRevision" class="select-control">
+                <option value="Rev-0 (Day-Ahead Final)" selected>Rev-0 (Day-Ahead)</option>
+                <option value="Rev-1 (Intra-Day R-1)">Rev-1 (Intra-Day R1)</option>
+                <option value="Rev-2 (Intra-Day R-2)">Rev-2 (Intra-Day R2)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="input-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="custScheduleDate">Schedule Date</label>
+              <input type="date" id="custScheduleDate" class="select-control">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="custSignatory">Authorized Signatory</label>
+              <input type="text" id="custSignatory" class="select-control" value="Rajesh Sharma (Energy Mgr)">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Customer & Grid Connectivity Parameters -->
+      <section class="glass-panel" id="panelGrid">
+        <div class="panel-title-bar panel-accordion-header" title="Click to collapse / expand grid & solar parameters">
+          <h2 class="panel-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+            Grid Interconnection
+          </h2>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <button class="btn-panel-accordion" title="Toggle section">
+              <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-accordion-content">
+          <!-- State Selector -->
+          <div class="form-group">
+            <label class="form-label" for="stateSelect">
+              Customer State (SERC Regulator)
+              <span class="label-hint">Policy Presets</span>
+            </label>
+            <select id="stateSelect" class="select-control">
+              <option value="maharashtra" selected>Maharashtra (MERC)</option>
+              <option value="gujarat">Gujarat (GERC)</option>
+              <option value="karnataka">Karnataka (KERC)</option>
+              <option value="tamilnadu">Tamil Nadu (TNERC)</option>
+              <option value="rajasthan">Rajasthan (RERC)</option>
+              <option value="uttarpradesh">Uttar Pradesh (UPERC)</option>
+              <option value="haryana">Haryana (HERC)</option>
+              <option value="telangana">Telangana (TSERC)</option>
+              <option value="andhrapradesh">Andhra Pradesh (APERC)</option>
+            </select>
+          </div>
+
+          <!-- Sanctioned Load & Voltage -->
+          <div class="input-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="sanctionedLoad">Sanctioned Load</label>
+              <div class="input-with-unit">
+                <input type="number" id="sanctionedLoad" class="input-control" value="1200" min="50" max="50000" step="50">
+                <span class="input-unit">kVA</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="voltageLevel">Feeder Voltage</label>
+              <select id="voltageLevel" class="select-control">
+                <option value="11">11 kV (LT/HT)</option>
+                <option value="22">22 kV (HT)</option>
+                <option value="33" selected>33 kV (HT Substation)</option>
+                <option value="66">66 kV (EHV)</option>
+                <option value="110">110 kV (EHV)</option>
+                <option value="132">132 kV (Transmission)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Base Connected Load & Profile -->
+          <div class="input-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="baseConnectedLoad">Base Load</label>
+              <div class="input-with-unit">
+                <input type="number" id="baseConnectedLoad" class="input-control" value="1000" min="50" max="50000" step="50">
+                <span class="input-unit">kW</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="loadProfileType">Load Profile</label>
+              <select id="loadProfileType" class="select-control">
+                <option value="continuous" selected>Continuous 24x7</option>
+                <option value="twoshift">2-Shift (08:00-20:00)</option>
+                <option value="commercial">Day Commercial</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Solar Capacities -->
+          <div class="input-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="rooftopCapacity">
+                Rooftop Solar
+                <span class="label-hint" style="color: var(--solar-gold)">BTM 0-Export</span>
+              </label>
+              <div class="input-with-unit">
+                <input type="number" id="rooftopCapacity" class="input-control" value="500" min="0" max="10000" step="50">
+                <span class="input-unit">kWp</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="openAccessCapacity">
+                Open Access Solar
+                <span class="label-hint" style="color: var(--oa-emerald)">Captive OA</span>
+              </label>
+              <div class="input-with-unit">
+                <input type="number" id="openAccessCapacity" class="input-control" value="1500" min="0" max="50000" step="50">
+                <span class="input-unit">kWp</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tariffs and Losses -->
+          <div class="input-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="gridTariff">Discom Tariff</label>
+              <div class="input-with-unit">
+                <input type="number" id="gridTariff" class="input-control" value="7.85" min="2" max="18" step="0.05">
+                <span class="input-unit">₹/kWh</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="oaPpaRate">OA Solar PPA</label>
+              <div class="input-with-unit">
+                <input type="number" id="oaPpaRate" class="input-control" value="3.80" min="2" max="10" step="0.05">
+                <span class="input-unit">₹/kWh</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="transmissionLoss">
+              Transmission & Wheeling Loss
+              <span class="label-hint">Auto from Voltage</span>
+            </label>
+            <div class="input-with-unit">
+              <input type="number" id="transmissionLoss" class="input-control" value="4.10" min="0" max="20" step="0.05">
+              <span class="input-unit">%</span>
+            </div>
+          </div>
+
+          <!-- State Policy Insight Box -->
+          <div class="policy-callout">
+            <div class="policy-callout-header">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              <span id="policyCalloutTitle">Maharashtra (MERC)</span>
+            </div>
+            <p class="policy-callout-text" id="policyCalloutDesc">
+              MERC restricts concurrent Net-Metering and Open Access on the same connection. Converting Rooftop Solar to BTM with Zero Export (using Class 0.2s RPR) enables full self-consumption while Captive Solar supplies the remaining demand with zero CSS.
+            </p>
+            <div class="policy-meta-list">
+              <div class="policy-meta-item">
+                <span>Net Metering Limit:</span>
+                <span id="policyMetaNetCap">1000 kW / 100%</span>
+              </div>
+              <div class="policy-meta-item">
+                <span>DSM Tolerance Band:</span>
+                <span id="policyMetaErrorBand">±10.0% (SERC DSM)</span>
+              </div>
+              <div class="policy-meta-item">
+                <span>Grid Delivery Loss:</span>
+                <span id="policyMetaLoss">4.10% (33 kV)</span>
+              </div>
+              <div class="policy-meta-item">
+                <span>Industrial Tariff:</span>
+                <span id="policyMetaTariff">₹7.85/kWh</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </aside>
+
+    <!-- Floating Left-Edge Docked Tab (Appears when sidebar is collapsed) -->
+    <button class="sidebar-docked-tab" id="btnDockedExpandSidebar" title="Expand Configuration Sidebar (Ctrl + B)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="13 17 18 12 13 7"></polyline>
+        <polyline points="6 17 11 12 6 7"></polyline>
+      </svg>
+      <span>Open Settings</span>
+    </button>
+
+    <!-- ==========================================================================
+         Center Workspace (KPIs, Scrubber, Chart & Table)
+         ========================================================================== -->
+    <div class="workspace-content">
+
+      <!-- Floating / Quick Uncollapse Sidebar Button (Active when sidebar is collapsed) -->
+      <button class="btn-floating-expand-sidebar" id="btnFloatingExpandSidebar" title="Show Configuration Sidebar & Inputs">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+          <polyline points="10 9 13 12 10 15"></polyline>
+        </svg>
+        <span>Show Configuration Sidebar & Inputs</span>
+      </button>
+
+      <!-- Executive KPI Cards -->
+      <section class="kpi-grid">
+        <!-- Daily Load -->
+        <div class="kpi-card">
+          <div class="kpi-top">
+            <span class="kpi-label">Total Daily Load</span>
+            <div class="kpi-icon-pill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            </div>
+          </div>
+          <div class="kpi-value">
+            <span id="kpiLoadVal">22,850</span>
+            <span class="kpi-unit">kWh</span>
+          </div>
+          <div class="kpi-subtext" id="kpiLoadSub">Clean Energy Share: 68.4%</div>
+        </div>
+
+        <!-- BTM Rooftop Solar -->
+        <div class="kpi-card solar">
+          <div class="kpi-top">
+            <span class="kpi-label">BTM Rooftop Solar</span>
+            <div class="kpi-icon-pill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line></svg>
+            </div>
+          </div>
+          <div class="kpi-value">
+            <span id="kpiBTMVal">2,480</span>
+            <span class="kpi-unit">kWh</span>
+          </div>
+          <div class="kpi-subtext" id="kpiBTMSub">100% self-consumed (0 export)</div>
+        </div>
+
+        <!-- Open Access Solar -->
+        <div class="kpi-card green">
+          <div class="kpi-top">
+            <span class="kpi-label">OA Solar Delivered</span>
+            <div class="kpi-icon-pill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+            </div>
+          </div>
+          <div class="kpi-value">
+            <span id="kpiOAVal">7,140</span>
+            <span class="kpi-unit">kWh</span>
+          </div>
+          <div class="kpi-subtext" id="kpiOASub">PPA Rate: ₹3.80/kWh</div>
+        </div>
+
+        <!-- Discom Grid Import -->
+        <div class="kpi-card grid">
+          <div class="kpi-top">
+            <span class="kpi-label">Discom Grid Import</span>
+            <div class="kpi-icon-pill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+            </div>
+          </div>
+          <div class="kpi-value">
+            <span id="kpiGridVal">13,230</span>
+            <span class="kpi-unit">kWh</span>
+          </div>
+          <div class="kpi-subtext" id="kpiGridSub">Base Tariff: ₹7.85/kWh</div>
+        </div>
+
+        <!-- DSM Deviation Penalties -->
+        <div class="kpi-card penalty" id="kpiPenaltyCard">
+          <div class="kpi-top">
+            <span class="kpi-label">DSM Penalties</span>
+            <div class="kpi-icon-pill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+          </div>
+          <div class="kpi-value">
+            <span id="kpiPenaltyVal">₹0</span>
+          </div>
+          <div class="kpi-subtext" id="kpiPenaltySub">✅ 100% compliant within band</div>
+        </div>
+
+        <!-- Net Financial Savings -->
+        <div class="kpi-card savings">
+          <div class="kpi-top">
+            <span class="kpi-label">Daily Net Savings</span>
+            <div class="kpi-icon-pill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+          </div>
+          <div class="kpi-value">
+            <span id="kpiSavingsVal">₹48,390</span>
+          </div>
+          <div class="kpi-subtext" id="kpiSavingsSub">36.2% reduction vs baseline</div>
+        </div>
+      </section>
+
+      <!-- Side-by-Side Analytics: Graph (Left, ~40% space) & 96-Block Table (Right, ~60% space) -->
+      <div class="analytics-split-row">
+
+        <!-- 96-Block Dispatch Chart (Chart.js) - Reduced size for compact side-by-side view -->
+        <section class="glass-panel chart-panel">
+          <div class="panel-title-bar">
+            <h2 class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+              Load Dispatch Profile
+            </h2>
+            <div class="chart-legend-custom">
+              <div class="legend-item"><span class="legend-dot" style="background: #FFFFFF;"></span> Load</div>
+              <div class="legend-item"><span class="legend-dot" style="background: #F59E0B;"></span> BTM</div>
+              <div class="legend-item"><span class="legend-dot" style="background: #10B981;"></span> OA</div>
+              <div class="legend-item"><span class="legend-dot" style="background: #38BDF8;"></span> Grid</div>
+              <div class="legend-item"><span class="legend-dot" style="background: #94A3B8; border: 1px dashed #FFFFFF;"></span> Sched</div>
+            </div>
+          </div>
+
+          <div class="chart-canvas-wrapper">
+            <canvas id="dispatchChart"></canvas>
+          </div>
+        </section>
+
+        <!-- 96-Block SLDC Dispatch & Deviation Table - Expanded space (~60%) -->
+        <section class="glass-panel table-panel">
+          <div class="table-toolbar">
+            <h2 class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+              15-Min SLDC Dispatch Schedule
+            </h2>
+
+            <div style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;">
+              <div class="table-filter-pills">
+                <button class="filter-btn active" data-filter="all">All 96</button>
+                <button class="filter-btn" data-filter="solar">Solar (06-18h)</button>
+                <button class="filter-btn" data-filter="penalties">Deviations</button>
+              </div>
+              <button class="btn-header" id="btnPrintScheduleTable" title="Print detailed SLDC schedule document">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                Print
+              </button>
+            </div>
+          </div>
+
+          <div class="table-scroll-container">
+            <table class="dispatch-table">
+              <thead>
+                <tr>
+                  <th>Block #</th>
+                  <th>Time Interval</th>
+                  <th>Actual Load (kW)</th>
+                  <th>BTM Solar (kW)</th>
+                  <th>OA Solar (kW)</th>
+                  <th>Sched Drawl (kW)</th>
+                  <th>Actual Drawl (kW)</th>
+                  <th>Deviation (kW)</th>
+                  <th>Deviation (%)</th>
+                  <th>Dispatch Status</th>
+                  <th>DSM Penalty (₹)</th>
+                </tr>
+              </thead>
+              <tbody id="dispatchTableBody">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- 24-Hour Time Scrubber Player & Instant Power Flow Diagram (At the Bottom) -->
+      <section class="scrubber-panel">
+        <div class="scrubber-header">
+          <div class="scrubber-title-box">
+            <span class="block-indicator-pill" id="timeScrubberLabel">Block 49/96 (12:00 - 12:15)</span>
+            <span style="font-size: 0.74rem; color: var(--text-secondary); font-weight: 500;">Interactive 15-Minute Timeline Player</span>
+          </div>
+          <div class="scrubber-controls">
+            <button class="btn-ctrl" id="btnPlayScrubber" title="Play / Pause 24-Hour Timeline Scrub">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </button>
+            <button class="btn-ctrl" id="btnResetScrubber" title="Reset to Midday (12:15 PM)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v6h6"></path><path d="M3 13a9 9 0 1 0 3-7.7L3 8"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <input type="range" id="timeScrubber" min="1" max="96" step="1" value="49" aria-label="15-Minute Time Block Scrubber">
+        
+        <div class="slider-scale-labels" style="margin-top: 0.35rem;">
+          <span>00:00 (Night Shift)</span>
+          <span>06:00 (Sunrise)</span>
+          <span>12:00 (Solar Peak)</span>
+          <span>18:00 (Sunset)</span>
+          <span>24:00 (Night Shift)</span>
+        </div>
+
+        <!-- Instantaneous Power Flow Meter -->
+        <div class="power-flow-bar">
+          <div class="flow-node">
+            <span class="flow-node-title">Factory Load</span>
+            <span class="flow-node-val" id="flowLoad">980 kW</span>
+          </div>
+          <div class="flow-node btm">
+            <span class="flow-node-title">BTM Solar (0-Export)</span>
+            <span class="flow-node-val" id="flowBTM">410 kW</span>
+          </div>
+          <div class="flow-node oa">
+            <span class="flow-node-title">OA Solar Delivered</span>
+            <span class="flow-node-val" id="flowOA">570 kW</span>
+          </div>
+          <div class="flow-node grid">
+            <span class="flow-node-title">Discom Grid Drawl</span>
+            <span class="flow-node-val" id="flowGrid">0 kW</span>
+          </div>
+          <div class="flow-node deviation">
+            <span class="flow-node-title">Schedule Deviation</span>
+            <span class="flow-node-val" id="flowDeviation">+0.0 kW (0%)</span>
+          </div>
+        </div>
+
+        <!-- Status Message Banner -->
+        <div id="flowStatusText" style="margin-top: 0.45rem; font-size: 0.74rem; font-weight: 500; color: var(--text-secondary);">
+          <span style="color: var(--status-ok)">✅ Balanced Dispatch:</span> Within SERC allowable tolerance band. Zero penalty.
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- ==========================================================================
+       State Policy & Regulatory Knowledge Modal
+       ========================================================================== -->
+  <div class="modal-overlay" id="policyModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">Indian Solar PV Policy & Deviation Settlement (DSM) Guide</h2>
+        <button class="btn-close-modal" id="btnCloseModal" title="Close Modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="policyModalContent">
+        <!-- Dynamically injected from UIController -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Official SLDC Schedule Print Preview & Execution Modal
+       ========================================================================== -->
+  <div class="modal-overlay" id="printModal">
+    <div class="modal-card print-preview-modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          SLDC 15-Minute Load Dispatch Schedule - Print Dossier
+        </h2>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="btn-header primary" id="btnExecutePrint">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Print / Save to PDF
+          </button>
+          <button class="btn-close-modal" id="btnClosePrintModal" title="Close Modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body print-modal-scroll" id="printModalBody">
+        <!-- Live rendered printable SLDC Document Preview -->
+        <div id="printPreviewContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden Print Dossier (Activated exclusively during browser window.print()) -->
+  <div id="sldcPrintDossier" class="sldc-print-dossier" aria-hidden="true">
+    <!-- Populated dynamically prior to print -->
+  </div>
+
+  <!-- Application Logic Scripts -->
+  <script src="js/statePolicies.js"></script>
+  <script src="js/solarModel.js"></script>
+  <script src="js/dsmEngine.js"></script>
+  <script src="js/uiController.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
