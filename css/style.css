@@ -1640,6 +1640,20 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   color: #0F172A;
 }
 
+/* Screen Display Hiding: Ensure Print Dossier NEVER displays on screen or at the bottom of the app */
+#sldcPrintDossier,
+.sldc-print-dossier {
+  display: none !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  left: -99999px !important;
+  top: -99999px !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+}
+
 /* Print Output Exclusivity via @media print */
 @media print {
   @page {
@@ -1662,11 +1676,17 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   }
 
   /* Show solely the Print Dossier Sheet */
-  #sldcPrintDossier {
+  #sldcPrintDossier,
+  .sldc-print-dossier {
     display: block !important;
     visibility: visible !important;
     position: static !important;
+    left: auto !important;
+    top: auto !important;
     width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    pointer-events: auto !important;
     background: #FFFFFF !important;
     color: #000000 !important;
     margin: 0 !important;

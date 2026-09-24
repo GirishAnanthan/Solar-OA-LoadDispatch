@@ -317,7 +317,7 @@ class UIController {
     // Print Modal Actions
     if (this.btnClosePrintModal) {
       this.btnClosePrintModal.addEventListener("click", () => {
-        this.printModal.classList.remove("active");
+        this.closePrintModal();
       });
     }
 
@@ -330,10 +330,29 @@ class UIController {
     if (this.printModal) {
       this.printModal.addEventListener("click", (e) => {
         if (e.target === this.printModal) {
-          this.printModal.classList.remove("active");
+          this.closePrintModal();
         }
       });
     }
+
+    // Clean up printable dossier after printing completes
+    window.addEventListener("afterprint", () => {
+      if (this.sldcPrintDossier) {
+        this.sldcPrintDossier.innerHTML = "";
+      }
+    });
+
+    // Escape key modal dismiss
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (this.policyModal && this.policyModal.classList.contains("active")) {
+          this.policyModal.classList.remove("active");
+        }
+        if (this.printModal && this.printModal.classList.contains("active")) {
+          this.closePrintModal();
+        }
+      }
+    });
 
     // Initialize State Defaults
     this.handleStateChange();
@@ -710,7 +729,7 @@ class UIController {
   }
 
   /**
-   * Opens the SLDC schedule print preview modal and prepares print container
+   * Opens the SLDC schedule print preview modal and prepares preview container
    */
   openPrintModal() {
     if (!this.app.lastEvaluationResults) return;
@@ -718,11 +737,23 @@ class UIController {
     if (this.printPreviewContainer) {
       this.printPreviewContainer.innerHTML = printHTML;
     }
-    if (this.sldcPrintDossier) {
-      this.sldcPrintDossier.innerHTML = printHTML;
-    }
     if (this.printModal) {
       this.printModal.classList.add("active");
+    }
+  }
+
+  /**
+   * Closes the SLDC schedule print preview modal and cleans up DOM content
+   */
+  closePrintModal() {
+    if (this.printModal) {
+      this.printModal.classList.remove("active");
+    }
+    if (this.printPreviewContainer) {
+      this.printPreviewContainer.innerHTML = "";
+    }
+    if (this.sldcPrintDossier) {
+      this.sldcPrintDossier.innerHTML = "";
     }
   }
 
