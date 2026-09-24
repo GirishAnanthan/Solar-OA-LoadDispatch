@@ -568,6 +568,29 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.65rem;
+  align-items: stretch;
+}
+
+.input-grid-2 .form-group {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.input-grid-2 .form-group .form-label {
+  min-height: 1.35rem;
+  margin-bottom: 0.35rem;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.input-grid-2 .form-group .input-with-unit,
+.input-grid-2 .form-group .select-control {
+  margin-top: auto;
 }
 
 @media (max-width: 360px) {
