@@ -46,8 +46,8 @@ class SolarSchedulingApp {
     // Update Table View
     this.ui.renderTable(this.lastEvaluationResults);
 
-    // Update Live Scrubber Telemetry
-    this.ui.updateScrubberView();
+    // Update Live Scrubber Telemetry (never scroll table or window during data input)
+    this.ui.updateScrubberView(false);
   }
 
   updateKPICards(summary) {

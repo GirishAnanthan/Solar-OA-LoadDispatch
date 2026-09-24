@@ -248,7 +248,7 @@ class UIController {
     // 24-Hour Time Scrubber
     this.timeScrubber.addEventListener("input", (e) => {
       this.currentScrubBlock = parseInt(e.target.value, 10);
-      this.updateScrubberView();
+      this.updateScrubberView(true);
     });
 
     // Play/Pause Scrubber
@@ -261,7 +261,7 @@ class UIController {
       this.pauseScrubber();
       this.currentScrubBlock = 49;
       this.timeScrubber.value = 49;
-      this.updateScrubberView();
+      this.updateScrubberView(true);
     });
 
     // Scenario Presets
@@ -442,7 +442,7 @@ class UIController {
         this.currentScrubBlock = 1;
       }
       this.timeScrubber.value = this.currentScrubBlock;
-      this.updateScrubberView();
+      this.updateScrubberView(true);
     }, 180);
   }
 
@@ -455,7 +455,7 @@ class UIController {
     }
   }
 
-  updateScrubberView() {
+  updateScrubberView(autoScrollTable = false) {
     if (!this.app.lastEvaluationResults) return;
     const blocks = this.app.lastEvaluationResults.blocks;
     const blockIndex = this.currentScrubBlock - 1;
@@ -505,13 +505,26 @@ class UIController {
       this.flowStatusText.innerHTML = `<span style="color: var(--status-ok)">✅ Balanced Dispatch:</span> Within SERC allowable tolerance band (±${currentBlock.toleranceBandPct}%). Zero penalty.`;
     }
 
-    // Highlight row in table
-    const tableRows = this.tableBody.querySelectorAll("tr");
+    // Highlight row in table (without triggering outer window scroll)
+    const tableRows = this.tableBody ? this.tableBody.querySelectorAll("tr") : [];
     tableRows.forEach(row => {
       if (parseInt(row.getAttribute("data-block"), 10) === currentBlock.blockNumber) {
         row.classList.add("current-scrubbed-row");
-        // Scroll into view if not visible
-        row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        // Only adjust the internal table container scrollbar if user is explicitly scrubbing timeline
+        if (autoScrollTable) {
+          const container = row.closest(".table-scroll-container");
+          if (container) {
+            const rowTop = row.offsetTop;
+            const rowHeight = row.offsetHeight;
+            const containerScroll = container.scrollTop;
+            const containerHeight = container.clientHeight;
+            if (rowTop - 35 < containerScroll) {
+              container.scrollTop = Math.max(0, rowTop - 40);
+            } else if (rowTop + rowHeight > containerScroll + containerHeight) {
+              container.scrollTop = rowTop + rowHeight - containerHeight + 25;
+            }
+          }
+        }
       } else {
         row.classList.remove("current-scrubbed-row");
       }
@@ -559,7 +572,15 @@ class UIController {
       html = `<tr><td colspan="11" style="text-align: center; padding: 2rem; color: var(--text-muted)">No blocks matched the selected filter (${this.currentTableFilter}).</td></tr>`;
     }
 
+    // Preserve container scroll position so table re-rendering doesn't cause jumpiness
+    const container = this.tableBody ? this.tableBody.closest(".table-scroll-container") : null;
+    const prevScrollTop = container ? container.scrollTop : 0;
+
     this.tableBody.innerHTML = html;
+
+    if (container && prevScrollTop > 0) {
+      container.scrollTop = prevScrollTop;
+    }
 
     // Attach click on table row to jump scrubber
     this.tableBody.querySelectorAll("tr").forEach(tr => {
@@ -568,7 +589,7 @@ class UIController {
         if (!isNaN(bNum)) {
           this.currentScrubBlock = bNum;
           this.timeScrubber.value = bNum;
-          this.updateScrubberView();
+          this.updateScrubberView(false);
         }
       });
     });
