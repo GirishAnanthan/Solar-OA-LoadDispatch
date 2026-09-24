@@ -781,16 +781,24 @@ class UIController {
       filteredBlocks = blocks.filter(b => b.status !== "WITHIN_BAND");
     }
 
+    const statusMap = {
+      WITHIN_BAND: 'In-Band',
+      OVER_DRAWL: 'Over-Drawl',
+      UNDER_DRAWL: 'Under-Drawl'
+    };
+
     let html = "";
     filteredBlocks.forEach(b => {
-      let statusBadge = `<span class="${b.statusBadgeClass}">${b.status.replace('_', ' ')}</span>`;
-      let penaltyDisplay = b.blockPenaltyINR > 0 ? `₹${b.blockPenaltyINR.toFixed(2)}` : "—";
+      const statusText = statusMap[b.status] || b.status.replace('_', '-');
+      let statusBadge = `<span class="${b.statusBadgeClass}">${statusText}</span>`;
+      let penaltyDisplay = b.blockPenaltyINR > 0 ? `₹${Math.round(b.blockPenaltyINR).toLocaleString()}` : "—";
       let devColor = b.deviationKW > 0 ? "var(--status-danger)" : (b.deviationKW < 0 ? "var(--status-warning)" : "var(--text-secondary)");
+      const compactTime = b.timeRange ? b.timeRange.replace(" - ", "–") : "";
 
       html += `
         <tr data-block="${b.blockNumber}">
           <td><strong>#${b.blockNumber}</strong></td>
-          <td>${b.timeRange}</td>
+          <td>${compactTime}</td>
           <td>${b.actualConnectedLoad.toLocaleString()}</td>
           <td style="color: var(--solar-gold)">${b.actualBTMUtilized.toLocaleString()}${b.actualBTMCurtailed > 0 ? ` <small title="Curtailed">(${b.actualBTMCurtailed})</small>` : ''}</td>
           <td style="color: var(--oa-emerald)">${b.actualOADelivered.toLocaleString()}</td>
