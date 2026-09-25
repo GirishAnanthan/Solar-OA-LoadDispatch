@@ -235,6 +235,15 @@ class UIController {
     this.printPreviewContainer = document.getElementById("printPreviewContainer");
     this.sldcPrintDossier = document.getElementById("sldcPrintDossier");
 
+    // 2-Tab Full-Width Primary Navigation Elements
+    this.tabBtnConfig = document.getElementById("tabBtnConfig");
+    this.tabBtnResults = document.getElementById("tabBtnResults");
+    this.btnToggleMainView = document.getElementById("btnToggleMainView");
+    this.btnToggleMainViewText = document.getElementById("btnToggleMainViewText");
+    this.btnGoToResults = document.getElementById("btnGoToResults");
+    this.viewPlantConfiguration = document.getElementById("viewPlantConfiguration");
+    this.viewAnalyticsResults = document.getElementById("viewAnalyticsResults");
+
     // Sidebar Collapse Elements
     this.mainWrapper = document.querySelector(".main-wrapper");
     this.btnCollapseSidebarInside = document.getElementById("btnCollapseSidebarInside");
@@ -336,27 +345,66 @@ class UIController {
       }
     } catch (e) {}
 
+    // Primary 2-Tab Switcher Event Listeners
+    if (this.tabBtnConfig) {
+      this.tabBtnConfig.addEventListener("click", () => this.switchMainTab("config"));
+    }
+    if (this.tabBtnResults) {
+      this.tabBtnResults.addEventListener("click", () => this.switchMainTab("results"));
+    }
+    if (this.btnGoToResults) {
+      this.btnGoToResults.addEventListener("click", () => {
+        this.switchMainTab("results");
+        if (this.app) {
+          this.app.runSimulation();
+        }
+      });
+    }
+    if (this.btnToggleMainView) {
+      this.btnToggleMainView.addEventListener("click", () => {
+        const isConfig = this.viewPlantConfiguration && this.viewPlantConfiguration.classList.contains("active");
+        this.switchMainTab(isConfig ? "results" : "config");
+      });
+    }
+    if (this.btnFloatingExpandSidebar) {
+      this.btnFloatingExpandSidebar.addEventListener("click", () => {
+        this.switchMainTab("config");
+      });
+    }
+
+    // Keyboard shortcut (Ctrl + 1 / Ctrl + 2 or Ctrl + B)
+    window.addEventListener("keydown", (e) => {
+      // Don't trigger if user is typing in an input or textarea
+      if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) {
+        return;
+      }
+      if (e.ctrlKey && e.key === "1") {
+        e.preventDefault();
+        this.switchMainTab("config");
+      } else if (e.ctrlKey && e.key === "2") {
+        e.preventDefault();
+        this.switchMainTab("results");
+      } else if ((e.ctrlKey && (e.key === "b" || e.key === "B")) || (e.altKey && (e.key === "s" || e.key === "S"))) {
+        e.preventDefault();
+        const isConfig = this.viewPlantConfiguration && this.viewPlantConfiguration.classList.contains("active");
+        this.switchMainTab(isConfig ? "results" : "config");
+      }
+    });
+
+    // Restore saved primary main tab if any
+    try {
+      const savedMainTab = localStorage.getItem("solar_oa_active_main_view");
+      if (savedMainTab === "results") {
+        this.switchMainTab("results");
+      }
+    } catch (e) {}
+
     if (this.btnCollapseSidebarInside) {
       this.btnCollapseSidebarInside.addEventListener("click", () => toggleSidebar(true));
     }
     if (this.btnCollapseSidebarMain) {
       this.btnCollapseSidebarMain.addEventListener("click", () => toggleSidebar(true));
     }
-    if (this.btnFloatingExpandSidebar) {
-      this.btnFloatingExpandSidebar.addEventListener("click", () => toggleSidebar(false));
-    }
-
-    // Keyboard shortcut (Ctrl + B or Alt + S or [) to toggle sidebar
-    window.addEventListener("keydown", (e) => {
-      // Don't trigger if user is typing in an input or textarea
-      if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) {
-        return;
-      }
-      if ((e.ctrlKey && (e.key === "b" || e.key === "B")) || (e.altKey && (e.key === "s" || e.key === "S")) || e.key === "[") {
-        e.preventDefault();
-        toggleSidebar();
-      }
-    });
 
     // Accordion Toggle for Individual Sidebar Cards
     document.querySelectorAll(".panel-accordion-header").forEach(header => {
@@ -1231,6 +1279,36 @@ class UIController {
     if (policy && policy.transmissionLossesByVoltage[voltage]) {
       this.transmissionLossInput.value = policy.transmissionLossesByVoltage[voltage].toFixed(2);
       this.policyMetaLoss.textContent = `${policy.transmissionLossesByVoltage[voltage].toFixed(2)}% (${voltage} kV)`;
+    }
+  }
+
+  switchMainTab(target) {
+    const isConfig = target === "viewPlantConfiguration" || target === "config";
+    if (this.tabBtnConfig && this.tabBtnResults) {
+      this.tabBtnConfig.classList.toggle("active", isConfig);
+      this.tabBtnResults.classList.toggle("active", !isConfig);
+    }
+    if (this.viewPlantConfiguration && this.viewAnalyticsResults) {
+      this.viewPlantConfiguration.classList.toggle("active", isConfig);
+      this.viewAnalyticsResults.classList.toggle("active", !isConfig);
+    }
+    if (this.btnToggleMainViewText) {
+      this.btnToggleMainViewText.textContent = isConfig 
+        ? "View Dispatch & Analytics →" 
+        : "← Edit Plant Configuration";
+    }
+
+    try {
+      localStorage.setItem("solar_oa_active_main_view", isConfig ? "config" : "results");
+    } catch (e) {}
+
+    // When switching to results, resize Chart.js so it immediately occupies the full monitor width
+    if (!isConfig) {
+      setTimeout(() => {
+        if (this.app && this.app.chart) {
+          this.app.chart.resize();
+        }
+      }, 50);
     }
   }
 

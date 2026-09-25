@@ -78,6 +78,10 @@ class SolarSchedulingApp {
     this.ui.triggerAutoSavePulse();
   }
 
+  runSimulation() {
+    this.recalculate();
+  }
+
   updateKPICards(summary) {
     // 1. Total Daily Load
     const kpiLoadVal = document.getElementById("kpiLoadVal");
