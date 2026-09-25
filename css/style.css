@@ -1394,11 +1394,11 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
 }
 
 /* ==========================================================================
-   Side-by-Side Analytics Row (Graph: ~30% space | Table: ~70% space)
+   Side-by-Side Analytics Row (Graph: ~37% space [+25% width] | Table: ~63% space)
    ========================================================================== */
 .analytics-split-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 2.15fr);
   gap: clamp(0.55rem, 0.85vw, 0.85rem);
   align-items: stretch;
   width: 100%;
@@ -1460,7 +1460,7 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
 
 .chart-canvas-wrapper {
   position: relative;
-  height: clamp(210px, 28vh, 290px);
+  height: clamp(230px, 30vh, 320px);
   width: 100%;
   min-width: 0;
   flex: 1;
@@ -1642,8 +1642,8 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
 
 .table-scroll-container {
   overflow-x: auto;
-  height: clamp(210px, 28vh, 290px);
-  max-height: clamp(210px, 28vh, 290px);
+  height: clamp(230px, 30vh, 320px);
+  max-height: clamp(230px, 30vh, 320px);
   overflow-y: auto;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-subtle);
