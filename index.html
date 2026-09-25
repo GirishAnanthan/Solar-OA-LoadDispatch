@@ -782,6 +782,44 @@
           <div class="chart-canvas-wrapper">
             <canvas id="dispatchChart"></canvas>
           </div>
+
+          <!-- External Live Hover Block Telemetry Bar (Shown ONLY when cursor is over graph blocks) -->
+          <div class="chart-hover-telemetry-bar" id="chartHoverTelemetry">
+            <div class="cht-left">
+              <span class="cht-block-badge" id="chtBlockNum">Block #49</span>
+              <span class="cht-time" id="chtTimeRange">12:00 – 12:15</span>
+            </div>
+            <div class="cht-metrics-grid">
+              <div class="cht-metric load">
+                <span class="cht-label">Load:</span>
+                <span class="cht-val" id="chtLoad">920 kW</span>
+              </div>
+              <div class="cht-metric btm">
+                <span class="cht-label">BTM:</span>
+                <span class="cht-val" id="chtBTM">251.5 kW</span>
+              </div>
+              <div class="cht-metric oa">
+                <span class="cht-label">OA:</span>
+                <span class="cht-val" id="chtOA">833.0 kW</span>
+              </div>
+              <div class="cht-metric grid">
+                <span class="cht-label">Grid:</span>
+                <span class="cht-val" id="chtGrid">0 kW</span>
+                <span class="cht-sub" id="chtSched">(Sched: 0 kW)</span>
+              </div>
+              <div class="cht-metric dev" id="chtDevBox">
+                <span class="cht-label">Dev:</span>
+                <span class="cht-val" id="chtDev">0.0 kW (0%)</span>
+              </div>
+              <div class="cht-metric penalty" id="chtPenaltyBox">
+                <span class="cht-label">DSM:</span>
+                <span class="cht-val" id="chtPenalty">₹0</span>
+              </div>
+              <div class="cht-metric status">
+                <span class="badge-ok" id="chtStatus">In-Band</span>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- 96-Block SLDC Dispatch & Deviation Table - Expanded space (~70%) -->

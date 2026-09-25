@@ -25,6 +25,17 @@ class SolarSchedulingApp {
         this.chart.resize();
       }
     });
+
+    // Hide external hover telemetry when cursor leaves chart canvas area
+    const canvasWrapper = document.querySelector(".chart-canvas-wrapper");
+    if (canvasWrapper) {
+      canvasWrapper.addEventListener("mouseleave", () => {
+        const telemetryBar = document.getElementById("chartHoverTelemetry");
+        if (telemetryBar) {
+          telemetryBar.classList.remove("active");
+        }
+      });
+    }
   }
 
   /**
@@ -219,31 +230,29 @@ class SolarSchedulingApp {
             display: false // Using custom external legend
           },
           tooltip: {
-            backgroundColor: "rgba(14, 22, 38, 0.95)",
-            titleColor: "#F8FAFC",
-            bodyColor: "#94A3B8",
-            borderColor: "rgba(255, 255, 255, 0.15)",
-            borderWidth: 1,
-            padding: 12,
-            boxPadding: 6,
-            usePointStyle: true,
-            callbacks: {
-              title: (items) => {
-                const idx = items[0].dataIndex;
-                const b = this.lastEvaluationResults.blocks[idx];
-                return `Block #${b.blockNumber} (${b.timeRange})`;
-              },
-              afterBody: (items) => {
-                const idx = items[0].dataIndex;
-                const b = this.lastEvaluationResults.blocks[idx];
-                const devSign = b.deviationKW > 0 ? "+" : "";
-                return [
-                  `------------------------------`,
-                  `Deviation: ${devSign}${b.deviationKW} kW (${b.deviationPct}%)`,
-                  `Status: ${b.status}`,
-                  `Penalty: ₹${b.blockPenaltyINR.toFixed(2)}`
-                ];
+            enabled: false, // Disables the in-canvas popup that was covering the graph!
+            external: (context) => {
+              const { tooltip } = context;
+              const telemetryBar = document.getElementById("chartHoverTelemetry");
+              if (!telemetryBar) return;
+
+              if (tooltip.opacity === 0 || !tooltip.dataPoints || tooltip.dataPoints.length === 0) {
+                telemetryBar.classList.remove("active");
+                return;
               }
+
+              const dataIndex = tooltip.dataPoints[0].dataIndex;
+              const block = this.lastEvaluationResults && this.lastEvaluationResults.blocks
+                ? this.lastEvaluationResults.blocks[dataIndex]
+                : null;
+
+              if (!block) {
+                telemetryBar.classList.remove("active");
+                return;
+              }
+
+              this.updateHoverTelemetry(block);
+              telemetryBar.classList.add("active");
             }
           }
         },
@@ -283,16 +292,58 @@ class SolarSchedulingApp {
     });
   }
 
+  updateHoverTelemetry(b) {
+    if (!b) return;
+    const blockNum = document.getElementById("chtBlockNum");
+    const timeRange = document.getElementById("chtTimeRange");
+    const loadVal = document.getElementById("chtLoad");
+    const btmVal = document.getElementById("chtBTM");
+    const oaVal = document.getElementById("chtOA");
+    const gridVal = document.getElementById("chtGrid");
+    const schedVal = document.getElementById("chtSched");
+    const devVal = document.getElementById("chtDev");
+    const penaltyVal = document.getElementById("chtPenalty");
+    const statusVal = document.getElementById("chtStatus");
+
+    if (blockNum) blockNum.textContent = `Block #${b.blockNumber}`;
+    if (timeRange) timeRange.textContent = b.timeRange;
+    if (loadVal) loadVal.textContent = `${b.actualConnectedLoad.toLocaleString()} kW`;
+    if (btmVal) btmVal.textContent = `${b.actualBTMUtilized.toLocaleString()} kW`;
+    if (oaVal) oaVal.textContent = `${b.actualOADelivered.toLocaleString()} kW`;
+    if (gridVal) gridVal.textContent = `${b.actualGridDrawl.toLocaleString()} kW`;
+    if (schedVal) schedVal.textContent = `(Sched: ${b.scheduledGridDrawl.toLocaleString()} kW)`;
+
+    if (devVal) {
+      const devSign = b.deviationKW > 0 ? "+" : "";
+      devVal.textContent = `${devSign}${b.deviationKW.toFixed(1)} kW (${b.deviationPct.toFixed(1)}%)`;
+      devVal.style.color = b.deviationKW > 0 ? "var(--status-danger)" : (b.deviationKW < 0 ? "var(--status-warning)" : "var(--text-secondary)");
+    }
+
+    if (penaltyVal) {
+      if (b.blockPenaltyINR > 0) {
+        penaltyVal.textContent = `₹${Math.round(b.blockPenaltyINR).toLocaleString()}`;
+        penaltyVal.style.color = "var(--status-danger)";
+      } else {
+        penaltyVal.textContent = "₹0";
+        penaltyVal.style.color = "var(--text-muted)";
+      }
+    }
+
+    if (statusVal) {
+      const statusMap = {
+        WITHIN_BAND: 'In-Band',
+        OVER_DRAWL: 'Over-Drawl',
+        UNDER_DRAWL: 'Under-Drawl'
+      };
+      statusVal.textContent = statusMap[b.status] || b.status;
+      statusVal.className = b.statusBadgeClass || "badge-ok";
+    }
+  }
+
   highlightChartBlock(blockIndex) {
     if (!this.chart) return;
-    // We could trigger tooltip or point radius on the scrubbed block
     this.highlightedBlockIndex = blockIndex;
-    // Highlight block on chart tooltip
     this.chart.setActiveElements([
-      { datasetIndex: 0, index: blockIndex },
-      { datasetIndex: 3, index: blockIndex }
-    ]);
-    this.chart.tooltip.setActiveElements([
       { datasetIndex: 0, index: blockIndex },
       { datasetIndex: 3, index: blockIndex }
     ]);

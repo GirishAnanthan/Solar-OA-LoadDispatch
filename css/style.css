@@ -1273,6 +1273,124 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   flex: 1;
 }
 
+/* External Live Hover Block Telemetry Bar (Shown ONLY when hovering over graph blocks) */
+.chart-hover-telemetry-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.45rem;
+  padding: 0.38rem 0.65rem;
+  background: rgba(14, 22, 38, 0.96);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45), 0 0 12px rgba(56, 189, 248, 0.15);
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  animation: telemetrySlideUp 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 38px;
+}
+
+.chart-hover-telemetry-bar.active {
+  display: flex;
+}
+
+@keyframes telemetrySlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cht-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.cht-block-badge {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: var(--grid-sky);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.cht-time {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.cht-metrics-grid {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+}
+
+.cht-metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.cht-label {
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.cht-val {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cht-sub {
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.cht-metric.load .cht-val {
+  color: #FFFFFF;
+}
+
+.cht-metric.btm .cht-val {
+  color: var(--solar-gold);
+}
+
+.cht-metric.oa .cht-val {
+  color: var(--oa-emerald);
+}
+
+.cht-metric.grid .cht-val {
+  color: var(--grid-sky);
+}
+
+.cht-metric.dev .cht-val {
+  color: var(--text-primary);
+}
+
+.cht-metric.penalty .cht-val {
+  color: var(--text-muted);
+}
+
 /* ==========================================================================
    96-Block Dispatch Table (Expanded Horizontal Space ~60%)
    ========================================================================== */
