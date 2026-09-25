@@ -241,6 +241,13 @@ class UIController {
     this.policyMetaErrorBand = document.getElementById("policyMetaErrorBand");
     this.policyMetaLoss = document.getElementById("policyMetaLoss");
     this.policyMetaTariff = document.getElementById("policyMetaTariff");
+
+    // Workspace Master Header Project Banner Elements
+    this.bannerCustomerName = document.getElementById("bannerCustomerName");
+    this.bannerOACapacityMW = document.getElementById("bannerOACapacityMW");
+    this.bannerSanctionedDemand = document.getElementById("bannerSanctionedDemand");
+    this.bannerRooftopCapacity = document.getElementById("bannerRooftopCapacity");
+    this.bannerStatePolicyName = document.getElementById("bannerStatePolicyName");
   }
 
   attachEventListeners() {
@@ -358,6 +365,16 @@ class UIController {
         });
       }
     });
+
+    // Live update for Customer Name in project banner
+    if (this.custNameInput) {
+      this.custNameInput.addEventListener("input", () => {
+        this.updateProjectBanner();
+      });
+      this.custNameInput.addEventListener("change", () => {
+        this.updateProjectBanner();
+      });
+    }
 
     // Rooftop Address Geocoding Search (Google Maps style)
     if (this.rooftopAddressSearchInput) {
@@ -674,6 +691,39 @@ class UIController {
       if (this.oaLonInput) this.oaLonInput.value = oaData.lon.toFixed(4);
       const oaOptTilt = calculateOptimalTilt(oaData.lat);
       this.updateOaOptimalTilt(oaOptTilt);
+    }
+
+    this.updateProjectBanner();
+  }
+
+  updateProjectBanner() {
+    const custName = (this.custNameInput && this.custNameInput.value.trim())
+      ? this.custNameInput.value.trim()
+      : "Apex Precision Forgings & Alloys Ltd.";
+
+    const oaKWp = parseFloat(this.openAccessKWpInput ? this.openAccessKWpInput.value : 1500) || 0;
+    const oaMW = (oaKWp / 1000).toFixed(2);
+
+    if (this.bannerCustomerName) {
+      this.bannerCustomerName.textContent = custName;
+    }
+    if (this.bannerOACapacityMW) {
+      this.bannerOACapacityMW.textContent = `${oaMW} MW`;
+    }
+
+    const sanctionedKW = parseFloat(this.sanctionedLoadInput ? this.sanctionedLoadInput.value : 1200) || 0;
+    if (this.bannerSanctionedDemand) {
+      this.bannerSanctionedDemand.textContent = `${sanctionedKW.toLocaleString()} kW`;
+    }
+
+    const rooftopKWp = parseFloat(this.rooftopKWpInput ? this.rooftopKWpInput.value : 500) || 0;
+    const rooftopMW = (rooftopKWp / 1000).toFixed(2);
+    if (this.bannerRooftopCapacity) {
+      this.bannerRooftopCapacity.textContent = `${rooftopKWp.toLocaleString()} kWp (${rooftopMW} MW)`;
+    }
+
+    if (this.stateSelect && this.bannerStatePolicyName && this.stateSelect.selectedOptions && this.stateSelect.selectedOptions[0]) {
+      this.bannerStatePolicyName.textContent = this.stateSelect.selectedOptions[0].text;
     }
   }
 

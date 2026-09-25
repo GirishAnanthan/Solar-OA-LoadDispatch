@@ -600,15 +600,66 @@
          ========================================================================== -->
     <div class="workspace-content">
 
-      <!-- Quick Uncollapse Sidebar Button (Active when sidebar is collapsed) -->
-      <button class="btn-floating-expand-sidebar" id="btnFloatingExpandSidebar" title="Show Sidebar (Ctrl + B)">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="9" y1="3" x2="9" y2="21"></line>
-          <polyline points="10 9 13 12 10 15"></polyline>
-        </svg>
-        <span>Show Sidebar</span>
-      </button>
+      <!-- ==========================================================================
+           Workspace Master Header - Project Name & OA Solar Captive Capacity Bar
+           ========================================================================== -->
+      <div class="workspace-master-header" id="workspaceMasterHeader">
+        <!-- Quick Uncollapse Sidebar Button (Active when sidebar is collapsed) -->
+        <button class="btn-floating-expand-sidebar" id="btnFloatingExpandSidebar" title="Show Sidebar (Ctrl + B)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+            <polyline points="10 9 13 12 10 15"></polyline>
+          </svg>
+          <span>Show Sidebar</span>
+        </button>
+
+        <div class="project-identity-info">
+          <div class="project-identity-icon" title="Analyzed Project & Open Access Solar Capacity">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
+            </svg>
+          </div>
+          <div class="project-identity-details">
+            <div class="project-identity-label-row">
+              <span class="project-identity-tag">ANALYZED PROJECT &amp; CAPACITY</span>
+              <span class="project-identity-caption">Project Name &amp; Capacity being analysed</span>
+            </div>
+            <div class="project-identity-content-row">
+              <span class="project-name-display" id="bannerCustomerName">Apex Precision Forgings &amp; Alloys Ltd.</span>
+              <span class="project-identity-separator">•</span>
+              <span class="project-capacity-badge" id="bannerOACapacityBadge" title="Open Access Captive Solar Capacity">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                </svg>
+                <strong id="bannerOACapacityMW">1.50 MW</strong>
+                <span class="project-capacity-unit-label">OA Solar Captive Capacity</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="project-identity-meta">
+          <div class="project-meta-pill" title="Sanctioned / Contract Demand">
+            <span class="meta-pill-label">Contract Demand:</span>
+            <span class="meta-pill-val" id="bannerSanctionedDemand">1,200 kW</span>
+          </div>
+          <div class="project-meta-pill solar" title="BTM Rooftop Solar (Zero-Export)">
+            <span class="meta-pill-label">BTM Rooftop:</span>
+            <span class="meta-pill-val" id="bannerRooftopCapacity">500 kWp (0.50 MW)</span>
+          </div>
+          <div class="project-meta-pill status" title="State Grid Regulations Active">
+            <span class="status-indicator-dot"></span>
+            <span class="meta-pill-val" id="bannerStatePolicyName">MERC (Maharashtra)</span>
+          </div>
+        </div>
+      </div>
 
       <!-- Executive KPI Cards -->
       <section class="kpi-grid">

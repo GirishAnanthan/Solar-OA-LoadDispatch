@@ -40,6 +40,9 @@ class SolarSchedulingApp {
     // Update KPI Cards
     this.updateKPICards(this.lastEvaluationResults.summary);
 
+    // Update Project & OA Solar Capacity Master Header Banner
+    this.ui.updateProjectBanner();
+
     // Update Chart.js Visualization
     this.updateChart(this.lastEvaluationResults);
 
