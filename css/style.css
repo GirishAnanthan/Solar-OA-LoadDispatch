@@ -933,58 +933,129 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   color: var(--text-muted);
 }
 
-/* Preset Scenario Quick Buttons */
-.scenarios-section {
-  margin-top: 1rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--border-subtle);
+/* ==========================================================================
+   Quick Stress-Test Scenarios (Integrated inside Load Dispatch Profile)
+   ========================================================================== */
+.chart-scenarios-container {
+  margin-bottom: 0.55rem;
+  padding: 0.42rem 0.6rem;
+  background: rgba(14, 22, 38, 0.65);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  backdrop-filter: blur(8px);
 }
 
-.scenarios-title {
-  font-size: 0.72rem;
+.chart-scenarios-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  line-height: 1.1;
+  padding: 0 0.1rem;
+}
+
+.chart-scenarios-header .scenarios-title {
+  font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 700;
   color: var(--text-muted);
-  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0;
 }
 
-.scenario-buttons-grid {
+.chart-scenarios-header .scenarios-title svg {
+  color: var(--solar-gold);
+}
+
+.chart-scenarios-header .scenarios-subhint {
+  font-size: 0.62rem;
+  color: var(--text-secondary);
+  opacity: 0.8;
+  font-style: italic;
+}
+
+.chart-scenarios-container .scenario-buttons-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.45rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
 }
 
 .btn-scenario {
-  padding: 0.48rem 0.65rem;
+  padding: 0.40rem 0.55rem;
   border-radius: var(--radius-sm);
-  background: var(--bg-input);
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  font-size: 0.72rem;
+  font-size: 0.70rem;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
   transition: all var(--trans-fast);
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.12rem;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
 }
 
-.btn-scenario span:first-child {
+.btn-scenario .scenario-btn-name {
   color: var(--text-primary);
-  font-size: 0.76rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.btn-scenario .label-hint {
+  font-size: 0.63rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .btn-scenario:hover {
   background: var(--bg-card-hover);
   border-color: var(--text-accent);
   color: var(--text-primary);
+  transform: translateY(-1px);
 }
 
 .btn-scenario.active {
-  background: rgba(56, 189, 248, 0.12);
-  border-color: rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.22);
+}
+
+.btn-scenario.active .scenario-btn-name {
+  color: var(--grid-sky);
+}
+
+.btn-scenario.active .label-hint {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 1450px) {
+  .chart-scenarios-container .scenario-buttons-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .chart-scenarios-header .scenarios-subhint {
+    display: none;
+  }
+  .chart-scenarios-container .scenario-buttons-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ==========================================================================
@@ -1421,17 +1492,77 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   color: var(--text-secondary);
   font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.65rem;
+  font-size: 0.64rem;
   letter-spacing: 0.02em;
-  padding: 0.45rem 0.20rem;
+  padding: 0.35rem 0.20rem;
   border-bottom: 1px solid var(--border-subtle);
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
   text-align: center;
   vertical-align: middle;
   white-space: normal;
   line-height: 1.15;
+}
+
+.dispatch-table thead tr:first-child th {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  background: #0E1626;
+}
+
+.dispatch-table thead tr:nth-child(2) th {
+  position: sticky;
+  top: 25px;
+  z-index: 11;
+  background: #0B1320;
+}
+
+/* Group Headers */
+.dispatch-table th.th-group-header {
+  padding: 0.28rem 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid var(--border-subtle);
+}
+
+.dispatch-table th.th-group-dispatch {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34D399;
+  border-bottom: 2px solid var(--oa-emerald);
+}
+
+.dispatch-table th.th-group-dev {
+  background: rgba(239, 68, 68, 0.12);
+  color: #F87171;
+  border-bottom: 2px solid rgba(239, 68, 68, 0.55);
+}
+
+/* Sub-column Headers */
+.dispatch-table th.th-subcol {
+  padding: 0.24rem 0.20rem;
+  font-size: 0.61rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: #0A121F;
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.dispatch-table th.th-subcol.btm-col {
+  color: var(--solar-gold);
+}
+
+.dispatch-table th.th-subcol.oa-col {
+  color: var(--oa-emerald);
+}
+
+.dispatch-table th.th-subcol.grid-col {
+  color: var(--grid-sky);
+}
+
+.dispatch-table th.th-subcol.dev-col {
+  color: #FDA4AF;
 }
 
 .dispatch-table td {

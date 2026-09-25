@@ -1290,7 +1290,7 @@ class UIController {
     csv += `Total Solar Generated & Consumed (kWh),${summary.totalBTMUtilizedKWh + summary.totalOAConsumedKWh}\n`;
     csv += `Total Daily DSM Penalties (INR),₹${summary.dailyTotalPenaltiesINR}\n\n`;
 
-    csv += `Block,Time Interval,Connected Load (kW),BTM Solar Utilized (kW),BTM Curtailed (kW),OA Solar Delivered (kW),Scheduled Grid Drawl (kW),Actual Grid Drawl (kW),Deviation (kW),Deviation (%),Status,Applicable Penalty (INR)\n`;
+    csv += `Block,Time Interval,Connected Load (kW),By BTM Solar (kW),BTM Curtailed (kW),By OA Solar (kW),By Grid (kW),Actual Grid Withdrawal (kW),Deviation (kW),Deviation (%),Dispatch Status,Applicable DSM Penalty (INR)\n`;
 
     blocks.forEach(b => {
       csv += `${b.blockNumber},"${b.timeRange}",${b.actualConnectedLoad},${b.actualBTMUtilized},${b.actualBTMCurtailed},${b.actualOADelivered},${b.scheduledGridDrawl},${b.actualGridDrawl},${b.deviationKW},${b.deviationPct},${b.status},${b.blockPenaltyINR}\n`;

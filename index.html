@@ -146,29 +146,6 @@
               <span>120% (Peak Irradiance)</span>
             </div>
           </div>
-
-          <!-- Preset Scenarios -->
-          <div class="scenarios-section">
-            <div class="scenarios-title">Quick Stress-Test Scenarios</div>
-            <div class="scenario-buttons-grid">
-              <button class="btn-scenario active" data-scenario="normal">
-                <span>Nominal Baseline</span>
-                <span class="label-hint">100% Load &bull; 100% Sun</span>
-              </button>
-              <button class="btn-scenario" data-scenario="trip">
-                <span>Midday Machine Trip</span>
-                <span class="label-hint">45% Load &bull; Export Risk</span>
-              </button>
-              <button class="btn-scenario" data-scenario="cloud">
-                <span>Cloud Transient Dip</span>
-                <span class="label-hint">105% Load &bull; 30% Sun</span>
-              </button>
-              <button class="btn-scenario" data-scenario="spike">
-                <span>Demand Breach Spike</span>
-                <span class="label-hint">135% Load &bull; Over-drawl</span>
-              </button>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -508,7 +485,7 @@
             <div class="form-group address-search-group" style="margin-bottom: 0.5rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
                 <label class="form-label" for="oaAddressSearch" style="margin-bottom: 0;">
-                  Solar Park / Remote Site Address Search
+                  Site Address / Location Search
                 </label>
                 <span class="label-hint" id="oaGeoStatus" style="font-size: 0.65rem; color: var(--oa-emerald);">Press Enter ↵ to Locate</span>
               </div>
@@ -771,6 +748,37 @@
             </div>
           </div>
 
+          <!-- Quick Stress-Test Scenarios (Moved to Graph Section for Full Visibility when Sidebar is Collapsed) -->
+          <div class="chart-scenarios-container">
+            <div class="chart-scenarios-header">
+              <span class="scenarios-title">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                Quick Stress-Test Scenarios
+              </span>
+              <span class="scenarios-subhint">Simulate live dispatch &amp; export variations</span>
+            </div>
+            <div class="scenario-buttons-grid">
+              <button class="btn-scenario active" data-scenario="normal" title="100% Load &bull; 100% Sun (Nominal Baseline)">
+                <span class="scenario-btn-name">Nominal Baseline</span>
+                <span class="label-hint">100% Load &bull; 100% Sun</span>
+              </button>
+              <button class="btn-scenario" data-scenario="trip" title="45% Load &bull; Export Risk (Midday Machine Trip)">
+                <span class="scenario-btn-name">Midday Machine Trip</span>
+                <span class="label-hint">45% Load &bull; Export Risk</span>
+              </button>
+              <button class="btn-scenario" data-scenario="cloud" title="105% Load &bull; 30% Sun (Cloud Transient Dip)">
+                <span class="scenario-btn-name">Cloud Transient Dip</span>
+                <span class="label-hint">105% Load &bull; 30% Sun</span>
+              </button>
+              <button class="btn-scenario" data-scenario="spike" title="135% Load &bull; Over-drawl (Demand Breach Spike)">
+                <span class="scenario-btn-name">Demand Breach Spike</span>
+                <span class="label-hint">135% Load &bull; Over-drawl</span>
+              </button>
+            </div>
+          </div>
+
           <div class="chart-canvas-wrapper">
             <canvas id="dispatchChart"></canvas>
           </div>
@@ -801,17 +809,21 @@
             <table class="dispatch-table">
               <thead>
                 <tr>
-                  <th>Block<br>#</th>
-                  <th>Time<br>Interval</th>
-                  <th>Actual<br>Load (kW)</th>
-                  <th>BTM Solar<br>(kW)</th>
-                  <th>OA Solar<br>(kW)</th>
-                  <th>Sched<br>Drawl (kW)</th>
-                  <th>Actual<br>Drawl (kW)</th>
-                  <th>Dev<br>(kW)</th>
-                  <th>Dev<br>(%)</th>
-                  <th>Dispatch<br>Status</th>
-                  <th>DSM<br>Penalty</th>
+                  <th rowspan="2">Block<br>#</th>
+                  <th rowspan="2">Time<br>Interval</th>
+                  <th rowspan="2">Connected<br>Load (kW)</th>
+                  <th colspan="3" class="th-group-header th-group-dispatch">Energy Dispatch Schedule</th>
+                  <th rowspan="2">Actual Grid<br>Withdrawal (kW)</th>
+                  <th colspan="2" class="th-group-header th-group-dev">Deviation</th>
+                  <th rowspan="2">Dispatch<br>Status</th>
+                  <th rowspan="2">DSM<br>Penalty</th>
+                </tr>
+                <tr class="th-subrow">
+                  <th class="th-subcol btm-col">By BTM Solar</th>
+                  <th class="th-subcol oa-col">By OA Solar</th>
+                  <th class="th-subcol grid-col">By Grid</th>
+                  <th class="th-subcol dev-col">in kW</th>
+                  <th class="th-subcol dev-col">%age</th>
                 </tr>
               </thead>
               <tbody id="dispatchTableBody">
