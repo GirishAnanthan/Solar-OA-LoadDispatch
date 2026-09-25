@@ -1,7 +1,10 @@
 /**
  * Indian State Electricity Regulatory Commissions (SERC) Policy Database
+ * Institutional & Bankable Regulatory Data for Indian C&I Open Access Solar
  * Covers Net Metering caps, Behind-The-Meter (BTM) Zero-Export rules, 
- * Open Access regulations, DSM (Deviation Settlement Mechanism) formulas, and Grid Tariffs.
+ * Open Access regulations, DSM (Deviation Settlement Mechanism) formulas,
+ * Cross Subsidy Surcharges (CSS), Additional Surcharges (AS), Wheeling & Transmission,
+ * Banking in-kind charges, Electricity Duty, and 4-Slot Time-of-Day (TOD) Tariffs.
  */
 
 const STATE_POLICIES = {
@@ -15,7 +18,7 @@ const STATE_POLICIES = {
     concurrentNetMeteringOA: false, // Strict Discom restriction on concurrent Net Metering + OA
     btmZeroExportAllowed: true,
     rprMandatory: true, // Reverse Power Relay (RPR) mandatory for BTM
-    baseIndustrialTariff: 7.85, // ₹/kWh for HT-I Industrial Continuous
+    baseIndustrialTariff: 7.85, // ₹/kWh for HT-I Industrial Continuous (MSEDCL)
     openAccessPpaRate: 3.80, // Typical Captive Solar PPA ₹/kWh
     dsmToleranceBandPct: 10.0, // ±10% error band without penalty
     dsmReferenceRate: 3.50, // Average Power Purchase Cost (APPC) ₹/kWh
@@ -27,7 +30,34 @@ const STATE_POLICIES = {
     ],
     inadvertentExportPenaltyRate: 1.50, // ₹/kWh penalty for unauthorized grid injection
     contractDemandExceedancePenaltyMultiplier: 1.5, // 150% tariff if actual load > sanctioned load
-    bankingType: "15-minute / Monthly (Cap at 30% of consumption)",
+    
+    // Open Access Charges (MERC MYT Tariff Order)
+    crossSubsidySurcharge: 1.64, // ₹/kWh for HT Industry (exempt for Captive)
+    additionalSurcharge: 1.25, // ₹/kWh for HT Industry (exempt for Captive)
+    wheelingChargePerKWh: 0.38, // ₹/kWh at 33kV HT
+    transmissionChargePerKWh: 0.44, // ₹/kWh (InSTS MSETCL transmission)
+    sldcFeesPerDay: 1500, // ₹/day SLDC operating & scheduling fee
+    electricityDutyPct: 9.3, // % of Discom power charges (7.5% - 9.3% in Maharashtra)
+    bankingChargePct: 2.0, // 2% in-kind energy deduction for monthly banking
+    bankingType: "Monthly banking (Cap at 30% of total consumption, lapses at FY end)",
+    
+    // TOD Tariff Slots (MSEDCL HT-I Industrial)
+    todSlabs: [
+      { name: "Night Off-Peak", startHour: 22, endHour: 6, surchargePct: -15, label: "22:00 - 06:00 (Rebate ₹-1.50/kWh)" },
+      { name: "Morning Peak", startHour: 9, endHour: 12, surchargePct: 15, label: "09:00 - 12:00 (Surcharge +₹1.18/kWh)" },
+      { name: "Evening Peak", startHour: 18, endHour: 22, surchargePct: 25, label: "18:00 - 22:00 (Surcharge +₹1.96/kWh)" },
+      { name: "Normal Day", startHour: 6, endHour: 9, surchargePct: 0, label: "06:00 - 09:00 (Normal Tariff)" },
+      { name: "Normal Afternoon", startHour: 12, endHour: 18, surchargePct: 0, label: "12:00 - 18:00 (Normal Tariff)" }
+    ],
+
+    // Captive Rule 3 Exemptions
+    captiveExemptions: {
+      cssExempt: true,
+      asExempt: true,
+      rule3EquityMinPct: 26.0,
+      rule3ConsumptionMinPct: 51.0
+    },
+
     transmissionLossesByVoltage: {
       "11": 6.20,
       "22": 5.40,
@@ -45,11 +75,11 @@ const STATE_POLICIES = {
     sldcName: "GUJARAT ENERGY TRANSMISSION CORP. LTD. (SLDC, GOTRI, VADODARA)",
     regulationName: "GERC (Forecasting, Scheduling and Deviation Settlement) Regulations",
     netMeteringCapKW: 1000,
-    netMeteringCapPctSanctioned: 50, // Generally 50% of sanctioned load for large C&I (100% for MSME)
+    netMeteringCapPctSanctioned: 50, // 50% sanctioned load cap for large C&I
     concurrentNetMeteringOA: false,
     btmZeroExportAllowed: true,
     rprMandatory: true,
-    baseIndustrialTariff: 7.20,
+    baseIndustrialTariff: 7.20, // HTP-I Industrial (GETCO/MGVCL/UGVCL/DGVCL/PGVCL)
     openAccessPpaRate: 3.65,
     dsmToleranceBandPct: 10.0,
     dsmReferenceRate: 3.35,
@@ -61,7 +91,31 @@ const STATE_POLICIES = {
     ],
     inadvertentExportPenaltyRate: 2.00,
     contractDemandExceedancePenaltyMultiplier: 1.6,
-    bankingType: "15-minute time block TOD settlement",
+
+    crossSubsidySurcharge: 1.95, // ₹/kWh for HT Industry (exempt for Captive)
+    additionalSurcharge: 1.10, // ₹/kWh (exempt for Captive)
+    wheelingChargePerKWh: 0.32, // ₹/kWh at 33kV/66kV
+    transmissionChargePerKWh: 0.40, // ₹/kWh GETCO transmission
+    sldcFeesPerDay: 1200,
+    electricityDutyPct: 15.0, // High electricity duty in Gujarat (15% for C&I)
+    bankingChargePct: 0.0, // 15-minute billing block TOD settlement
+    bankingType: "15-minute time block TOD settlement (No seasonal banking permitted)",
+
+    todSlabs: [
+      { name: "Night Off-Peak", startHour: 22, endHour: 6, surchargePct: -12, label: "22:00 - 06:00 (Rebate ₹-0.85/kWh)" },
+      { name: "Morning Peak", startHour: 7, endHour: 11, surchargePct: 18, label: "07:00 - 11:00 (Surcharge +₹1.30/kWh)" },
+      { name: "Evening Peak", startHour: 18, endHour: 22, surchargePct: 20, label: "18:00 - 22:00 (Surcharge +₹1.44/kWh)" },
+      { name: "Normal Day", startHour: 6, endHour: 7, surchargePct: 0, label: "06:00 - 07:00 (Normal Tariff)" },
+      { name: "Normal Afternoon", startHour: 11, endHour: 18, surchargePct: 0, label: "11:00 - 18:00 (Normal Tariff)" }
+    ],
+
+    captiveExemptions: {
+      cssExempt: true,
+      asExempt: true,
+      rule3EquityMinPct: 26.0,
+      rule3ConsumptionMinPct: 51.0
+    },
+
     transmissionLossesByVoltage: {
       "11": 5.90,
       "22": 5.10,
@@ -83,7 +137,7 @@ const STATE_POLICIES = {
     concurrentNetMeteringOA: false,
     btmZeroExportAllowed: true,
     rprMandatory: true,
-    baseIndustrialTariff: 7.45,
+    baseIndustrialTariff: 7.45, // BESCOM/HESCOM/MESCOM HT-2(a)
     openAccessPpaRate: 3.75,
     dsmToleranceBandPct: 10.0,
     dsmReferenceRate: 3.40,
@@ -95,7 +149,29 @@ const STATE_POLICIES = {
     ],
     inadvertentExportPenaltyRate: 1.80,
     contractDemandExceedancePenaltyMultiplier: 1.5,
-    bankingType: "15-minute banking (Banking charges 8.5% in kind)",
+
+    crossSubsidySurcharge: 2.15, // ₹/kWh for HT Industrial (exempt for Captive)
+    additionalSurcharge: 1.35, // ₹/kWh (exempt for Captive)
+    wheelingChargePerKWh: 0.42, // ₹/kWh
+    transmissionChargePerKWh: 0.48, // ₹/kWh KPTCL transmission
+    sldcFeesPerDay: 1800,
+    electricityDutyPct: 9.0, // 9% electricity tax
+    bankingChargePct: 8.5, // 8.5% in-kind energy deduction (KERC solar banking order)
+    bankingType: "15-minute / Monthly banking (Banking charges 8.5% in kind, no peak withdrawal)",
+
+    todSlabs: [
+      { name: "Night Off-Peak", startHour: 22, endHour: 6, surchargePct: -15, label: "22:00 - 06:00 (Rebate ₹-1.12/kWh)" },
+      { name: "Evening Peak", startHour: 18, endHour: 22, surchargePct: 25, label: "18:00 - 22:00 (Surcharge +₹1.86/kWh)" },
+      { name: "Normal Day", startHour: 6, endHour: 18, surchargePct: 0, label: "06:00 - 18:00 (Normal Tariff)" }
+    ],
+
+    captiveExemptions: {
+      cssExempt: true,
+      asExempt: true,
+      rule3EquityMinPct: 26.0,
+      rule3ConsumptionMinPct: 51.0
+    },
+
     transmissionLossesByVoltage: {
       "11": 6.10,
       "22": 5.25,
@@ -117,7 +193,7 @@ const STATE_POLICIES = {
     concurrentNetMeteringOA: false,
     btmZeroExportAllowed: true,
     rprMandatory: true,
-    baseIndustrialTariff: 8.35, // High HT industrial tariff
+    baseIndustrialTariff: 8.35, // High HT industrial tariff (TANGEDCO HT-IA)
     openAccessPpaRate: 3.90,
     dsmToleranceBandPct: 10.0,
     dsmReferenceRate: 3.60,
@@ -129,7 +205,30 @@ const STATE_POLICIES = {
     ],
     inadvertentExportPenaltyRate: 2.20,
     contractDemandExceedancePenaltyMultiplier: 1.75, // Severe penalty in TANGEDCO
-    bankingType: "Slot-to-slot TOD settlement (Peak/Off-Peak/Normal)",
+
+    crossSubsidySurcharge: 2.28, // ₹/kWh for HT Industry (exempt for Captive)
+    additionalSurcharge: 1.15, // ₹/kWh
+    wheelingChargePerKWh: 0.40,
+    transmissionChargePerKWh: 0.52, // TANTRANSCO transmission
+    sldcFeesPerDay: 2000,
+    electricityDutyPct: 5.0, // 5% electricity tax
+    bankingChargePct: 14.0, // 14% high banking charge in Tamil Nadu
+    bankingType: "Slot-to-slot TOD settlement (Peak/Off-Peak/Normal, 14% in-kind banking charge)",
+
+    todSlabs: [
+      { name: "Morning Peak", startHour: 6, endHour: 9, surchargePct: 20, label: "06:00 - 09:00 (Peak +20%)" },
+      { name: "Evening Peak", startHour: 18, endHour: 22, surchargePct: 25, label: "18:00 - 22:00 (Peak +25%)" },
+      { name: "Night Off-Peak", startHour: 22, endHour: 6, surchargePct: -10, label: "22:00 - 06:00 (Rebate -10%)" },
+      { name: "Normal Day", startHour: 9, endHour: 18, surchargePct: 0, label: "09:00 - 18:00 (Normal Tariff)" }
+    ],
+
+    captiveExemptions: {
+      cssExempt: true,
+      asExempt: true,
+      rule3EquityMinPct: 26.0,
+      rule3ConsumptionMinPct: 51.0
+    },
+
     transmissionLossesByVoltage: {
       "11": 6.40,
       "22": 5.60,
@@ -151,7 +250,7 @@ const STATE_POLICIES = {
     concurrentNetMeteringOA: false,
     btmZeroExportAllowed: true,
     rprMandatory: true,
-    baseIndustrialTariff: 7.90,
+    baseIndustrialTariff: 7.90, // JVVNL/AVVNL/JdVVNL HT Large Industry
     openAccessPpaRate: 3.55,
     dsmToleranceBandPct: 15.0, // Wider 15% tolerance band in Rajasthan due to vast solar capacity
     dsmReferenceRate: 3.25,
@@ -163,7 +262,29 @@ const STATE_POLICIES = {
     ],
     inadvertentExportPenaltyRate: 1.40,
     contractDemandExceedancePenaltyMultiplier: 1.5,
-    bankingType: "15-minute billing block",
+
+    crossSubsidySurcharge: 1.82, // ₹/kWh for HT Industry (exempt for Captive)
+    additionalSurcharge: 0.80, // ₹/kWh
+    wheelingChargePerKWh: 0.28,
+    transmissionChargePerKWh: 0.38, // RVPNL transmission
+    sldcFeesPerDay: 1100,
+    electricityDutyPct: 8.0, // 8% duty
+    bankingChargePct: 0.0, // 15-minute billing block
+    bankingType: "15-minute billing block (Unutilized solar energy settled at APPC)",
+
+    todSlabs: [
+      { name: "Night Off-Peak", startHour: 23, endHour: 6, surchargePct: -15, label: "23:00 - 06:00 (Rebate -15%)" },
+      { name: "Evening Peak", startHour: 18, endHour: 23, surchargePct: 20, label: "18:00 - 23:00 (Surcharge +20%)" },
+      { name: "Normal Day", startHour: 6, endHour: 18, surchargePct: 0, label: "06:00 - 18:00 (Normal Tariff)" }
+    ],
+
+    captiveExemptions: {
+      cssExempt: true,
+      asExempt: true,
+      rule3EquityMinPct: 26.0,
+      rule3ConsumptionMinPct: 51.0
+    },
+
     transmissionLossesByVoltage: {
       "11": 5.80,
       "22": 5.00,
@@ -185,7 +306,7 @@ const STATE_POLICIES = {
     concurrentNetMeteringOA: false,
     btmZeroExportAllowed: true,
     rprMandatory: true,
-    baseIndustrialTariff: 8.15,
+    baseIndustrialTariff: 8.15, // UPPCL HV-2 Large Industry
     openAccessPpaRate: 3.85,
     dsmToleranceBandPct: 12.0,
     dsmReferenceRate: 3.45,
@@ -197,7 +318,29 @@ const STATE_POLICIES = {
     ],
     inadvertentExportPenaltyRate: 1.90,
     contractDemandExceedancePenaltyMultiplier: 1.6,
-    bankingType: "15-minute banking (Unbanked energy lapses)",
+
+    crossSubsidySurcharge: 2.10, // ₹/kWh for HV Industry (exempt for Captive)
+    additionalSurcharge: 1.05, // ₹/kWh
+    wheelingChargePerKWh: 0.45,
+    transmissionChargePerKWh: 0.48, // UPPTCL transmission
+    sldcFeesPerDay: 1600,
+    electricityDutyPct: 7.5,
+    bankingChargePct: 2.5,
+    bankingType: "15-minute / Monthly banking (Unbanked energy lapses at month end)",
+
+    todSlabs: [
+      { name: "Night Off-Peak", startHour: 22, endHour: 6, surchargePct: -15, label: "22:00 - 06:00 (Rebate -15%)" },
+      { name: "Evening Peak", startHour: 17, endHour: 22, surchargePct: 20, label: "17:00 - 22:00 (Surcharge +20%)" },
+      { name: "Normal Day", startHour: 6, endHour: 17, surchargePct: 0, label: "06:00 - 17:00 (Normal Tariff)" }
+    ],
+
+    captiveExemptions: {
+      cssExempt: true,
+      asExempt: true,
+      rule3EquityMinPct: 26.0,
+      rule3ConsumptionMinPct: 51.0
+    },
+
     transmissionLossesByVoltage: {
       "11": 6.50,
       "22": 5.70,
@@ -219,7 +362,7 @@ const STATE_POLICIES = {
     concurrentNetMeteringOA: false,
     btmZeroExportAllowed: true,
     rprMandatory: true,
-    baseIndustrialTariff: 7.70,
+    baseIndustrialTariff: 7.70, // UHBVN/DHBVN HT Industry
     openAccessPpaRate: 3.70,
     dsmToleranceBandPct: 12.0,
     dsmReferenceRate: 3.40,
@@ -231,7 +374,29 @@ const STATE_POLICIES = {
     ],
     inadvertentExportPenaltyRate: 1.70,
     contractDemandExceedancePenaltyMultiplier: 1.5,
+
+    crossSubsidySurcharge: 1.74, // ₹/kWh for HT Industry (exempt for Captive)
+    additionalSurcharge: 1.12, // ₹/kWh
+    wheelingChargePerKWh: 0.35,
+    transmissionChargePerKWh: 0.42, // HVPNL transmission
+    sldcFeesPerDay: 1400,
+    electricityDutyPct: 9.0,
+    bankingChargePct: 2.0,
     bankingType: "Monthly banking with withdrawal restrictions during peak hours",
+
+    todSlabs: [
+      { name: "Night Off-Peak", startHour: 22, endHour: 6, surchargePct: -15, label: "22:00 - 06:00 (Rebate -15%)" },
+      { name: "Evening Peak", startHour: 18, endHour: 22, surchargePct: 20, label: "18:00 - 22:00 (Surcharge +20%)" },
+      { name: "Normal Day", startHour: 6, endHour: 18, surchargePct: 0, label: "06:00 - 18:00 (Normal Tariff)" }
+    ],
+
+    captiveExemptions: {
+      cssExempt: true,
+      asExempt: true,
+      rule3EquityMinPct: 26.0,
+      rule3ConsumptionMinPct: 51.0
+    },
+
     transmissionLossesByVoltage: {
       "11": 6.30,
       "22": 5.50,
@@ -253,7 +418,7 @@ const STATE_POLICIES = {
     concurrentNetMeteringOA: false,
     btmZeroExportAllowed: true,
     rprMandatory: true,
-    baseIndustrialTariff: 7.80,
+    baseIndustrialTariff: 7.80, // TSSPDCL/TSNPDCL HT-I
     openAccessPpaRate: 3.75,
     dsmToleranceBandPct: 12.0,
     dsmReferenceRate: 3.40,
@@ -265,7 +430,29 @@ const STATE_POLICIES = {
     ],
     inadvertentExportPenaltyRate: 1.85,
     contractDemandExceedancePenaltyMultiplier: 1.6,
+
+    crossSubsidySurcharge: 1.98, // ₹/kWh for HT Industry (exempt for Captive)
+    additionalSurcharge: 1.45, // ₹/kWh
+    wheelingChargePerKWh: 0.36,
+    transmissionChargePerKWh: 0.44, // TSTRANSCO transmission
+    sldcFeesPerDay: 1500,
+    electricityDutyPct: 6.0,
+    bankingChargePct: 2.0,
     bankingType: "15-minute billing block",
+
+    todSlabs: [
+      { name: "Night Off-Peak", startHour: 22, endHour: 6, surchargePct: -15, label: "22:00 - 06:00 (Rebate -15%)" },
+      { name: "Evening Peak", startHour: 18, endHour: 22, surchargePct: 20, label: "18:00 - 22:00 (Surcharge +20%)" },
+      { name: "Normal Day", startHour: 6, endHour: 18, surchargePct: 0, label: "06:00 - 18:00 (Normal Tariff)" }
+    ],
+
+    captiveExemptions: {
+      cssExempt: true,
+      asExempt: true,
+      rule3EquityMinPct: 26.0,
+      rule3ConsumptionMinPct: 51.0
+    },
+
     transmissionLossesByVoltage: {
       "11": 6.25,
       "22": 5.45,
@@ -287,7 +474,7 @@ const STATE_POLICIES = {
     concurrentNetMeteringOA: false,
     btmZeroExportAllowed: true,
     rprMandatory: true,
-    baseIndustrialTariff: 7.85,
+    baseIndustrialTariff: 7.85, // APSPDCL/APEPDCL HT-I
     openAccessPpaRate: 3.70,
     dsmToleranceBandPct: 12.0,
     dsmReferenceRate: 3.35,
@@ -299,7 +486,29 @@ const STATE_POLICIES = {
     ],
     inadvertentExportPenaltyRate: 1.80,
     contractDemandExceedancePenaltyMultiplier: 1.55,
+
+    crossSubsidySurcharge: 2.05, // ₹/kWh for HT Industry (exempt for Captive)
+    additionalSurcharge: 1.20, // ₹/kWh
+    wheelingChargePerKWh: 0.38,
+    transmissionChargePerKWh: 0.46, // APTRANSCO transmission
+    sldcFeesPerDay: 1500,
+    electricityDutyPct: 6.0,
+    bankingChargePct: 2.0,
     bankingType: "Monthly TOD settlement",
+
+    todSlabs: [
+      { name: "Night Off-Peak", startHour: 22, endHour: 6, surchargePct: -15, label: "22:00 - 06:00 (Rebate -15%)" },
+      { name: "Evening Peak", startHour: 18, endHour: 22, surchargePct: 20, label: "18:00 - 22:00 (Surcharge +20%)" },
+      { name: "Normal Day", startHour: 6, endHour: 18, surchargePct: 0, label: "06:00 - 18:00 (Normal Tariff)" }
+    ],
+
+    captiveExemptions: {
+      cssExempt: true,
+      asExempt: true,
+      rule3EquityMinPct: 26.0,
+      rule3ConsumptionMinPct: 51.0
+    },
+
     transmissionLossesByVoltage: {
       "11": 6.20,
       "22": 5.40,
