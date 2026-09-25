@@ -193,10 +193,15 @@ class UIController {
 
     // Real-Time Power Flow Meter Nodes
     this.flowLoad = document.getElementById("flowLoad");
+    this.flowLoadSub = document.getElementById("flowLoadSub");
     this.flowBTM = document.getElementById("flowBTM");
+    this.flowBTMSub = document.getElementById("flowBTMSub");
     this.flowOA = document.getElementById("flowOA");
+    this.flowOASub = document.getElementById("flowOASub");
     this.flowGrid = document.getElementById("flowGrid");
+    this.flowGridSub = document.getElementById("flowGridSub");
     this.flowDeviation = document.getElementById("flowDeviation");
+    this.flowDevSub = document.getElementById("flowDevSub");
     this.flowStatusText = document.getElementById("flowStatusText");
 
     // Table & Filters
@@ -1343,14 +1348,61 @@ class UIController {
     this.timeScrubberLabel.textContent = `Block ${currentBlock.blockNumber}/96 (${currentBlock.timeRange})`;
 
     // Update Real-Time Power Flow Meter Nodes
+    const oaConsumed = currentBlock.actualOAConsumed !== undefined 
+      ? currentBlock.actualOAConsumed 
+      : Math.min(currentBlock.actualOADelivered, Math.max(0, currentBlock.actualConnectedLoad - currentBlock.actualBTMUtilized));
+    const oaSurplus = currentBlock.actualOASurplus !== undefined 
+      ? currentBlock.actualOASurplus 
+      : Math.max(0, currentBlock.actualOADelivered - (currentBlock.actualConnectedLoad - currentBlock.actualBTMUtilized));
+
     this.flowLoad.textContent = `${currentBlock.actualConnectedLoad.toLocaleString()} kW`;
+    if (this.flowLoadSub) this.flowLoadSub.textContent = `Connected Demand`;
+
     this.flowBTM.textContent = `${currentBlock.actualBTMUtilized.toLocaleString()} kW`;
-    this.flowOA.textContent = `${currentBlock.actualOADelivered.toLocaleString()} kW`;
+    if (this.flowBTMSub) {
+      if (currentBlock.actualBTMCurtailed > 0) {
+        this.flowBTMSub.textContent = `(${currentBlock.actualBTMCurtailed} kW Curtailed)`;
+        this.flowBTMSub.style.color = "var(--solar-gold)";
+      } else {
+        this.flowBTMSub.textContent = `100% self-consumed`;
+        this.flowBTMSub.style.color = "var(--text-muted)";
+      }
+    }
+
+    this.flowOA.textContent = `${oaConsumed.toLocaleString()} kW`;
+    if (this.flowOASub) {
+      if (oaSurplus > 0) {
+        this.flowOASub.textContent = `${currentBlock.actualOADelivered.toLocaleString()} kW Deliv. (+${oaSurplus.toFixed(1)} kW Surplus)`;
+        this.flowOASub.title = `${currentBlock.actualOADelivered} kW delivered from solar park: ${oaConsumed} kW absorbed by factory, ${oaSurplus.toFixed(1)} kW surplus injected into grid`;
+        this.flowOASub.style.color = "var(--oa-emerald)";
+      } else {
+        this.flowOASub.textContent = `${currentBlock.actualOADelivered.toLocaleString()} kW delivered`;
+        this.flowOASub.title = `100% of delivered OA solar absorbed by plant`;
+        this.flowOASub.style.color = "var(--text-muted)";
+      }
+    }
+
     this.flowGrid.textContent = `${currentBlock.actualGridDrawl.toLocaleString()} kW`;
+    if (this.flowGridSub) this.flowGridSub.textContent = `Sched: ${currentBlock.scheduledGridDrawl.toLocaleString()} kW`;
 
     const dev = currentBlock.deviationKW;
     const devSign = dev > 0 ? "+" : "";
     this.flowDeviation.textContent = `${devSign}${dev.toFixed(1)} kW (${currentBlock.deviationPct.toFixed(1)}%)`;
+    if (this.flowDevSub) {
+      if (currentBlock.status === "WITHIN_BAND") {
+        this.flowDevSub.textContent = `In-Band (0 Penalty)`;
+        this.flowDevSub.style.color = "var(--status-ok)";
+      } else if (currentBlock.status === "OVER_DRAWL") {
+        this.flowDevSub.textContent = `Over-Drawl (Penalized)`;
+        this.flowDevSub.style.color = "var(--status-danger)";
+      } else if (currentBlock.status === "UNDER_DRAWL") {
+        this.flowDevSub.textContent = `Under-Drawl (DSM Levy)`;
+        this.flowDevSub.style.color = "var(--status-warning)";
+      } else {
+        this.flowDevSub.textContent = `Deviation`;
+        this.flowDevSub.style.color = "var(--text-muted)";
+      }
+    }
 
     // Highlight alerts on flow nodes
     const btmNode = this.flowBTM.parentElement;
@@ -1379,7 +1431,11 @@ class UIController {
     } else {
       gridNode.classList.remove("overdrawl-alert");
       devNode.style.color = "var(--status-ok)";
-      this.flowStatusText.innerHTML = `<span style="color: var(--status-ok)">✅ Balanced Dispatch:</span> Within SERC allowable tolerance band (±${currentBlock.toleranceBandPct}%). Zero penalty.`;
+      if (oaSurplus > 0) {
+        this.flowStatusText.innerHTML = `<span style="color: var(--status-ok)">✅ Balanced Dispatch:</span> 100% plant load met by clean solar (${currentBlock.actualBTMUtilized} kW BTM + ${oaConsumed} kW OA). <span style="color: var(--oa-emerald)">+${oaSurplus.toFixed(1)} kW surplus OA delivered into grid</span> (banked / settled per SERC). Zero penalty.`;
+      } else {
+        this.flowStatusText.innerHTML = `<span style="color: var(--status-ok)">✅ Balanced Dispatch:</span> Within SERC allowable tolerance band (±${currentBlock.toleranceBandPct}%). Zero penalty.`;
+      }
     }
 
     // Highlight row in table (without triggering outer window scroll)
@@ -1436,13 +1492,23 @@ class UIController {
       let devColor = b.deviationKW > 0 ? "var(--status-danger)" : (b.deviationKW < 0 ? "var(--status-warning)" : "var(--text-secondary)");
       const compactTime = b.timeRange ? b.timeRange.replace(" - ", "–") : "";
 
+      const oaConsumed = b.actualOAConsumed !== undefined 
+        ? b.actualOAConsumed 
+        : Math.min(b.actualOADelivered, Math.max(0, b.actualConnectedLoad - b.actualBTMUtilized));
+      const oaSurplus = b.actualOASurplus !== undefined 
+        ? b.actualOASurplus 
+        : Math.max(0, b.actualOADelivered - (b.actualConnectedLoad - b.actualBTMUtilized));
+      const oaCellDisplay = oaSurplus > 0
+        ? `${oaConsumed.toLocaleString()} <small title="Delivered from solar park: ${b.actualOADelivered} kW (${oaSurplus.toFixed(1)} kW surplus injected into grid)" style="color: #94A3B8; font-size: 0.72em;">(+${oaSurplus.toFixed(1)})</small>`
+        : `${oaConsumed.toLocaleString()}`;
+
       html += `
         <tr data-block="${b.blockNumber}">
           <td><strong>#${b.blockNumber}</strong></td>
           <td>${compactTime}</td>
           <td>${b.actualConnectedLoad.toLocaleString()}</td>
           <td style="color: var(--solar-gold)">${b.actualBTMUtilized.toLocaleString()}${b.actualBTMCurtailed > 0 ? ` <small title="Curtailed">(${b.actualBTMCurtailed})</small>` : ''}</td>
-          <td style="color: var(--oa-emerald)">${b.actualOADelivered.toLocaleString()}</td>
+          <td style="color: var(--oa-emerald)">${oaCellDisplay}</td>
           <td>${b.scheduledGridDrawl.toLocaleString()}</td>
           <td>${b.actualGridDrawl.toLocaleString()}</td>
           <td style="color: ${devColor}; font-weight: 600">${b.deviationKW > 0 ? '+' : ''}${b.deviationKW.toFixed(1)}</td>

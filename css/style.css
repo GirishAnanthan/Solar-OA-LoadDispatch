@@ -1587,6 +1587,15 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
 .flow-node.grid .flow-node-val { color: var(--grid-sky); }
 .flow-node.deviation .flow-node-val { color: var(--status-warning); }
 
+.flow-node-sub {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
 .flow-node.zero-export-alert {
   border-color: rgba(251, 191, 36, 0.5);
   background: rgba(251, 191, 36, 0.08);

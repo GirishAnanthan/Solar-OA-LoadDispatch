@@ -429,6 +429,8 @@ class SolarModel {
         
         actualOAGenAtSource: Math.round(actualOAGenAtSource * 10) / 10,
         actualOADelivered: Math.round(actualOADelivered * 10) / 10,
+        actualOAConsumed: Math.round(Math.min(actualOADelivered, actualResidualDemand) * 10) / 10,
+        actualOASurplus: Math.round(Math.max(0, actualOADelivered - actualResidualDemand) * 10) / 10,
         daOADelivered: Math.round(daOADelivered * 10) / 10,
 
         // Dispatch & Grid Drawl metrics (kW)

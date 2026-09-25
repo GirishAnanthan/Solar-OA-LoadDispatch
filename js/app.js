@@ -318,7 +318,21 @@ class SolarSchedulingApp {
     if (timeRange) timeRange.textContent = b.timeRange;
     if (loadVal) loadVal.textContent = `${b.actualConnectedLoad.toLocaleString()} kW`;
     if (btmVal) btmVal.textContent = `${b.actualBTMUtilized.toLocaleString()} kW`;
-    if (oaVal) oaVal.textContent = `${b.actualOADelivered.toLocaleString()} kW`;
+    if (oaVal) {
+      const oaConsumed = b.actualOAConsumed !== undefined 
+        ? b.actualOAConsumed 
+        : Math.min(b.actualOADelivered, Math.max(0, b.actualConnectedLoad - b.actualBTMUtilized));
+      const oaSurplus = b.actualOASurplus !== undefined 
+        ? b.actualOASurplus 
+        : Math.max(0, b.actualOADelivered - (b.actualConnectedLoad - b.actualBTMUtilized));
+      if (oaSurplus > 0) {
+        oaVal.textContent = `${oaConsumed.toLocaleString()} kW (+${oaSurplus.toFixed(1)} surplus)`;
+        oaVal.title = `${b.actualOADelivered} kW delivered from solar park: ${oaConsumed} kW absorbed by factory, ${oaSurplus.toFixed(1)} kW surplus injected into grid`;
+      } else {
+        oaVal.textContent = `${oaConsumed.toLocaleString()} kW`;
+        oaVal.title = `100% of delivered OA solar absorbed by plant`;
+      }
+    }
     if (gridVal) gridVal.textContent = `${b.actualGridDrawl.toLocaleString()} kW`;
     if (schedVal) schedVal.textContent = `(Sched: ${b.scheduledGridDrawl.toLocaleString()} kW)`;
 
