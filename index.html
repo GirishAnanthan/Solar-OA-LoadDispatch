@@ -40,17 +40,33 @@
       </div>
 
       <div class="header-actions">
+        <span class="autosave-badge" id="autosaveBadge" title="Calculations automatically saved to browser storage">
+          <span class="autosave-dot"></span>
+          Auto-Saved
+        </span>
+        <button class="btn-header accent" id="btnOpenDPR" title="Generate Bankable Detailed Project Report (DPR) for Bank / Board Approval">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Bankable DPR
+        </button>
+        <button class="btn-header" id="btnOpenScenarios" title="Switch or save institutional project templates">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          Scenarios
+        </button>
         <button class="btn-header" id="btnPolicyModal">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-          State Policy Hub
+          Policy Hub
         </button>
         <button class="btn-header" id="btnPrintSchedule" title="Print official 15-minute load dispatch schedule for SLDC">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-          Print SLDC Schedule
+          SLDC Print
         </button>
-        <button class="btn-header primary" id="btnExportCSV">
+        <button class="btn-header" id="btnExportFinancialModel" title="Export 25-Year Financial Model & DSCR Table (.csv)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          Model (.csv)
+        </button>
+        <button class="btn-header primary" id="btnExportCSV" title="Export 96-Block Schedule CSV">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Export CSV
+          Schedule (.csv)
         </button>
       </div>
     </div>
@@ -321,6 +337,32 @@
             </div>
           </div>
 
+          <!-- Procurement Model & Captive Equity -->
+          <div class="input-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="procurementType">
+                Procurement Model
+                <span class="label-hint">Rule 3 Structure</span>
+              </label>
+              <select id="procurementType" class="select-control">
+                <option value="group_captive" selected>Group Captive (Rule 3)</option>
+                <option value="captive_100">100% Captive (Own)</option>
+                <option value="third_party">Third-Party Open Access</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="captiveEquityGroup">
+              <label class="form-label" for="captiveEquityPct">
+                Equity Share
+                <span class="label-hint">Rule 3 (&ge;26%)</span>
+              </label>
+              <div class="input-with-unit">
+                <input type="number" id="captiveEquityPct" class="input-control" value="26.0" min="0" max="100" step="1">
+                <span class="input-unit">%</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Tariffs and Losses -->
           <div class="input-grid-2">
             <div class="form-group">
@@ -568,6 +610,59 @@
             </div>
           </div>
         </div>
+      <!-- BESS Battery Storage & Smart Meter Ingestion -->
+      <section class="glass-panel" id="panelBESS">
+        <div class="panel-title-bar panel-accordion-header" title="Click to collapse / expand battery storage & meter data">
+          <h2 class="panel-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line></svg>
+            BESS Storage &amp; Smart Meter
+          </h2>
+          <div style="display: flex; align-items: center; gap: 0.35rem;">
+            <button class="btn-panel-accordion" title="Toggle section">
+              <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="panel-accordion-content">
+          <div class="input-grid-2">
+            <div class="form-group">
+              <label class="form-label" for="bessCapacityKWh">
+                BESS Capacity
+                <span class="label-hint">LFP Storage</span>
+              </label>
+              <div class="input-with-unit">
+                <input type="number" id="bessCapacityKWh" class="input-control" value="0" min="0" max="10000" step="50">
+                <span class="input-unit">kWh</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bessPowerKW">
+                Power Inverter
+                <span class="label-hint">C-Rate Rating</span>
+              </label>
+              <div class="input-with-unit">
+                <input type="number" id="bessPowerKW" class="input-control" value="0" min="0" max="5000" step="25">
+                <span class="input-unit">kW</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Smart Meter 15-Minute Load Survey Import -->
+          <div style="margin-top: 0.5rem; padding: 0.65rem; background: rgba(15, 23, 42, 0.7); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+              <span style="font-size: 0.74rem; font-weight: 700; color: #F8FAFC;">15-Min Smart Meter Survey</span>
+              <span id="meterImportStatus" style="font-size: 0.65rem; color: var(--text-muted);">AMR / CSV</span>
+            </div>
+            <p style="font-size: 0.68rem; color: var(--text-secondary); margin: 0 0 0.45rem 0;">Upload AMR/DLMS 15-min interval CSV to replace synthetic curve with actual plant data.</p>
+            <input type="file" id="meterFileInput" accept=".csv,.txt,.tsv" style="display: none;">
+            <button type="button" class="btn-header" id="btnUploadMeter" style="width: 100%; justify-content: center; font-size: 0.72rem; padding: 0.38rem;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              Upload Meter Survey (CSV)
+            </button>
+          </div>
+        </div>
       </section>
 
     </aside>
@@ -637,6 +732,33 @@
           </div>
         </div>
       </div>
+
+      <!-- Executive Workspace Navigation Tabs -->
+      <div class="workspace-tabs-bar">
+        <button class="workspace-tab-btn active" data-tab="dispatch">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <span>15-Min Operational Dispatch</span>
+        </button>
+        <button class="workspace-tab-btn" data-tab="finance">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span>Bankable 25-Yr Financials &amp; DSCR</span>
+        </button>
+        <button class="workspace-tab-btn" data-tab="landed">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <span>OA Landed Cost &amp; Rule 3 Audit</span>
+        </button>
+        <button class="workspace-tab-btn" data-tab="bess">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line></svg>
+          <span>BESS &amp; TOD Arbitrage</span>
+        </button>
+        <button class="workspace-tab-btn" data-tab="annual">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span>Annual 35,040 Simulation</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: 15-Minute Operational Dispatch View -->
+      <div class="workspace-tab-content active" id="tabContentDispatch">
 
       <!-- Executive KPI Cards -->
       <section class="kpi-grid">
@@ -936,7 +1058,302 @@
         </div>
       </section>
 
-    </div>
+      </div><!-- End Tab 1: Dispatch -->
+
+      <!-- Tab 2: Bankable 25-Year Financials & DSCR View -->
+      <div class="workspace-tab-content" id="tabContentFinance">
+        <div class="bankable-section-header">
+          <div class="bankable-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            25-Year Project Finance, DSCR &amp; Investor Bankability Model
+          </div>
+          <button class="btn-header" id="btnExportFinancialModelTab" title="Download Full 25-Year Financial Model CSV">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Export Financial Model (.csv)
+          </button>
+        </div>
+
+        <!-- Bankability Scorecard KPIs -->
+        <div class="bankable-kpi-grid">
+          <div class="bankable-kpi-box highlight">
+            <span class="bkpi-label">Project IRR (Pre-Tax)</span>
+            <span class="bkpi-val" id="finProjectIRR">18.4%</span>
+            <span class="bkpi-sub">Benchmark: &ge; 14.0%</span>
+          </div>
+          <div class="bankable-kpi-box highlight">
+            <span class="bkpi-label">Equity IRR (Post-Tax)</span>
+            <span class="bkpi-val" id="finEquityIRR">22.8%</span>
+            <span class="bkpi-sub">Target Return on Capital</span>
+          </div>
+          <div class="bankable-kpi-box success">
+            <span class="bkpi-label">Minimum DSCR</span>
+            <span class="bkpi-val" id="finMinDSCR">1.32x</span>
+            <span class="bkpi-sub">Bank Covenant: &ge; 1.20x</span>
+          </div>
+          <div class="bankable-kpi-box success">
+            <span class="bkpi-label">Average DSCR</span>
+            <span class="bkpi-val" id="finAvgDSCR">1.54x</span>
+            <span class="bkpi-sub">Bank Covenant: &ge; 1.35x</span>
+          </div>
+          <div class="bankable-kpi-box">
+            <span class="bkpi-label">NPV @ 10% WACC</span>
+            <span class="bkpi-val" id="finNPV">₹4.12 Cr</span>
+            <span class="bkpi-sub">Net Present Value</span>
+          </div>
+          <div class="bankable-kpi-box">
+            <span class="bkpi-label">Solar LCOE</span>
+            <span class="bkpi-val" id="finLCOE">₹3.24/kWh</span>
+            <span class="bkpi-sub">Levelized Solar Cost</span>
+          </div>
+          <div class="bankable-kpi-box">
+            <span class="bkpi-label">Discounted Payback</span>
+            <span class="bkpi-val" id="finPayback">4.8 Yrs</span>
+            <span class="bkpi-sub" id="finSimplePayback">Simple: 3.6 Yrs</span>
+          </div>
+          <div class="bankable-kpi-box success">
+            <span class="bkpi-label">25-Yr Net Savings</span>
+            <span class="bkpi-val" id="finCumSavings">₹16.85 Cr</span>
+            <span class="bkpi-sub">Net after O&amp;M &amp; Debt</span>
+          </div>
+        </div>
+
+        <!-- 25-Year Project Cash Flow Table -->
+        <div class="glass-panel" style="padding: 1rem; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem;">
+            <span style="font-size: 0.88rem; font-weight: 700; color: #F8FAFC;">25-Year Pro-Forma Cash Flow &amp; Debt Service Schedule (INR Lakhs)</span>
+            <span style="font-size: 0.72rem; color: var(--text-muted);">Assumes 70:30 Debt-Equity • 12-Year Amortization @ 9.25% p.a. • 3% Tariff Escalation</span>
+          </div>
+          <div class="financial-table-scroll">
+            <table class="financial-table">
+              <thead>
+                <tr>
+                  <th>Yr</th>
+                  <th>Clean Energy (MUs)</th>
+                  <th>Discom Tariff (₹)</th>
+                  <th>Gross Savings</th>
+                  <th>O&amp;M Cost</th>
+                  <th>EBITDA</th>
+                  <th>Principal</th>
+                  <th>Interest</th>
+                  <th>Total Debt</th>
+                  <th>CFADS</th>
+                  <th>DSCR</th>
+                  <th>FCFE</th>
+                  <th>Cum. Savings</th>
+                </tr>
+              </thead>
+              <tbody id="financialTableBody">
+                <!-- Dynamically injected from UIController -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- End Tab 2: Finance -->
+
+      <!-- Tab 3: Open Access Landed Cost & Rule 3 Captive Audit View -->
+      <div class="workspace-tab-content" id="tabContentLanded">
+        <div class="bankable-section-header">
+          <div class="bankable-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            Open Access Landed Tariff Waterfall &amp; Statutory Rule 3 Captive Audit
+          </div>
+          <span class="badge-tag highlight" id="landedStateBadge">MERC MYT Tariff Order</span>
+        </div>
+
+        <div class="landed-grid-2">
+          <!-- Landed Cost Waterfall Table -->
+          <div class="landed-waterfall-card">
+            <h3 style="font-size: 0.95rem; font-weight: 700; color: #F59E0B; margin: 0 0 0.85rem 0;">
+              Itemized Landed Cost Breakdown (₹/kWh)
+            </h3>
+            <table class="waterfall-table">
+              <tbody>
+                <tr><td>Base Solar PPA Rate (Generator Bus):</td><td class="num" id="wfBasePPA">₹3.800</td></tr>
+                <tr><td>STU Transmission Charges:</td><td class="num" id="wfTransCharge">+₹0.440</td></tr>
+                <tr><td>Discom Wheeling Charges:</td><td class="num" id="wfWheelCharge">+₹0.380</td></tr>
+                <tr><td>Wheeling &amp; Transmission Losses (<span id="wfLossPct">4.10%</span>):</td><td class="num" id="wfLossCost">+₹0.162</td></tr>
+                <tr><td>Cross-Subsidy Surcharge (CSS):</td><td class="num" id="wfCSS"><span class="badge-pill-green">₹0.000 (Exempt)</span></td></tr>
+                <tr><td>Additional Surcharge (AS):</td><td class="num" id="wfAS"><span class="badge-pill-green">₹0.000 (Exempt)</span></td></tr>
+                <tr><td>Banking Energy Surcharge:</td><td class="num" id="wfBanking">+₹0.076</td></tr>
+                <tr><td>Electricity Duty &amp; SLDC Operating Fees:</td><td class="num" id="wfDuty">+₹0.395</td></tr>
+                <tr style="border-top: 1px solid rgba(255, 255, 255, 0.2); font-weight: 700; color: #38BDF8;">
+                  <td>TOTAL OPEN ACCESS LANDED COST:</td>
+                  <td class="num" id="wfTotalLanded">₹5.253 / kWh</td>
+                </tr>
+                <tr><td>Discom Effective Industrial Tariff:</td><td class="num" id="wfDiscomTariff">₹8.580 / kWh</td></tr>
+                <tr style="border-top: 2px solid rgba(16, 185, 129, 0.4); font-weight: 800; color: #34D399; font-size: 0.88rem;">
+                  <td>NET TARIFF DIFFERENTIAL (SAVINGS):</td>
+                  <td class="num" id="wfNetSavings">₹3.327 / kWh (38.8%)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Rule 3 Captive Compliance Audit Certificate -->
+          <div class="rule3-audit-card">
+            <h3 style="font-size: 0.95rem; font-weight: 700; color: #10B981; margin: 0 0 0.85rem 0;">
+              Statutory Captive Eligibility Audit (Rule 3)
+            </h3>
+            
+            <div class="rule3-badge compliant" id="rule3Badge">
+              <span id="rule3BadgeText">✅ 100% RULE 3 COMPLIANT (CAPTIVE STATUS VALIDATED)</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem;">
+              <div style="background: rgba(0,0,0,0.25); padding: 0.65rem; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; color: #F8FAFC;">
+                  <span>1. Equity Ownership Criterion (&ge; 26%):</span>
+                  <span id="rule3EquityStatus" style="color: #34D399;">PASS (26.0% Held)</span>
+                </div>
+                <p style="font-size: 0.70rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
+                  Consumer holds minimum 26% equity share capital with voting rights in the generator SPV.
+                </p>
+              </div>
+
+              <div style="background: rgba(0,0,0,0.25); padding: 0.65rem; border-radius: 6px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 700; color: #F8FAFC;">
+                  <span>2. Energy Consumption Criterion (&ge; 51%):</span>
+                  <span id="rule3ConsumptionStatus" style="color: #34D399;">PASS (74.4% Consumed)</span>
+                </div>
+                <p style="font-size: 0.70rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
+                  Captive consumer consumes at least 51% of aggregate electricity generated on an annual basis.
+                </p>
+              </div>
+            </div>
+
+            <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 0.75rem;">
+              <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Retrospective CSS / AS Risk:</span>
+              <p id="rule3RiskText" style="font-size: 0.74rem; color: #CBD5E1; margin: 0.25rem 0 0 0;">
+                Zero CSS / AS liability. 100% Captive statutory exemption validated under Electricity Rules 2005/2023.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div><!-- End Tab 3: Landed Cost -->
+
+      <!-- Tab 4: BESS Battery Storage & TOD Arbitrage View -->
+      <div class="workspace-tab-content" id="tabContentBESS">
+        <div class="bankable-section-header">
+          <div class="bankable-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect><line x1="22" y1="11" x2="22" y2="13"></line></svg>
+            BESS Battery Storage, Midday Curtailment Capture &amp; TOD Peak Arbitrage
+          </div>
+          <span class="badge-tag highlight">LFP Battery Storage</span>
+        </div>
+
+        <div class="bess-kpi-grid">
+          <div class="bankable-kpi-box highlight">
+            <span class="bkpi-label">Configured BESS</span>
+            <span class="bkpi-val" id="bessCapDisplay">500 kWh</span>
+            <span class="bkpi-sub" id="bessPowerDisplay">250 kW (0.5C Inverter)</span>
+          </div>
+          <div class="bankable-kpi-box success">
+            <span class="bkpi-label">Curtailed Solar Captured</span>
+            <span class="bkpi-val" id="bessCurtailDisplay">420 kWh/day</span>
+            <span class="bkpi-sub">Free midday solar stored</span>
+          </div>
+          <div class="bankable-kpi-box success">
+            <span class="bkpi-label">Peak TOD Energy Discharged</span>
+            <span class="bkpi-val" id="bessDischargeDisplay">380 kWh/day</span>
+            <span class="bkpi-sub">Discharged during 18-22h peak</span>
+          </div>
+          <div class="bankable-kpi-box">
+            <span class="bkpi-label">Annual TOD Arbitrage Savings</span>
+            <span class="bkpi-val" id="bessSavingsDisplay">₹14.2 Lakhs/yr</span>
+            <span class="bkpi-sub">Offsets peak grid surcharges</span>
+          </div>
+        </div>
+
+        <div class="glass-panel" style="padding: 1.15rem;">
+          <h4 style="font-size: 0.90rem; font-weight: 700; color: #F8FAFC; margin: 0 0 0.5rem 0;">Time-of-Day (TOD) Tariff Arbitrage Strategy</h4>
+          <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; margin: 0 0 0.85rem 0;">
+            Under SERC industrial tariffs, electricity drawn during the evening peak window (18:00 – 22:00) incurs a 20% to 30% surcharge (up to ₹10.50 – ₹12.00/kWh). 
+            When BTM Rooftop Solar generation exceeds factory demand around midday (11:00 – 14:00), the Reverse Power Relay would otherwise curtail solar to enforce Zero-Export. 
+            The BESS intercepts this curtailed energy at zero marginal cost and discharges it during the evening peak, maximizing financial yield.
+          </p>
+        </div>
+      </div><!-- End Tab 4: BESS -->
+
+      <!-- Tab 5: Annual 35,040 Simulation & Smart Meter Survey View -->
+      <div class="workspace-tab-content" id="tabContentAnnual">
+        <div class="bankable-section-header">
+          <div class="bankable-section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            35,040-Block (8,760-Hour) Annual Simulation &amp; Smart Meter Survey
+          </div>
+          <span class="badge-tag highlight">365-Day Solar Atlas</span>
+        </div>
+
+        <div class="bankable-kpi-grid">
+          <div class="bankable-kpi-box highlight">
+            <span class="bkpi-label">Annual Clean Generation</span>
+            <span class="bkpi-val" id="annGenMUs">3.52 MUs</span>
+            <span class="bkpi-sub">BTM + Delivered OA</span>
+          </div>
+          <div class="bankable-kpi-box success">
+            <span class="bkpi-label">Annual Green Power Share</span>
+            <span class="bkpi-val" id="annGreenShare">68.4%</span>
+            <span class="bkpi-sub">Of total factory demand</span>
+          </div>
+          <div class="bankable-kpi-box">
+            <span class="bkpi-label">Annual Solar CUF</span>
+            <span class="bkpi-val" id="annCUFPct">20.8%</span>
+            <span class="bkpi-sub">Weighted Capacity Factor</span>
+          </div>
+          <div class="bankable-kpi-box success">
+            <span class="bkpi-label">Annual Energy Bill Savings</span>
+            <span class="bkpi-val" id="annSavingsLakhs">₹176.6 Lakhs</span>
+            <span class="bkpi-sub">Net savings per year</span>
+          </div>
+        </div>
+
+        <!-- 12-Month Seasonal Table -->
+        <div class="glass-panel" style="padding: 1rem; margin-bottom: 1rem;">
+          <h4 style="font-size: 0.88rem; font-weight: 700; color: #F8FAFC; margin: 0 0 0.65rem 0;">12-Month Seasonal Solar Yield &amp; Energy Balance Table</h4>
+          <div class="financial-table-scroll" style="max-height: 340px;">
+            <table class="financial-table">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Season</th>
+                  <th>Load (MUs)</th>
+                  <th>BTM Solar (MUs)</th>
+                  <th>OA Solar (MUs)</th>
+                  <th>Green Share (%)</th>
+                  <th>Grid Import (MUs)</th>
+                  <th>CUF (%)</th>
+                  <th>Savings (₹ Lakhs)</th>
+                </tr>
+              </thead>
+              <tbody id="annualTableBody">
+                <!-- Dynamically populated from UIController -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Decarbonization & ESG Impact -->
+        <div class="dpr-esg-grid">
+          <div class="dpr-esg-card">
+            <span class="esg-icon">🌱</span>
+            <span class="esg-val" id="annCO2Tonnes">2,886 Tonnes</span>
+            <span class="esg-label">Annual CO₂ Emissions Avoided</span>
+            <span class="esg-sub">CEA Grid Baseline: 0.82 tCO₂/MWh</span>
+          </div>
+          <div class="dpr-esg-card">
+            <span class="esg-icon">🌳</span>
+            <span class="esg-val" id="annTreesEquivalent">129,870 Trees</span>
+            <span class="esg-label">Equivalent Mature Trees Seeded</span>
+            <span class="esg-sub">Over 25-Year Operational Life</span>
+          </div>
+          <div class="dpr-esg-card">
+            <span class="esg-icon">⚡</span>
+            <span class="esg-val" id="annRE100Share">68.4%</span>
+            <span class="esg-label">RE100 Renewable Power Share</span>
+            <span class="esg-sub">Scope-2 Corporate Decarbonization</span>
+          </div>
+        </div>
+      </div><!-- End Tab 5: Annual -->
 
   </main>
 
@@ -989,9 +1406,74 @@
     <!-- Populated dynamically prior to print -->
   </div>
 
+  <!-- ==========================================================================
+       Bankable Detailed Project Report (DPR) Executive Modal
+       ========================================================================== -->
+  <div class="modal-overlay" id="dprModal">
+    <div class="modal-card dpr-modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Bankable Detailed Project Report (DPR) Dossier
+        </h2>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="btn-header primary" id="btnExecuteDPRPrint">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Print DPR / Save PDF
+          </button>
+          <button class="btn-close-modal" id="btnCloseDPRModal" title="Close Modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body print-modal-scroll" id="dprModalBody">
+        <div id="dprContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       Project Scenario Manager Modal
+       ========================================================================== -->
+  <div class="modal-overlay" id="scenarioModal">
+    <div class="modal-card" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2 class="modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          Project Scenarios &amp; Institutional Templates
+        </h2>
+        <button class="btn-close-modal" id="btnCloseScenarioModal" title="Close Modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding: 1.25rem;">
+        <h4 style="font-size: 0.88rem; font-weight: 700; color: #F8FAFC; margin: 0 0 0.5rem 0;">Institutional Benchmark Templates</h4>
+        <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.25rem;" id="templateListContainer">
+          <!-- Dynamically injected -->
+        </div>
+
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 1rem;">
+          <h4 style="font-size: 0.88rem; font-weight: 700; color: #F8FAFC; margin: 0 0 0.5rem 0;">Save Active Model As Scenario</h4>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="customScenarioNameInput" class="input-control" placeholder="e.g. Pune Factory - 2 MW Captive + 500 kWh BESS" style="flex: 1;">
+            <button class="btn-header primary" id="btnSaveCustomScenario">Save Scenario</button>
+          </div>
+          <div id="savedCustomScenariosList" style="margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Application Logic Scripts -->
   <script src="js/statePolicies.js"></script>
   <script src="js/solarModel.js"></script>
+  <script src="js/bessModel.js"></script>
+  <script src="js/landedCostEngine.js"></script>
+  <script src="js/financialModel.js"></script>
+  <script src="js/meterDataParser.js"></script>
+  <script src="js/annualModel.js"></script>
+  <script src="js/projectStorage.js"></script>
+  <script src="js/dprGenerator.js"></script>
   <script src="js/dsmEngine.js"></script>
   <script src="js/uiController.js"></script>
   <script src="js/app.js"></script>

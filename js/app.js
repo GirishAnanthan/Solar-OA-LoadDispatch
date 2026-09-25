@@ -67,6 +67,15 @@ class SolarSchedulingApp {
     if (this.lastEvaluationResults && this.lastEvaluationResults.solarTelemetry) {
       this.ui.updateSolarTelemetryView(this.lastEvaluationResults.solarTelemetry);
     }
+
+    // Render Bankability Views (Tabs 2 - 5)
+    this.ui.renderFinancialView(this.lastEvaluationResults);
+    this.ui.renderLandedCostView(this.lastEvaluationResults);
+    this.ui.renderBESSView(this.lastEvaluationResults);
+    this.ui.renderAnnualView(this.lastEvaluationResults);
+
+    // Trigger auto-save to ensure state persistence across sessions and shutdowns
+    this.ui.triggerAutoSavePulse();
   }
 
   updateKPICards(summary) {

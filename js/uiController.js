@@ -125,6 +125,12 @@ class UIController {
     this.playbackInterval = null;
     this.currentTableFilter = "all"; // "all", "solar", "penalties"
 
+    // Institutional Sub-Engines
+    this.projectStorage = typeof ProjectStorage !== "undefined" ? new ProjectStorage() : null;
+    this.meterDataParser = typeof MeterDataParser !== "undefined" ? new MeterDataParser() : null;
+    this.dprGenerator = typeof DPRGenerator !== "undefined" ? new DPRGenerator() : null;
+    this.annualModel = typeof AnnualModel !== "undefined" ? new AnnualModel() : null;
+
     this.bindElements();
     this.attachEventListeners();
   }
@@ -249,6 +255,41 @@ class UIController {
     this.bannerSanctionedDemand = document.getElementById("bannerSanctionedDemand");
     this.bannerRooftopCapacity = document.getElementById("bannerRooftopCapacity");
     this.bannerStatePolicyName = document.getElementById("bannerStatePolicyName");
+
+    // Bankability & Procurement Elements
+    this.procurementTypeSelect = document.getElementById("procurementType");
+    this.captiveEquityInput = document.getElementById("captiveEquityPct");
+    this.captiveEquityGroup = document.getElementById("captiveEquityGroup");
+    this.bessCapacityInput = document.getElementById("bessCapacityKWh");
+    this.bessPowerInput = document.getElementById("bessPowerKW");
+    this.btnUploadMeter = document.getElementById("btnUploadMeter");
+    this.meterFileInput = document.getElementById("meterFileInput");
+    this.meterImportStatus = document.getElementById("meterImportStatus");
+
+    // Header Bankability Buttons & Autosave Badge
+    this.autosaveBadge = document.getElementById("autosaveBadge");
+    this.btnOpenDPR = document.getElementById("btnOpenDPR");
+    this.btnExportFinancialModel = document.getElementById("btnExportFinancialModel");
+    this.btnExportFinancialModelTab = document.getElementById("btnExportFinancialModelTab");
+    this.btnOpenScenarios = document.getElementById("btnOpenScenarios");
+
+    // Workspace Tabs
+    this.workspaceTabs = document.querySelectorAll(".workspace-tab-btn");
+    this.workspaceTabContents = document.querySelectorAll(".workspace-tab-content");
+
+    // DPR Modal Elements
+    this.dprModal = document.getElementById("dprModal");
+    this.btnCloseDPRModal = document.getElementById("btnCloseDPRModal");
+    this.btnExecuteDPRPrint = document.getElementById("btnExecuteDPRPrint");
+    this.dprContainer = document.getElementById("dprContainer");
+
+    // Scenario Modal Elements
+    this.scenarioModal = document.getElementById("scenarioModal");
+    this.btnCloseScenarioModal = document.getElementById("btnCloseScenarioModal");
+    this.templateListContainer = document.getElementById("templateListContainer");
+    this.customScenarioNameInput = document.getElementById("customScenarioNameInput");
+    this.btnSaveCustomScenario = document.getElementById("btnSaveCustomScenario");
+    this.savedCustomScenariosList = document.getElementById("savedCustomScenariosList");
   }
 
   attachEventListeners() {
@@ -633,8 +674,141 @@ class UIController {
         if (this.printModal && this.printModal.classList.contains("active")) {
           this.closePrintModal();
         }
+        if (this.dprModal && this.dprModal.classList.contains("active")) {
+          this.closeDPRModal();
+        }
+        if (this.scenarioModal && this.scenarioModal.classList.contains("active")) {
+          this.closeScenarioModal();
+        }
       }
     });
+
+    // Workspace Navigation Tabs Switching
+    if (this.workspaceTabs) {
+      this.workspaceTabs.forEach(tabBtn => {
+        tabBtn.addEventListener("click", () => {
+          const targetTab = tabBtn.getAttribute("data-tab");
+          this.workspaceTabs.forEach(b => b.classList.remove("active"));
+          tabBtn.classList.add("active");
+
+          if (this.workspaceTabContents) {
+            this.workspaceTabContents.forEach(content => {
+              content.classList.remove("active");
+            });
+          }
+
+          const activeContent = document.getElementById("tabContent" + targetTab.charAt(0).toUpperCase() + targetTab.slice(1));
+          if (activeContent) {
+            activeContent.classList.add("active");
+          }
+
+          // Auto-resize chart if switching to dispatch tab
+          if (targetTab === "dispatch" && this.app && this.app.chart) {
+            setTimeout(() => this.app.chart.resize(), 100);
+          }
+        });
+      });
+    }
+
+    // Procurement Structure & BESS Input Reactivity
+    if (this.procurementTypeSelect) {
+      this.procurementTypeSelect.addEventListener("change", (e) => {
+        if (this.captiveEquityGroup) {
+          if (e.target.value === "third_party") {
+            this.captiveEquityGroup.style.display = "none";
+          } else {
+            this.captiveEquityGroup.style.display = "block";
+          }
+        }
+        this.app.recalculate();
+      });
+    }
+    if (this.captiveEquityInput) {
+      this.captiveEquityInput.addEventListener("input", () => this.app.recalculate());
+    }
+    if (this.bessCapacityInput) {
+      this.bessCapacityInput.addEventListener("input", () => this.app.recalculate());
+    }
+    if (this.bessPowerInput) {
+      this.bessPowerInput.addEventListener("input", () => this.app.recalculate());
+    }
+
+    // Smart Meter File Upload Ingestion
+    if (this.btnUploadMeter && this.meterFileInput) {
+      this.btnUploadMeter.addEventListener("click", () => this.meterFileInput.click());
+      this.meterFileInput.addEventListener("change", (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            if (this.meterDataParser) {
+              const res = this.meterDataParser.parseCSV(evt.target.result);
+              if (this.meterImportStatus) {
+                this.meterImportStatus.textContent = `✔ Loaded (${res.totalRowsRead} rows)`;
+                this.meterImportStatus.style.color = "#34D399";
+              }
+              if (this.baseLoadInput) {
+                this.baseLoadInput.value = res.metrics.avgKW;
+              }
+              this.app.recalculate();
+              alert(`Smart Meter Ingested Successfully!\n• Peak Demand: ${res.metrics.peakKW} kW\n• Average Load: ${res.metrics.avgKW} kW\n• Total Energy: ${res.metrics.totalDailyKWh.toLocaleString()} kWh/day\n• Optimal Solar Size: ${res.metrics.recommendedRooftopKWp} kWp`);
+            }
+          } catch (err) {
+            alert("Error parsing meter file: " + err.message);
+          }
+        };
+        reader.readAsText(file);
+      });
+    }
+
+    // DPR Modal Actions
+    if (this.btnOpenDPR) {
+      this.btnOpenDPR.addEventListener("click", () => this.openDPRModal());
+    }
+    if (this.btnCloseDPRModal) {
+      this.btnCloseDPRModal.addEventListener("click", () => this.closeDPRModal());
+    }
+    if (this.btnExecuteDPRPrint) {
+      this.btnExecuteDPRPrint.addEventListener("click", () => this.executeDPRPrint());
+    }
+    if (this.dprModal) {
+      this.dprModal.addEventListener("click", (e) => {
+        if (e.target === this.dprModal) this.closeDPRModal();
+      });
+    }
+
+    // Financial Model CSV Export
+    if (this.btnExportFinancialModel) {
+      this.btnExportFinancialModel.addEventListener("click", () => this.exportFinancialModelCSV());
+    }
+    if (this.btnExportFinancialModelTab) {
+      this.btnExportFinancialModelTab.addEventListener("click", () => this.exportFinancialModelCSV());
+    }
+
+    // Scenario Manager Modal Actions
+    if (this.btnOpenScenarios) {
+      this.btnOpenScenarios.addEventListener("click", () => this.openScenarioModal());
+    }
+    if (this.btnCloseScenarioModal) {
+      this.btnCloseScenarioModal.addEventListener("click", () => this.closeScenarioModal());
+    }
+    if (this.btnSaveCustomScenario) {
+      this.btnSaveCustomScenario.addEventListener("click", () => this.saveCustomScenario());
+    }
+    if (this.scenarioModal) {
+      this.scenarioModal.addEventListener("click", (e) => {
+        if (e.target === this.scenarioModal) this.closeScenarioModal();
+      });
+    }
+
+    // Restore Auto-saved parameters if present
+    if (this.projectStorage) {
+      const saved = this.projectStorage.loadAutoSave();
+      if (saved) {
+        this.applySavedParameters(saved);
+      }
+    }
 
     // Initialize State Defaults
     this.handleStateChange();
@@ -1416,6 +1590,20 @@ class UIController {
     const oaTracking = this.oaTrackingSelect ? this.oaTrackingSelect.value : "fixed";
     const scheduleDate = this.custScheduleDateInput ? this.custScheduleDateInput.value : null;
 
+    // Procurement & BESS Parameters
+    const procurementType = this.procurementTypeSelect ? this.procurementTypeSelect.value : "group_captive";
+    const captiveEquityPct = this.captiveEquityInput ? (parseFloat(this.captiveEquityInput.value) || 26.0) : 26.0;
+    const bessCapacityKWh = this.bessCapacityInput ? (parseFloat(this.bessCapacityInput.value) || 0) : 0;
+    const bessPowerKW = this.bessPowerInput ? (parseFloat(this.bessPowerInput.value) || 0) : 0;
+    const voltageLevel = this.voltageSelect ? this.voltageSelect.value : "33";
+
+    // Customer & Plant Identifiers
+    const custName = this.custNameInput ? this.custNameInput.value : "Apex Precision Forgings & Alloys Ltd.";
+    const custConsumerNo = this.custConsumerNoInput ? this.custConsumerNoInput.value : "HT-028540091823";
+    const custAddress = this.custAddressInput ? this.custAddressInput.value : "";
+    const custSubstation = this.custSubstationInput ? this.custSubstationInput.value : "";
+    const custSignatory = this.custSignatoryInput ? this.custSignatoryInput.value : "Rajesh Sharma (Energy Mgr)";
+
     return {
       sanctionedLoadKW,
       baseConnectedLoadKW,
@@ -1434,7 +1622,17 @@ class UIController {
       oaLon,
       oaTilt,
       oaTracking,
-      scheduleDate
+      scheduleDate,
+      procurementType,
+      captiveEquityPct,
+      bessCapacityKWh,
+      bessPowerKW,
+      voltageLevel,
+      custName,
+      custConsumerNo,
+      custAddress,
+      custSubstation,
+      custSignatory
     };
   }
 
@@ -1720,6 +1918,417 @@ class UIController {
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Renders Bankable 25-Year Financial Model & DSCR Covenants
+   */
+  renderFinancialView(results) {
+    if (!results || !results.projectFinanceReport) return;
+    const fin = results.projectFinanceReport;
+    const metrics = fin.bankabilityMetrics || {};
+
+    const elProjectIRR = document.getElementById("finProjectIRR");
+    const elEquityIRR = document.getElementById("finEquityIRR");
+    const elMinDSCR = document.getElementById("finMinDSCR");
+    const elAvgDSCR = document.getElementById("finAvgDSCR");
+    const elNPV = document.getElementById("finNPV");
+    const elLCOE = document.getElementById("finLCOE");
+    const elPayback = document.getElementById("finPayback");
+    const elSimplePayback = document.getElementById("finSimplePayback");
+    const elCumSavings = document.getElementById("finCumSavings");
+    const tbody = document.getElementById("financialTableBody");
+
+    if (elProjectIRR) elProjectIRR.textContent = `${metrics.projectIRR}%`;
+    if (elEquityIRR) elEquityIRR.textContent = `${metrics.equityIRR}%`;
+    if (elMinDSCR) elMinDSCR.textContent = typeof metrics.minDSCR === "number" ? `${metrics.minDSCR.toFixed(2)}x` : metrics.minDSCR;
+    if (elAvgDSCR) elAvgDSCR.textContent = typeof metrics.avgDSCR === "number" ? `${metrics.avgDSCR.toFixed(2)}x` : metrics.avgDSCR;
+    if (elNPV) elNPV.textContent = `₹${(metrics.npvINR / 1e7).toFixed(2)} Cr`;
+    if (elLCOE) elLCOE.textContent = `₹${metrics.lcoePerKWh.toFixed(2)}/kWh`;
+    if (elPayback) elPayback.textContent = typeof metrics.discountedPaybackYears === "number" ? `${metrics.discountedPaybackYears} Yrs` : metrics.discountedPaybackYears;
+    if (elSimplePayback) elSimplePayback.textContent = `Simple: ${typeof metrics.simplePaybackYears === "number" ? metrics.simplePaybackYears + " Yrs" : metrics.simplePaybackYears}`;
+    if (elCumSavings) elCumSavings.textContent = `₹${(metrics.cumulativeSavings25YrINR / 1e7).toFixed(2)} Cr`;
+
+    if (tbody && fin.yearlyCashFlows) {
+      let rowsHTML = "";
+      for (const row of fin.yearlyCashFlows) {
+        const dscrClass = (row.dscr !== null && row.dscr < 1.20) ? "style=\"color: #F87171; font-weight:700;\"" : "";
+        rowsHTML += `
+          <tr>
+            <td style="font-weight:700; color: #94A3B8;">${row.year}</td>
+            <td>${row.greenEnergyMUs.toFixed(2)}</td>
+            <td>₹${row.discomTariff.toFixed(2)}</td>
+            <td class="num" style="color: #34D399;">₹${(row.grossEnergySavingsINR / 1e5).toFixed(1)}L</td>
+            <td class="num">₹${(row.omCostINR / 1e5).toFixed(1)}L</td>
+            <td class="num" style="font-weight:600;">₹${(row.ebitdaINR / 1e5).toFixed(1)}L</td>
+            <td class="num">₹${(row.principalRepaymentINR / 1e5).toFixed(1)}L</td>
+            <td class="num">₹${(row.interestPaymentINR / 1e5).toFixed(1)}L</td>
+            <td class="num">₹${(row.totalDebtServiceINR / 1e5).toFixed(1)}L</td>
+            <td class="num">₹${(row.cfadsINR / 1e5).toFixed(1)}L</td>
+            <td class="num" ${dscrClass}>${row.dscr !== null ? row.dscr.toFixed(2) + "x" : "—"}</td>
+            <td class="num" style="color: #38BDF8;">₹${(row.fcfeINR / 1e5).toFixed(1)}L</td>
+            <td class="num" style="font-weight:700; color: #10B981;">₹${(row.cumulativeSavingsINR / 1e5).toFixed(1)}L</td>
+          </tr>
+        `;
+      }
+      tbody.innerHTML = rowsHTML;
+    }
+  }
+
+  /**
+   * Renders Open Access Landed Tariff Waterfall & Statutory Rule 3 Captive Audit
+   */
+  renderLandedCostView(results) {
+    if (!results || !results.landedCostReport) return;
+    const landed = results.landedCostReport;
+    const rule3 = results.rule3AuditReport;
+
+    const elStateBadge = document.getElementById("landedStateBadge");
+    if (elStateBadge) elStateBadge.textContent = `${landed.regulator} • ${landed.stateName}`;
+
+    // Waterfall numbers
+    const setVal = (id, text, isHTML = false) => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (isHTML) el.innerHTML = text;
+        else el.textContent = text;
+      }
+    };
+
+    setVal("wfBasePPA", `₹${landed.basePpaRate.toFixed(3)}`);
+    setVal("wfTransCharge", `+₹${landed.transmissionCharge.toFixed(3)}`);
+    setVal("wfWheelCharge", `+₹${landed.wheelingCharge.toFixed(3)}`);
+    setVal("wfLossPct", `${landed.lossPct.toFixed(2)}%`);
+    setVal("wfLossCost", `+₹${landed.lossCostPerKWh.toFixed(3)}`);
+
+    if (landed.cssApplicable === 0) {
+      setVal("wfCSS", `<span class="badge-pill-green">₹0.000 (Exempt)</span>`, true);
+    } else {
+      setVal("wfCSS", `+₹${landed.cssApplicable.toFixed(3)}`);
+    }
+
+    if (landed.asApplicable === 0) {
+      setVal("wfAS", `<span class="badge-pill-green">₹0.000 (Exempt)</span>`, true);
+    } else {
+      setVal("wfAS", `+₹${landed.asApplicable.toFixed(3)}`);
+    }
+
+    setVal("wfBanking", `+₹${landed.bankingCostPerKWh.toFixed(3)}`);
+    setVal("wfDuty", `+₹${(landed.dutyCostPerKWh + landed.sldcFeePerKWh).toFixed(3)}`);
+    setVal("wfTotalLanded", `₹${landed.totalLandedCostPerKWh.toFixed(3)} / kWh`);
+    setVal("wfDiscomTariff", `₹${landed.discomEffectiveLanded.toFixed(3)} / kWh`);
+    setVal("wfNetSavings", `₹${landed.tariffDifferentialPerKWh.toFixed(3)} / kWh (${landed.savingsPct.toFixed(1)}%)`);
+
+    // Rule 3 Captive Compliance Audit
+    if (rule3) {
+      const rule3Badge = document.getElementById("rule3Badge");
+      const rule3BadgeText = document.getElementById("rule3BadgeText");
+      const rule3EquityStatus = document.getElementById("rule3EquityStatus");
+      const rule3ConsumptionStatus = document.getElementById("rule3ConsumptionStatus");
+      const rule3RiskText = document.getElementById("rule3RiskText");
+
+      if (rule3Badge) {
+        rule3Badge.className = rule3.isFullyCompliant ? "rule3-badge compliant" : "rule3-badge non-compliant";
+      }
+      if (rule3BadgeText) {
+        rule3BadgeText.textContent = rule3.isFullyCompliant 
+          ? "✅ 100% RULE 3 COMPLIANT (CAPTIVE STATUS VALIDATED)" 
+          : "⚠️ RULE 3 DISQUALIFICATION RISK (RETROSPECTIVE EXPOSURE)";
+      }
+      if (rule3EquityStatus) {
+        rule3EquityStatus.textContent = rule3.equityCheck.statusText;
+        rule3EquityStatus.style.color = rule3.equityCheck.isPassed ? "#34D399" : "#F87171";
+      }
+      if (rule3ConsumptionStatus) {
+        rule3ConsumptionStatus.textContent = rule3.consumptionCheck.statusText;
+        rule3ConsumptionStatus.style.color = rule3.consumptionCheck.isPassed ? "#34D399" : "#F87171";
+      }
+      if (rule3RiskText) {
+        rule3RiskText.textContent = rule3.financialRisk.riskDescription;
+      }
+    }
+  }
+
+  /**
+   * Renders BESS Battery Storage & TOD Arbitrage KPIs
+   */
+  renderBESSView(results) {
+    const bess = results ? results.bessSummary : null;
+
+    const elCap = document.getElementById("bessCapDisplay");
+    const elPower = document.getElementById("bessPowerDisplay");
+    const elCurtail = document.getElementById("bessCurtailDisplay");
+    const elDischarge = document.getElementById("bessDischargeDisplay");
+    const elSavings = document.getElementById("bessSavingsDisplay");
+
+    if (bess && bess.capacityKWh > 0) {
+      if (elCap) elCap.textContent = `${bess.capacityKWh} kWh`;
+      if (elPower) elPower.textContent = `${bess.powerKW} kW (C-rate ${(bess.powerKW / bess.capacityKWh).toFixed(2)}C)`;
+      if (elCurtail) elCurtail.textContent = `${bess.totalCurtailedCapturedKWh.toFixed(1)} kWh/day`;
+      if (elDischarge) elDischarge.textContent = `${bess.totalPeakDischargedKWh.toFixed(1)} kWh/day`;
+      if (elSavings) elSavings.textContent = `₹${(bess.annualTODArbitrageSavingsINR / 1e5).toFixed(1)} Lakhs/yr`;
+    } else {
+      if (elCap) elCap.textContent = "0 kWh";
+      if (elPower) elPower.textContent = "0 kW (Configure in Sidebar)";
+      if (elCurtail) elCurtail.textContent = "0.0 kWh/day";
+      if (elDischarge) elDischarge.textContent = "0.0 kWh/day";
+      if (elSavings) elSavings.textContent = "₹0.0 Lakhs/yr";
+    }
+  }
+
+  /**
+   * Renders Annual 35,040 Simulation & Monthly Seasonal Table
+   */
+  renderAnnualView(results) {
+    if (!results || !results.summary || !this.annualModel) return;
+    const params = this.getSimulationParams();
+    const annualData = this.annualModel.evaluateAnnualProfile(results.summary, params.rooftopKWp, params.openAccessKWp);
+    if (!annualData) return;
+
+    const m = annualData.annualMetrics;
+    const elGen = document.getElementById("annGenMUs");
+    const elGreen = document.getElementById("annGreenShare");
+    const elCUF = document.getElementById("annCUFPct");
+    const elSavings = document.getElementById("annSavingsLakhs");
+    const elCO2 = document.getElementById("annCO2Tonnes");
+    const elTrees = document.getElementById("annTreesEquivalent");
+    const elRE100 = document.getElementById("annRE100Share");
+    const tbody = document.getElementById("annualTableBody");
+
+    if (elGen) elGen.textContent = `${m.annualTotalGreenMUs.toFixed(2)} MUs`;
+    if (elGreen) elGreen.textContent = `${m.annualGreenSharePct.toFixed(1)}%`;
+    if (elCUF) elCUF.textContent = `${m.annualCUFPct.toFixed(1)}%`;
+    if (elSavings) elSavings.textContent = `₹${m.annualSavingsLakhsINR.toFixed(1)} Lakhs`;
+    if (elCO2) elCO2.textContent = `${m.co2AvoidedTonnes.toLocaleString("en-IN")} Tonnes`;
+    if (elTrees) elTrees.textContent = `${m.treesEquivalent.toLocaleString("en-IN")} Trees`;
+    if (elRE100) elRE100.textContent = `${m.annualGreenSharePct.toFixed(1)}%`;
+
+    if (tbody && annualData.monthlyBreakdown) {
+      let rowsHTML = "";
+      for (const row of annualData.monthlyBreakdown) {
+        rowsHTML += `
+          <tr>
+            <td style="font-weight:700; color: #F8FAFC;">${row.month}</td>
+            <td style="color: var(--text-muted); font-size: 0.72rem;">${row.season}</td>
+            <td class="num">${row.loadMUs.toFixed(2)}</td>
+            <td class="num" style="color: #F59E0B;">${row.btmMUs.toFixed(2)}</td>
+            <td class="num" style="color: #38BDF8;">${row.oaMUs.toFixed(2)}</td>
+            <td class="num" style="font-weight:700; color: #34D399;">${row.greenSharePct.toFixed(1)}%</td>
+            <td class="num">${row.gridImportMUs.toFixed(2)}</td>
+            <td class="num">${row.cufPct.toFixed(1)}%</td>
+            <td class="num" style="font-weight:700; color: #10B981;">₹${row.savingsLakhsINR.toFixed(1)}L</td>
+          </tr>
+        `;
+      }
+      tbody.innerHTML = rowsHTML;
+    }
+  }
+
+  /**
+   * Autosaves active parameters to local storage with subtle visual feedback
+   */
+  triggerAutoSavePulse() {
+    if (!this.projectStorage) return;
+    const params = this.getSimulationParams();
+    this.projectStorage.autoSave(params);
+
+    if (this.autosaveBadge) {
+      const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      this.autosaveBadge.innerHTML = `<span class="badge-dot"></span> Autosaved ${timeStr}`;
+      this.autosaveBadge.classList.add("pulse");
+      setTimeout(() => {
+        if (this.autosaveBadge) this.autosaveBadge.classList.remove("pulse");
+      }, 1200);
+    }
+  }
+
+  /**
+   * DPR Modal & PDF Generation
+   */
+  openDPRModal() {
+    if (!this.dprGenerator || !this.app.lastEvaluationResults) return;
+    const html = this.dprGenerator.generateDPRHTML(this.app.lastEvaluationResults, this.getSimulationParams());
+    if (this.dprContainer) {
+      this.dprContainer.innerHTML = html;
+    }
+    if (this.dprModal) {
+      this.dprModal.classList.add("active");
+    }
+  }
+
+  closeDPRModal() {
+    if (this.dprModal) {
+      this.dprModal.classList.remove("active");
+    }
+  }
+
+  executeDPRPrint() {
+    if (!this.dprContainer) return;
+    if (this.sldcPrintDossier) {
+      this.sldcPrintDossier.innerHTML = this.dprContainer.innerHTML;
+    }
+    window.print();
+  }
+
+  exportFinancialModelCSV() {
+    if (!this.dprGenerator || !this.app.lastEvaluationResults) {
+      alert("No financial model data available. Run simulation first.");
+      return;
+    }
+    this.dprGenerator.exportFinancialModelCSV(this.app.lastEvaluationResults, this.getSimulationParams());
+  }
+
+  /**
+   * Scenario Manager Modal
+   */
+  openScenarioModal() {
+    if (!this.projectStorage) return;
+
+    // Render Institutional Benchmark Templates
+    if (this.templateListContainer) {
+      const templates = this.projectStorage.DEFAULT_TEMPLATES;
+      let tHTML = "";
+      for (const [key, t] of Object.entries(templates)) {
+        tHTML += `
+          <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 700; color: #F8FAFC; font-size: 0.85rem;">${t.name}</div>
+              <div style="color: var(--text-muted); font-size: 0.72rem; margin-top: 0.15rem;">${t.description}</div>
+            </div>
+            <button class="btn-header" onclick="window.solarApp.ui.loadScenario('${key}')" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
+              Load
+            </button>
+          </div>
+        `;
+      }
+      this.templateListContainer.innerHTML = tHTML;
+    }
+
+    this.renderSavedCustomScenarios();
+
+    if (this.scenarioModal) {
+      this.scenarioModal.classList.add("active");
+    }
+  }
+
+  closeScenarioModal() {
+    if (this.scenarioModal) {
+      this.scenarioModal.classList.remove("active");
+    }
+  }
+
+  renderSavedCustomScenarios() {
+    if (!this.savedCustomScenariosList || !this.projectStorage) return;
+    const scenarios = this.projectStorage.getSavedScenarios();
+    const keys = Object.keys(scenarios);
+
+    if (keys.length === 0) {
+      this.savedCustomScenariosList.innerHTML = `<span style="font-size: 0.74rem; color: var(--text-muted);">No custom saved scenarios yet. Save your current model parameters above.</span>`;
+      return;
+    }
+
+    let sHTML = "";
+    for (const key of keys) {
+      const s = scenarios[key];
+      const dateStr = s.timestamp ? new Date(s.timestamp).toLocaleDateString("en-IN") : "";
+      sHTML += `
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 0.6rem; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 600; color: #F8FAFC; font-size: 0.82rem;">${s.name}</div>
+            <div style="color: var(--text-muted); font-size: 0.70rem;">Saved ${dateStr}</div>
+          </div>
+          <div style="display: flex; gap: 0.35rem;">
+            <button class="btn-header" onclick="window.solarApp.ui.loadScenario('${key}')" style="font-size: 0.72rem; padding: 0.25rem 0.5rem;">Load</button>
+            <button class="btn-header danger" onclick="window.solarApp.ui.deleteCustomScenario('${key}')" style="font-size: 0.72rem; padding: 0.25rem 0.5rem;">Delete</button>
+          </div>
+        </div>
+      `;
+    }
+    this.savedCustomScenariosList.innerHTML = sHTML;
+  }
+
+  saveCustomScenario() {
+    if (!this.projectStorage || !this.customScenarioNameInput) return;
+    const name = this.customScenarioNameInput.value.trim();
+    if (!name) {
+      alert("Please enter a name for this scenario.");
+      return;
+    }
+    const params = this.getSimulationParams();
+    this.projectStorage.saveScenario(name, params);
+    this.customScenarioNameInput.value = "";
+    this.renderSavedCustomScenarios();
+    alert(`Scenario "${name}" saved successfully!`);
+  }
+
+  deleteCustomScenario(id) {
+    if (!this.projectStorage) return;
+    if (confirm("Delete this saved scenario?")) {
+      this.projectStorage.deleteScenario(id);
+      this.renderSavedCustomScenarios();
+    }
+  }
+
+  loadScenario(scenarioKey) {
+    if (!this.projectStorage) return;
+    let target = null;
+    if (this.projectStorage.DEFAULT_TEMPLATES[scenarioKey]) {
+      target = this.projectStorage.DEFAULT_TEMPLATES[scenarioKey];
+    } else {
+      const saved = this.projectStorage.getSavedScenarios();
+      if (saved[scenarioKey]) {
+        target = saved[scenarioKey].state;
+      }
+    }
+
+    if (target) {
+      this.applySavedParameters(target);
+      this.closeScenarioModal();
+      this.app.recalculate();
+      alert("Scenario loaded successfully!");
+    }
+  }
+
+  applySavedParameters(params) {
+    if (!params) return;
+    if (params.stateKey && this.stateSelect) {
+      this.stateSelect.value = params.stateKey;
+      this.handleStateChange();
+    }
+    if (params.sanctionedLoadKW !== undefined && this.sanctionedLoadInput) this.sanctionedLoadInput.value = params.sanctionedLoadKW;
+    if (params.baseConnectedLoadKW !== undefined && this.baseLoadInput) this.baseLoadInput.value = params.baseConnectedLoadKW;
+    if (params.loadProfileType && this.loadProfileSelect) this.loadProfileSelect.value = params.loadProfileType;
+    if (params.rooftopKWp !== undefined && this.rooftopKWpInput) this.rooftopKWpInput.value = params.rooftopKWp;
+    if (params.openAccessKWp !== undefined && this.openAccessKWpInput) this.openAccessKWpInput.value = params.openAccessKWp;
+    if (params.gridTariff !== undefined && this.gridTariffInput) this.gridTariffInput.value = params.gridTariff;
+    if (params.oaPpaRate !== undefined && this.oaPpaRateInput) this.oaPpaRateInput.value = params.oaPpaRate;
+    if (params.transmissionLoss !== undefined && this.transmissionLossInput) this.transmissionLossInput.value = params.transmissionLoss;
+    if (params.lossPct !== undefined && this.transmissionLossInput) this.transmissionLossInput.value = params.lossPct;
+
+    if (params.procurementType && this.procurementTypeSelect) {
+      this.procurementTypeSelect.value = params.procurementType;
+      if (this.captiveEquityGroup) {
+        this.captiveEquityGroup.style.display = params.procurementType === "third_party" ? "none" : "block";
+      }
+    }
+    if (params.captiveEquityPct !== undefined && this.captiveEquityInput) this.captiveEquityInput.value = params.captiveEquityPct;
+    if (params.bessCapacityKWh !== undefined && this.bessCapacityInput) this.bessCapacityInput.value = params.bessCapacityKWh;
+    if (params.bessPowerKW !== undefined && this.bessPowerInput) this.bessPowerInput.value = params.bessPowerKW;
+
+    if (params.rooftopLat !== undefined && this.rooftopLatInput) this.rooftopLatInput.value = params.rooftopLat;
+    if (params.rooftopLon !== undefined && this.rooftopLonInput) this.rooftopLonInput.value = params.rooftopLon;
+    if (params.rooftopTilt !== undefined && this.rooftopTiltInput) this.rooftopTiltInput.value = params.rooftopTilt;
+    if (params.oaLat !== undefined && this.oaLatInput) this.oaLatInput.value = params.oaLat;
+    if (params.oaLon !== undefined && this.oaLonInput) this.oaLonInput.value = params.oaLon;
+    if (params.oaTracking && this.oaTrackingSelect) this.oaTrackingSelect.value = params.oaTracking;
+
+    if (params.custName && this.custNameInput) this.custNameInput.value = params.custName;
+    if (params.custConsumerNo && this.custConsumerNoInput) this.custConsumerNoInput.value = params.custConsumerNo;
+    if (params.custAddress && this.custAddressInput) this.custAddressInput.value = params.custAddress;
+    if (params.custSubstation && this.custSubstationInput) this.custSubstationInput.value = params.custSubstation;
+    if (params.custSignatory && this.custSignatoryInput) this.custSignatoryInput.value = params.custSignatory;
+
+    this.updateProjectBanner();
   }
 }
 

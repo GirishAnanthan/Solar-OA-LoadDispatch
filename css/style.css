@@ -2446,4 +2446,649 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   animation: pvgisSpin 1s linear infinite;
 }
 
+/* ==========================================================================
+   Auto-Save Status Indicator & Header Enhancements
+   ========================================================================== */
+.autosave-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.65rem;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #34D399;
+}
+
+.autosave-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+}
+
+.btn-header.accent {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.35));
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #FCD34D;
+  font-weight: 700;
+}
+
+.btn-header.accent:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.4), rgba(217, 119, 6, 0.55));
+  border-color: rgba(245, 158, 11, 0.8);
+  color: #FFFFFF;
+}
+
+/* ==========================================================================
+   Executive Workspace Navigation Tabs
+   ========================================================================== */
+.workspace-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 0.35rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.workspace-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.95rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.80rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.workspace-tab-btn:hover {
+  background: rgba(30, 41, 59, 0.8);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.workspace-tab-btn.active {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(16, 185, 129, 0.2));
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #FFFFFF;
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.2);
+}
+
+.workspace-tab-content {
+  display: none;
+}
+
+.workspace-tab-content.active {
+  display: block;
+}
+
+/* ==========================================================================
+   Bankable Financial Dashboard & Tab Views
+   ========================================================================== */
+.bankable-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.85rem;
+}
+
+.bankable-section-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bankable-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.15rem;
+}
+
+.bankable-kpi-box {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.bankable-kpi-box.highlight {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(14, 165, 233, 0.12));
+}
+
+.bankable-kpi-box.success {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(16, 185, 129, 0.12));
+}
+
+.bkpi-label {
+  font-size: 0.70rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+}
+
+.bkpi-val {
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0.35rem 0 0.15rem 0;
+}
+
+.bkpi-sub {
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+.financial-table-scroll {
+  max-height: 480px;
+  overflow-y: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.financial-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.76rem;
+  text-align: right;
+}
+
+.financial-table th {
+  background: rgba(15, 23, 42, 0.95);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 0.6rem 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  white-space: nowrap;
+}
+
+.financial-table th:first-child,
+.financial-table td:first-child {
+  text-align: center;
+}
+
+.financial-table td {
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.financial-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dscr-tag-ok {
+  color: #34D399;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   Landed Cost Waterfall & Rule 3 Card
+   ========================================================================== */
+.landed-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .landed-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.landed-waterfall-card, .rule3-audit-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 1.15rem;
+}
+
+.waterfall-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.80rem;
+}
+
+.waterfall-table td {
+  padding: 0.45rem 0.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.waterfall-table td.num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.badge-pill-green {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+}
+
+.rule3-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.rule3-badge.compliant {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.rule3-badge.non-compliant {
+  background: rgba(239, 68, 68, 0.2);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+/* ==========================================================================
+   BESS & Storage Arbitrage Panel
+   ========================================================================== */
+.bess-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+/* ==========================================================================
+   Bankable DPR Dossier Modal & Print Styling
+   ========================================================================== */
+.dpr-modal-card {
+  max-width: 980px;
+  width: 95vw;
+  max-height: 90vh;
+}
+
+.dpr-document {
+  background: #0B1120;
+  color: #E2E8F0;
+  padding: 1.5rem;
+  border-radius: 8px;
+  font-family: var(--font-main);
+  line-height: 1.5;
+}
+
+.dpr-cover-header {
+  border-bottom: 2px solid rgba(245, 158, 11, 0.5);
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.dpr-cover-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.dpr-badge-confidential {
+  background: rgba(239, 68, 68, 0.2);
+  color: #F87171;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+}
+
+.dpr-badge-statutory {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.dpr-doc-ref {
+  font-family: var(--font-mono);
+  font-size: 0.70rem;
+  color: var(--text-muted);
+}
+
+.dpr-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #F8FAFC;
+  margin: 0 0 0.25rem 0;
+}
+
+.dpr-subtitle {
+  font-size: 0.88rem;
+  color: #94A3B8;
+  font-weight: 500;
+  margin: 0 0 1rem 0;
+}
+
+.dpr-project-meta-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.dpr-meta-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  display: block;
+}
+
+.dpr-meta-val {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.dpr-section {
+  margin-bottom: 2rem;
+}
+
+.dpr-section-heading {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #F59E0B;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.4rem;
+  margin-bottom: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.dpr-section-desc {
+  font-size: 0.80rem;
+  color: #94A3B8;
+  margin-bottom: 0.85rem;
+}
+
+.dpr-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.65rem;
+}
+
+.dpr-kpi-box {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.dpr-kpi-box.highlight {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.dpr-kpi-box.success {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.dpr-kpi-label {
+  font-size: 0.66rem;
+  color: #94A3B8;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.dpr-kpi-num {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0.25rem 0 0.15rem 0;
+}
+
+.dpr-kpi-sub {
+  font-size: 0.66rem;
+  color: #64748B;
+}
+
+.dpr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.dpr-table th {
+  background: rgba(15, 23, 42, 0.9);
+  padding: 0.55rem 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.dpr-table td {
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dpr-total-row td {
+  font-weight: 700;
+  color: #FFFFFF;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.dpr-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 850px) {
+  .dpr-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dpr-subheading {
+  font-size: 0.88rem;
+  color: #F8FAFC;
+  font-weight: 700;
+  margin: 0 0 0.65rem 0;
+}
+
+.dpr-table-compact {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.dpr-table-compact td {
+  padding: 0.4rem 0.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dpr-table-compact td.num {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.dpr-audit-card {
+  border-radius: 8px;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dpr-audit-card.compliant {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.audit-status-badge {
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #34D399;
+  margin-bottom: 0.85rem;
+}
+
+.audit-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.audit-item {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.78rem;
+}
+
+.audit-bullet {
+  color: #10B981;
+  font-weight: 800;
+}
+
+.audit-item p {
+  margin: 0.15rem 0 0 0;
+  color: #94A3B8;
+  font-size: 0.72rem;
+}
+
+.audit-liability-box {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  padding: 0.65rem;
+  font-size: 0.72rem;
+  color: #CBD5E1;
+}
+
+.dpr-table-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+}
+
+.dpr-table-financial {
+  font-size: 0.72rem;
+  text-align: right;
+}
+
+.dpr-table-financial th {
+  text-align: right;
+}
+
+.dpr-table-financial th:first-child,
+.dpr-table-financial td:first-child {
+  text-align: center;
+}
+
+.dscr-ok {
+  color: #34D399;
+}
+
+.dpr-esg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+}
+
+.dpr-esg-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.esg-icon {
+  font-size: 1.8rem;
+  margin-bottom: 0.35rem;
+}
+
+.esg-val {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #34D399;
+}
+
+.esg-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #F8FAFC;
+  margin-top: 0.25rem;
+}
+
+.esg-sub {
+  font-size: 0.68rem;
+  color: #64748B;
+}
+
+.dpr-sign-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.dpr-sign-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #94A3B8;
+}
+
+.dpr-sign-line {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.3);
+  margin-bottom: 0.5rem;
+  width: 80%;
+}
+
 
