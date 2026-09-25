@@ -183,6 +183,7 @@ class UIController {
     this.timeScrubberLabel = document.getElementById("timeScrubberLabel");
     this.btnPlayScrubber = document.getElementById("btnPlayScrubber");
     this.btnResetScrubber = document.getElementById("btnResetScrubber");
+    this.btnReplayScrubber = document.getElementById("btnReplayScrubber");
 
     // Real-Time Power Flow Meter Nodes
     this.flowLoad = document.getElementById("flowLoad");
@@ -530,13 +531,20 @@ class UIController {
       this.togglePlayScrubber();
     });
 
-    // Reset Scrubber
+    // Reset Scrubber to Midday
     this.btnResetScrubber.addEventListener("click", () => {
       this.pauseScrubber();
       this.currentScrubBlock = 49;
       this.timeScrubber.value = 49;
       this.updateScrubberView(true);
     });
+
+    // Replay Scrubber from Block 1 (00:00)
+    if (this.btnReplayScrubber) {
+      this.btnReplayScrubber.addEventListener("click", () => {
+        this.replayScrubber();
+      });
+    }
 
     // Scenario Presets
     document.querySelectorAll(".btn-scenario").forEach(btn => {
@@ -1106,26 +1114,48 @@ class UIController {
   }
 
   startPlayScrubber() {
+    // If currently at or past the final block 96, reset to block 1 before playing
+    if (this.currentScrubBlock >= 96) {
+      this.currentScrubBlock = 1;
+      this.timeScrubber.value = 1;
+      this.updateScrubberView(true);
+    }
+
     this.isPlaying = true;
     this.btnPlayScrubber.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
+    this.btnPlayScrubber.setAttribute("title", "Pause 24-Hour Timeline Scrub");
     
+    // Playback interval: 750ms per 15-minute block (>4x slower than 180ms for comfortable inspection)
     this.playbackInterval = setInterval(() => {
       this.currentScrubBlock++;
-      if (this.currentScrubBlock > 96) {
-        this.currentScrubBlock = 1;
+      if (this.currentScrubBlock >= 96) {
+        this.currentScrubBlock = 96;
+        this.timeScrubber.value = 96;
+        this.updateScrubberView(true);
+        this.pauseScrubber(); // Stop at the last block
+        return;
       }
       this.timeScrubber.value = this.currentScrubBlock;
       this.updateScrubberView(true);
-    }, 180);
+    }, 750);
   }
 
   pauseScrubber() {
     this.isPlaying = false;
     this.btnPlayScrubber.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+    this.btnPlayScrubber.setAttribute("title", "Play 24-Hour Timeline Scrub");
     if (this.playbackInterval) {
       clearInterval(this.playbackInterval);
       this.playbackInterval = null;
     }
+  }
+
+  replayScrubber() {
+    this.pauseScrubber();
+    this.currentScrubBlock = 1;
+    this.timeScrubber.value = 1;
+    this.updateScrubberView(true);
+    this.startPlayScrubber();
   }
 
   updateScrubberView(autoScrollTable = false) {
