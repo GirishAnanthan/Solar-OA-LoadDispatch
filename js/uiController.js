@@ -304,6 +304,9 @@ class UIController {
     this.customScenarioNameInput = document.getElementById("customScenarioNameInput");
     this.btnSaveCustomScenario = document.getElementById("btnSaveCustomScenario");
     this.savedCustomScenariosList = document.getElementById("savedCustomScenariosList");
+
+    // Modal Focus State Management
+    this.lastFocusedElement = null;
   }
 
   attachEventListeners() {
@@ -664,50 +667,41 @@ class UIController {
     });
 
     // Policy Modal
-    this.btnPolicyModal.addEventListener("click", () => {
-      this.policyModal.classList.add("active");
-      this.populatePolicyModal();
-    });
-
-    this.btnCloseModal.addEventListener("click", () => {
-      this.policyModal.classList.remove("active");
-    });
-
-    this.policyModal.addEventListener("click", (e) => {
-      if (e.target === this.policyModal) {
-        this.policyModal.classList.remove("active");
-      }
-    });
+    if (this.btnPolicyModal) {
+      this.btnPolicyModal.addEventListener("click", (e) => this.openPolicyModal(e.currentTarget));
+    }
+    if (this.btnCloseModal) {
+      this.btnCloseModal.addEventListener("click", () => this.closePolicyModal());
+    }
+    if (this.policyModal) {
+      this.policyModal.addEventListener("click", (e) => {
+        if (e.target === this.policyModal) this.closePolicyModal();
+      });
+    }
 
     // Print SLDC Schedule Buttons
     if (this.btnPrintSchedule) {
-      this.btnPrintSchedule.addEventListener("click", () => this.openPrintModal());
+      this.btnPrintSchedule.addEventListener("click", (e) => this.openPrintModal(e.currentTarget));
     }
     if (this.btnQuickPrintSidebar) {
-      this.btnQuickPrintSidebar.addEventListener("click", () => this.openPrintModal());
+      this.btnQuickPrintSidebar.addEventListener("click", (e) => this.openPrintModal(e.currentTarget));
     }
     if (this.btnPrintScheduleTable) {
-      this.btnPrintScheduleTable.addEventListener("click", () => this.openPrintModal());
+      this.btnPrintScheduleTable.addEventListener("click", (e) => this.openPrintModal(e.currentTarget));
     }
 
     // Print Modal Actions
     if (this.btnClosePrintModal) {
-      this.btnClosePrintModal.addEventListener("click", () => {
-        this.closePrintModal();
-      });
+      this.btnClosePrintModal.addEventListener("click", () => this.closePrintModal());
     }
 
     if (this.btnExecutePrint) {
-      this.btnExecutePrint.addEventListener("click", () => {
-        this.executePrint();
-      });
+      this.btnExecutePrint.addEventListener("click", () => this.executePrint());
     }
 
     if (this.printModal) {
       this.printModal.addEventListener("click", (e) => {
-        if (e.target === this.printModal) {
-          this.closePrintModal();
-        }
+        if (e.target === this.printModal) this.closePrintModal();
       });
     }
 
@@ -718,23 +712,8 @@ class UIController {
       }
     });
 
-    // Escape key modal dismiss
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        if (this.policyModal && this.policyModal.classList.contains("active")) {
-          this.policyModal.classList.remove("active");
-        }
-        if (this.printModal && this.printModal.classList.contains("active")) {
-          this.closePrintModal();
-        }
-        if (this.dprModal && this.dprModal.classList.contains("active")) {
-          this.closeDPRModal();
-        }
-        if (this.scenarioModal && this.scenarioModal.classList.contains("active")) {
-          this.closeScenarioModal();
-        }
-      }
-    });
+    // Keyboard navigation & modal focus trapping (Escape dismiss, Tab cycling)
+    document.addEventListener("keydown", (e) => this.handleModalKeydown(e));
 
     // Workspace Navigation Tabs Switching
     if (this.workspaceTabs) {
@@ -817,7 +796,7 @@ class UIController {
 
     // DPR Modal Actions
     if (this.btnOpenDPR) {
-      this.btnOpenDPR.addEventListener("click", () => this.openDPRModal());
+      this.btnOpenDPR.addEventListener("click", (e) => this.openDPRModal(e.currentTarget));
     }
     if (this.btnCloseDPRModal) {
       this.btnCloseDPRModal.addEventListener("click", () => this.closeDPRModal());
@@ -841,7 +820,7 @@ class UIController {
 
     // Scenario Manager Modal Actions
     if (this.btnOpenScenarios) {
-      this.btnOpenScenarios.addEventListener("click", () => this.openScenarioModal());
+      this.btnOpenScenarios.addEventListener("click", (e) => this.openScenarioModal(e.currentTarget));
     }
     if (this.btnCloseScenarioModal) {
       this.btnCloseScenarioModal.addEventListener("click", () => this.closeScenarioModal());
@@ -1577,7 +1556,7 @@ class UIController {
         ? b.actualOASurplus 
         : Math.max(0, b.actualOADelivered - (b.actualConnectedLoad - b.actualBTMUtilized));
       const oaCellDisplay = oaSurplus > 0
-        ? `${oaConsumed.toLocaleString()} <small title="Delivered from solar park: ${b.actualOADelivered} kW (${oaSurplus.toFixed(1)} kW surplus injected into grid)" style="color: #94A3B8; font-size: 0.72em;">(+${oaSurplus.toFixed(1)})</small>`
+        ? `${oaConsumed.toLocaleString()} <small title="Delivered from solar park: ${b.actualOADelivered} kW (${oaSurplus.toFixed(1)} kW surplus injected into grid)" style="color: #CBD5E1; font-size: 0.85em; font-weight: 600;">(+${oaSurplus.toFixed(1)})</small>`
         : `${oaConsumed.toLocaleString()}`;
 
       html += `
@@ -1712,6 +1691,15 @@ class UIController {
     modalContent.innerHTML = html;
   }
 
+  openPolicyModal(triggerEl = null) {
+    this.populatePolicyModal();
+    this.openModal(this.policyModal, triggerEl);
+  }
+
+  closePolicyModal() {
+    this.closeModal(this.policyModal);
+  }
+
   getSimulationParams() {
     const baseConnectedLoadKW = parseFloat(this.baseLoadInput.value) || 1000;
     const sanctionedLoadKW = parseFloat(this.sanctionedLoadInput.value) || 1200;
@@ -1825,24 +1813,20 @@ class UIController {
   /**
    * Opens the SLDC schedule print preview modal and prepares preview container
    */
-  openPrintModal() {
+  openPrintModal(triggerEl = null) {
     if (!this.app.lastEvaluationResults) return;
     const printHTML = this.generateSLDCPrintHTML();
     if (this.printPreviewContainer) {
       this.printPreviewContainer.innerHTML = printHTML;
     }
-    if (this.printModal) {
-      this.printModal.classList.add("active");
-    }
+    this.openModal(this.printModal, triggerEl);
   }
 
   /**
    * Closes the SLDC schedule print preview modal and cleans up DOM content
    */
   closePrintModal() {
-    if (this.printModal) {
-      this.printModal.classList.remove("active");
-    }
+    this.closeModal(this.printModal);
     if (this.printPreviewContainer) {
       this.printPreviewContainer.innerHTML = "";
     }
@@ -1979,12 +1963,12 @@ class UIController {
             <td class="meta-label">Rooftop Solar Plant (BTM):</td>
             <td class="meta-val">
               <strong>${rooftopKWp} kWp</strong> (Zero-Export Mode / Class 0.2s RPR Protected)<br>
-              <span style="font-size: 0.72rem; color: #475569;">GPS: ${rooftopLat}° N, ${rooftopLon}° E | Tilt: ${rooftopTilt}° South (Yield: ${solarTel && solarTel.rooftop ? solarTel.rooftop.dailyGenKWhPerKWp : '5.2'} kWh/kWp)</span>
+              <span style="font-size: 0.75rem; color: #475569;">GPS: ${rooftopLat}° N, ${rooftopLon}° E | Tilt: ${rooftopTilt}° South (Yield: ${solarTel && solarTel.rooftop ? solarTel.rooftop.dailyGenKWhPerKWp : '5.2'} kWh/kWp)</span>
             </td>
             <td class="meta-label">Captive Open Access Solar:</td>
             <td class="meta-val">
               <strong>${oaKWp} kWp</strong> (${oaTracking === 'tracker' ? 'Single-Axis Tracking' : 'Fixed Tilt ' + calculateOptimalTilt(oaLat) + '°'})<br>
-              <span style="font-size: 0.72rem; color: #475569;">GPS: ${oaLat}° N, ${oaLon}° E | ${oaParkName} (Offset: ${timeShiftMinutes >= 0 ? '+' : ''}${timeShiftMinutes} min)</span>
+              <span style="font-size: 0.75rem; color: #475569;">GPS: ${oaLat}° N, ${oaLon}° E | ${oaParkName} (Offset: ${timeShiftMinutes >= 0 ? '+' : ''}${timeShiftMinutes} min)</span>
             </td>
           </tr>
         </table>
@@ -2052,12 +2036,12 @@ class UIController {
           <div class="sign-col">
             <div>Prepared & Verified by:</div>
             <div class="sign-line">Shift Electrical Engineer (Plant Substation)</div>
-            <div style="font-size: 8.5px; color: #64748B;">Date & Timestamp: ${new Date().toLocaleString('en-IN')}</div>
+            <div style="font-size: 0.75rem; color: #475569;">Date & Timestamp: ${new Date().toLocaleString('en-IN')}</div>
           </div>
           <div class="sign-col" style="text-align: right;">
             <div>Authorized Signatory for ${custName}:</div>
             <div class="sign-line">${custSignatory}</div>
-            <div style="font-size: 8.5px; color: #64748B;">Official Seal & Consumer Stamp</div>
+            <div style="font-size: 0.75rem; color: #475569;">Official Seal & Consumer Stamp</div>
           </div>
         </div>
       </div>
@@ -2253,7 +2237,7 @@ class UIController {
         rowsHTML += `
           <tr>
             <td style="font-weight:700; color: #F8FAFC;">${row.month}</td>
-            <td style="color: var(--text-muted); font-size: 0.72rem;">${row.season}</td>
+            <td style="color: var(--text-muted); font-size: 0.75rem;">${row.season}</td>
             <td class="num">${row.loadMUs.toFixed(2)}</td>
             <td class="num" style="color: #F59E0B;">${row.btmMUs.toFixed(2)}</td>
             <td class="num" style="color: #38BDF8;">${row.oaMUs.toFixed(2)}</td>
@@ -2295,15 +2279,11 @@ class UIController {
     if (this.dprContainer) {
       this.dprContainer.innerHTML = html;
     }
-    if (this.dprModal) {
-      this.dprModal.classList.add("active");
-    }
+    this.openModal(this.dprModal, triggerEl);
   }
 
   closeDPRModal() {
-    if (this.dprModal) {
-      this.dprModal.classList.remove("active");
-    }
+    this.closeModal(this.dprModal);
   }
 
   executeDPRPrint() {
@@ -2323,9 +2303,87 @@ class UIController {
   }
 
   /**
+   * Accessible Modal Focus Management & Keyboard Trap
+   */
+  openModal(modal, triggerEl = null) {
+    if (!modal) return;
+    this.lastFocusedElement = triggerEl || document.activeElement;
+    modal.classList.add("active");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+
+    // Set focus on first interactive element within the dialog
+    setTimeout(() => {
+      const focusable = modal.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length > 0) {
+        focusable[0].focus();
+      }
+    }, 50);
+  }
+
+  closeModal(modal) {
+    if (!modal) return;
+    modal.classList.remove("active");
+    modal.setAttribute("aria-hidden", "true");
+
+    const activeModals = document.querySelectorAll('.modal-overlay.active');
+    if (activeModals.length === 0) {
+      document.body.style.overflow = "";
+    }
+
+    if (this.lastFocusedElement && typeof this.lastFocusedElement.focus === "function") {
+      this.lastFocusedElement.focus();
+    }
+  }
+
+  handleModalKeydown(e) {
+    const activeModal = document.querySelector('.modal-overlay.active');
+    if (!activeModal) return;
+
+    if (e.key === "Escape") {
+      e.preventDefault();
+      if (activeModal === this.policyModal) this.closePolicyModal();
+      else if (activeModal === this.printModal) this.closePrintModal();
+      else if (activeModal === this.dprModal) this.closeDPRModal();
+      else if (activeModal === this.scenarioModal) this.closeScenarioModal();
+      else this.closeModal(activeModal);
+      return;
+    }
+
+    if (e.key === "Tab") {
+      const focusables = Array.from(
+        activeModal.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter(el => el.offsetParent !== null || el.offsetWidth > 0 || el.offsetHeight > 0);
+
+      if (focusables.length === 0) return;
+
+      const firstEl = focusables[0];
+      const lastEl = focusables[focusables.length - 1];
+
+      if (e.shiftKey) {
+        // Shift + Tab: if on first element or outside, cycle to last element
+        if (document.activeElement === firstEl || !activeModal.contains(document.activeElement)) {
+          e.preventDefault();
+          lastEl.focus();
+        }
+      } else {
+        // Tab: if on last element, cycle to first element
+        if (document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl.focus();
+        }
+      }
+    }
+  }
+
+  /**
    * Scenario Manager Modal
    */
-  openScenarioModal() {
+  openScenarioModal(triggerEl = null) {
     if (!this.projectStorage) return;
 
     // Render Institutional Benchmark Templates
@@ -2337,7 +2395,7 @@ class UIController {
           <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
             <div>
               <div style="font-weight: 700; color: #F8FAFC; font-size: 0.85rem;">${t.name}</div>
-              <div style="color: var(--text-muted); font-size: 0.72rem; margin-top: 0.15rem;">${t.description}</div>
+              <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.15rem;">${t.description}</div>
             </div>
             <button class="btn-header" onclick="window.solarApp.ui.loadScenario('${key}')" style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
               Load
@@ -2350,15 +2408,11 @@ class UIController {
 
     this.renderSavedCustomScenarios();
 
-    if (this.scenarioModal) {
-      this.scenarioModal.classList.add("active");
-    }
+    this.openModal(this.scenarioModal, triggerEl);
   }
 
   closeScenarioModal() {
-    if (this.scenarioModal) {
-      this.scenarioModal.classList.remove("active");
-    }
+    this.closeModal(this.scenarioModal);
   }
 
   renderSavedCustomScenarios() {
@@ -2367,7 +2421,7 @@ class UIController {
     const keys = Object.keys(scenarios);
 
     if (keys.length === 0) {
-      this.savedCustomScenariosList.innerHTML = `<span style="font-size: 0.74rem; color: var(--text-muted);">No custom saved scenarios yet. Save your current model parameters above.</span>`;
+      this.savedCustomScenariosList.innerHTML = `<span style="font-size: 0.75rem; color: var(--text-muted);">No custom saved scenarios yet. Save your current model parameters above.</span>`;
       return;
     }
 
@@ -2379,11 +2433,11 @@ class UIController {
         <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 6px; padding: 0.6rem; display: flex; justify-content: space-between; align-items: center;">
           <div>
             <div style="font-weight: 600; color: #F8FAFC; font-size: 0.82rem;">${s.name}</div>
-            <div style="color: var(--text-muted); font-size: 0.70rem;">Saved ${dateStr}</div>
+            <div style="color: var(--text-muted); font-size: 0.75rem;">Saved ${dateStr}</div>
           </div>
           <div style="display: flex; gap: 0.35rem;">
-            <button class="btn-header" onclick="window.solarApp.ui.loadScenario('${key}')" style="font-size: 0.72rem; padding: 0.25rem 0.5rem;">Load</button>
-            <button class="btn-header danger" onclick="window.solarApp.ui.deleteCustomScenario('${key}')" style="font-size: 0.72rem; padding: 0.25rem 0.5rem;">Delete</button>
+            <button class="btn-header" onclick="window.solarApp.ui.loadScenario('${key}')" style="font-size: 0.75rem; padding: 0.28rem 0.55rem;">Load</button>
+            <button class="btn-header danger" onclick="window.solarApp.ui.deleteCustomScenario('${key}')" style="font-size: 0.75rem; padding: 0.28rem 0.55rem;">Delete</button>
           </div>
         </div>
       `;

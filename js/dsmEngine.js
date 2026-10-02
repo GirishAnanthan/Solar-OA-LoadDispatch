@@ -45,9 +45,13 @@ class DSMEngine {
 
     let totalActualConsumptionKWh = 0;
     let totalScheduledLoadKWh = 0;
+    let totalRooftopPotentialKWh = 0;
     let totalBTMUtilizedKWh = 0;
     let totalBTMCurtailedKWh = 0;
+    let totalOAGenAtSourceKWh = 0;
+    let totalOADeliveredKWh = 0;
     let totalOAConsumedKWh = 0;
+    let totalOASurplusKWh = 0;
     let totalActualGridImportKWh = 0;
     let totalScheduledGridImportKWh = 0;
     let totalDeviationKWh = 0;
@@ -161,9 +165,13 @@ class DSMEngine {
       // Accumulate energy and TOD costs
       totalActualConsumptionKWh += block.energyActualLoadKWh;
       totalScheduledLoadKWh += (block.scheduledConnectedLoad * 0.25);
+      totalRooftopPotentialKWh += (block.energyRooftopPotentialKWh || (block.actualRooftopGenPotential * 0.25));
       totalBTMUtilizedKWh += block.energyBTMUtilizedKWh;
       totalBTMCurtailedKWh += block.energyBTMCurtailedKWh;
+      totalOAGenAtSourceKWh += (block.energyOAGenAtSourceKWh || (block.actualOAGenAtSource * 0.25));
+      totalOADeliveredKWh += (block.energyOADeliveredKWh || (block.actualOADelivered * 0.25));
       totalOAConsumedKWh += block.energyOAConsumedKWh;
+      totalOASurplusKWh += (block.energyOASurplusKWh || (block.actualOASurplus * 0.25));
       totalActualGridImportKWh += block.energyActualGridImportKWh;
       totalScheduledGridImportKWh += block.energyScheduledGridImportKWh;
       totalDeviationKWh += block.energyDeviationKWh;
@@ -260,9 +268,13 @@ class DSMEngine {
       blocks: evaluatedBlocks,
       summary: {
         totalActualConsumptionKWh: Math.round(totalActualConsumptionKWh),
+        totalRooftopPotentialKWh: Math.round(totalRooftopPotentialKWh),
         totalBTMUtilizedKWh: Math.round(totalBTMUtilizedKWh),
         totalBTMCurtailedKWh: Math.round(totalBTMCurtailedKWh),
+        totalOAGenAtSourceKWh: Math.round(totalOAGenAtSourceKWh),
+        totalOADeliveredKWh: Math.round(totalOADeliveredKWh),
         totalOAConsumedKWh: Math.round(totalOAConsumedKWh),
+        totalOASurplusKWh: Math.round(totalOASurplusKWh),
         totalActualGridImportKWh: Math.round(totalActualGridImportKWh),
         totalScheduledGridImportKWh: Math.round(totalScheduledGridImportKWh),
         totalDeviationKWh: Math.round(totalDeviationKWh),

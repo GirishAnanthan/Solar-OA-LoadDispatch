@@ -89,23 +89,35 @@ class SolarSchedulingApp {
     if (kpiLoadVal) kpiLoadVal.textContent = summary.totalActualConsumptionKWh.toLocaleString();
     if (kpiLoadSub) kpiLoadSub.textContent = `Clean Energy Share: ${summary.greenEnergySharePct}%`;
 
-    // 2. BTM Rooftop Solar (Zero-Export)
+    // 2. BTM Rooftop Solar (Zero-Export) — show generation potential from plant capacity + PVGIS
     const kpiBTMVal = document.getElementById("kpiBTMVal");
     const kpiBTMSub = document.getElementById("kpiBTMSub");
-    if (kpiBTMVal) kpiBTMVal.textContent = summary.totalBTMUtilizedKWh.toLocaleString();
+    if (kpiBTMVal) {
+      const rooftopPotential = summary.totalRooftopPotentialKWh || summary.totalBTMUtilizedKWh;
+      kpiBTMVal.textContent = rooftopPotential.toLocaleString();
+    }
     if (kpiBTMSub) {
       if (summary.totalBTMCurtailedKWh > 0) {
-        kpiBTMSub.innerHTML = `<span style="color: var(--solar-gold)">⚠️ ${summary.totalBTMCurtailedKWh.toLocaleString()} kWh curtailed (0-export)</span>`;
+        kpiBTMSub.innerHTML = `<span style="color: var(--solar-gold)">⚠️ ${summary.totalBTMUtilizedKWh.toLocaleString()} kWh utilized • ${summary.totalBTMCurtailedKWh.toLocaleString()} kWh curtailed</span>`;
       } else {
-        kpiBTMSub.textContent = "100% self-consumed (0 export)";
+        kpiBTMSub.textContent = `${summary.totalBTMUtilizedKWh.toLocaleString()} kWh utilized (100% self-consumed)`;
       }
     }
 
-    // 3. Open Access Solar
+    // 3. Open Access Solar — show total delivered generation from OA solar park capacity
     const kpiOAVal = document.getElementById("kpiOAVal");
     const kpiOASub = document.getElementById("kpiOASub");
-    if (kpiOAVal) kpiOAVal.textContent = summary.totalOAConsumedKWh.toLocaleString();
-    if (kpiOASub) kpiOASub.textContent = `PPA Rate: ₹${summary.oaPpaRate.toFixed(2)}/kWh`;
+    if (kpiOAVal) {
+      const oaDelivered = summary.totalOADeliveredKWh || summary.totalOAConsumedKWh;
+      kpiOAVal.textContent = oaDelivered.toLocaleString();
+    }
+    if (kpiOASub) {
+      if (summary.totalOASurplusKWh > 0) {
+        kpiOASub.textContent = `${summary.totalOAConsumedKWh.toLocaleString()} kWh absorbed • ${summary.totalOASurplusKWh.toLocaleString()} kWh surplus`;
+      } else {
+        kpiOASub.textContent = `${summary.totalOAConsumedKWh.toLocaleString()} kWh absorbed (PPA: ₹${summary.oaPpaRate.toFixed(2)}/kWh)`;
+      }
+    }
 
     // 4. Discom Grid Import
     const kpiGridVal = document.getElementById("kpiGridVal");
@@ -146,7 +158,7 @@ class SolarSchedulingApp {
     const labels = blocks.map(b => b.startTime);
 
     const loadData = blocks.map(b => b.actualConnectedLoad);
-    const btmSolarData = blocks.map(b => b.actualBTMUtilized);
+    const rooftopGenData = blocks.map(b => b.actualRooftopGenPotential !== undefined ? b.actualRooftopGenPotential : b.actualBTMUtilized);
     const oaSolarData = blocks.map(b => b.actualOADelivered);
     const actualGridData = blocks.map(b => b.actualGridDrawl);
     const scheduledGridData = blocks.map(b => b.scheduledGridDrawl);
@@ -156,7 +168,7 @@ class SolarSchedulingApp {
     if (this.chart) {
       this.chart.data.labels = labels;
       this.chart.data.datasets[0].data = loadData;
-      this.chart.data.datasets[1].data = btmSolarData;
+      this.chart.data.datasets[1].data = rooftopGenData;
       this.chart.data.datasets[2].data = oaSolarData;
       this.chart.data.datasets[3].data = actualGridData;
       this.chart.data.datasets[4].data = scheduledGridData;
@@ -182,11 +194,11 @@ class SolarSchedulingApp {
             order: 1
           },
           {
-            label: "BTM Rooftop Solar (kW)",
-            data: btmSolarData,
+            label: "Rooftop Solar Gen (kWp • PVGIS)",
+            data: rooftopGenData,
             borderColor: "#F59E0B",
-            backgroundColor: "rgba(245, 158, 11, 0.45)",
-            borderWidth: 1.5,
+            backgroundColor: "rgba(245, 158, 11, 0.22)",
+            borderWidth: 1.8,
             fill: true,
             pointRadius: 0,
             pointHoverRadius: 4,
@@ -194,11 +206,11 @@ class SolarSchedulingApp {
             order: 3
           },
           {
-            label: "Delivered OA Solar (kW)",
+            label: "Delivered OA Solar (kWp • PVGIS)",
             data: oaSolarData,
             borderColor: "#10B981",
-            backgroundColor: "rgba(16, 185, 129, 0.40)",
-            borderWidth: 1.5,
+            backgroundColor: "rgba(16, 185, 129, 0.20)",
+            borderWidth: 1.8,
             fill: true,
             pointRadius: 0,
             pointHoverRadius: 4,
@@ -209,7 +221,7 @@ class SolarSchedulingApp {
             label: "Actual Grid Drawl (kW)",
             data: actualGridData,
             borderColor: "#38BDF8",
-            backgroundColor: "rgba(56, 189, 248, 0.25)",
+            backgroundColor: "rgba(56, 189, 248, 0.16)",
             borderWidth: 1.8,
             fill: true,
             pointRadius: 0,
@@ -276,10 +288,10 @@ class SolarSchedulingApp {
               drawBorder: false
             },
             ticks: {
-              color: "#64748B",
+              color: "#94A3B8",
               font: {
                 family: "'Fira Code', monospace",
-                size: 10
+                size: 11.5
               },
               maxTicksLimit: 8,
               maxRotation: 0
@@ -292,10 +304,10 @@ class SolarSchedulingApp {
               drawBorder: false
             },
             ticks: {
-              color: "#64748B",
+              color: "#94A3B8",
               font: {
                 family: "'Fira Code', monospace",
-                size: 11
+                size: 12
               },
               callback: (val) => `${val} kW`
             }
@@ -321,20 +333,30 @@ class SolarSchedulingApp {
     if (blockNum) blockNum.textContent = `Block #${b.blockNumber}`;
     if (timeRange) timeRange.textContent = b.timeRange;
     if (loadVal) loadVal.textContent = `${b.actualConnectedLoad.toLocaleString()} kW`;
-    if (btmVal) btmVal.textContent = `${b.actualBTMUtilized.toLocaleString()} kW`;
+    // Show BTM Rooftop: potential generation vs actually utilized (constrained by load in zero-export mode)
+    if (btmVal) {
+      const rooftopPot = b.actualRooftopGenPotential !== undefined ? b.actualRooftopGenPotential : 0;
+      const btmUsed = b.actualBTMUtilized !== undefined ? b.actualBTMUtilized : 0;
+      const curtailed = b.actualBTMCurtailed !== undefined ? b.actualBTMCurtailed : Math.max(0, rooftopPot - b.actualConnectedLoad);
+      if (curtailed > 0) {
+        btmVal.textContent = `${btmUsed.toLocaleString()} kW / ${rooftopPot.toLocaleString()} kW`;
+        btmVal.title = `Rooftop Generation: ${rooftopPot.toLocaleString()} kW • Utilized: ${btmUsed.toLocaleString()} kW • Curtailed (0-export): ${curtailed.toFixed(1)} kW`;
+      } else {
+        btmVal.textContent = `${btmUsed.toLocaleString()} kW`;
+        btmVal.title = `BTM Rooftop Solar: ${btmUsed.toLocaleString()} kW self-consumed (100% utilized)`;
+      }
+    }
+    // Show OA Solar: delivered from park vs consumed vs surplus
     if (oaVal) {
-      const oaConsumed = b.actualOAConsumed !== undefined 
-        ? b.actualOAConsumed 
-        : Math.min(b.actualOADelivered, Math.max(0, b.actualConnectedLoad - b.actualBTMUtilized));
-      const oaSurplus = b.actualOASurplus !== undefined 
-        ? b.actualOASurplus 
-        : Math.max(0, b.actualOADelivered - (b.actualConnectedLoad - b.actualBTMUtilized));
+      const oaDelivered = b.actualOADelivered !== undefined ? b.actualOADelivered : 0;
+      const oaConsumed = b.actualOAConsumed !== undefined ? b.actualOAConsumed : 0;
+      const oaSurplus = b.actualOASurplus !== undefined ? b.actualOASurplus : 0;
       if (oaSurplus > 0) {
-        oaVal.textContent = `${oaConsumed.toLocaleString()} kW (+${oaSurplus.toFixed(1)} surplus)`;
-        oaVal.title = `${b.actualOADelivered} kW delivered from solar park: ${oaConsumed} kW absorbed by factory, ${oaSurplus.toFixed(1)} kW surplus injected into grid`;
+        oaVal.textContent = `${oaConsumed.toLocaleString()} kW / ${oaDelivered.toLocaleString()} kW`;
+        oaVal.title = `OA Solar at Source: ${b.actualOAGenAtSource ? b.actualOAGenAtSource.toLocaleString() : '—'} kW • Delivered (after ${(b.deliveryLossFactor || 0.96)*100}% wheeling): ${oaDelivered.toLocaleString()} kW • Consumed: ${oaConsumed.toLocaleString()} kW • Surplus: ${oaSurplus.toFixed(1)} kW`;
       } else {
         oaVal.textContent = `${oaConsumed.toLocaleString()} kW`;
-        oaVal.title = `100% of delivered OA solar absorbed by plant`;
+        oaVal.title = `OA Solar: ${oaDelivered.toLocaleString()} kW delivered from solar park, 100% absorbed by plant`;
       }
     }
     if (gridVal) gridVal.textContent = `${b.actualGridDrawl.toLocaleString()} kW`;

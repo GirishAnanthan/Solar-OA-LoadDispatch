@@ -118,7 +118,7 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
               Consumer &amp; Feeder ID
             </h3>
-            <button class="btn-ctrl" id="btnQuickPrintSidebar" title="Print SLDC Load Schedule Document" style="width: 26px; height: 26px;">
+            <button class="btn-ctrl" id="btnQuickPrintSidebar" title="Print SLDC Load Schedule Document" aria-label="Print SLDC Load Schedule Document">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
             </button>
           </div>
@@ -225,12 +225,12 @@
           <!-- Smart Meter 15-Minute Load Survey Import -->
           <div style="margin-top: auto; padding: 0.85rem; background: rgba(15, 23, 42, 0.7); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-              <span style="font-size: 0.76rem; font-weight: 700; color: #F8FAFC;">15-Min Smart Meter Survey</span>
-              <span id="meterImportStatus" style="font-size: 0.68rem; color: var(--text-muted);">AMR / CSV</span>
+              <span style="font-size: 0.78rem; font-weight: 700; color: #F8FAFC;">15-Min Smart Meter Survey</span>
+              <span id="meterImportStatus" style="font-size: 0.75rem; color: var(--text-muted);">AMR / CSV</span>
             </div>
-            <p style="font-size: 0.70rem; color: var(--text-secondary); margin: 0 0 0.55rem 0;">Upload AMR/DLMS 15-min interval CSV to replace synthetic profile with real-world plant meter survey data.</p>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0 0 0.55rem 0;">Upload AMR/DLMS 15-min interval CSV to replace synthetic profile with real-world plant meter survey data.</p>
             <input type="file" id="meterFileInput" accept=".csv,.txt,.tsv" style="display: none;">
-            <button type="button" class="btn-header" id="btnUploadMeter" style="width: 100%; justify-content: center; font-size: 0.74rem; padding: 0.45rem;">
+            <button type="button" class="btn-header" id="btnUploadMeter" style="width: 100%; justify-content: center; font-size: 0.75rem; padding: 0.45rem;">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
               Upload Smart Meter Survey (CSV)
             </button>
@@ -294,7 +294,7 @@
             <div class="form-group address-search-group" style="margin-bottom: 0.4rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
                 <label class="form-label" for="rooftopAddressSearch" style="margin-bottom: 0;">Address Search</label>
-                <span class="label-hint" id="rooftopGeoStatus" style="font-size: 0.65rem; color: var(--text-accent);">Enter ↵ to Locate</span>
+                <span class="label-hint" id="rooftopGeoStatus" style="font-size: 0.75rem; color: var(--text-accent);">Enter ↵ to Locate</span>
               </div>
               <div class="map-search-bar">
                 <span class="map-pin-icon">
@@ -345,7 +345,7 @@
             <div class="form-group address-search-group" style="margin-bottom: 0.4rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
                 <label class="form-label" for="oaAddressSearch" style="margin-bottom: 0;">Address Search</label>
-                <span class="label-hint" id="oaGeoStatus" style="font-size: 0.65rem; color: var(--oa-emerald);">Enter ↵ to Locate</span>
+                <span class="label-hint" id="oaGeoStatus" style="font-size: 0.75rem; color: var(--oa-emerald);">Enter ↵ to Locate</span>
               </div>
               <div class="map-search-bar">
                 <span class="map-pin-icon" style="color: #F59E0B;">
@@ -375,7 +375,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label" for="oaTracking">Mounting</label>
-                <select id="oaTracking" class="select-control" style="font-size: 0.74rem; padding: 0.42rem 0.25rem;">
+                <select id="oaTracking" class="select-control" style="font-size: 0.75rem; padding: 0.42rem 0.25rem;">
                   <option value="fixed" id="oaFixedOption" selected>Fixed (27° Optimal)</option>
                   <option value="tracker">1-Axis Tracker</option>
                 </select>
@@ -776,7 +776,7 @@
           </span>
           <input type="range" id="loadSlider" min="20" max="150" step="1" value="100" aria-label="Connected Load Multiplier Slider" style="flex: 1; max-width: 180px;">
           <span class="slider-val-badge" id="loadSliderVal">100%</span>
-          <span id="loadSliderKw" style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">(1000 kW)</span>
+          <span id="loadSliderKw" style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">(1000 kW)</span>
         </div>
 
         <div class="tuning-separator"></div>
@@ -813,8 +813,8 @@
             </h2>
             <div class="chart-legend-custom">
               <div class="legend-item"><span class="legend-dot" style="background: #FFFFFF;"></span> Load</div>
-              <div class="legend-item"><span class="legend-dot" style="background: #F59E0B;"></span> BTM</div>
-              <div class="legend-item"><span class="legend-dot" style="background: #10B981;"></span> OA</div>
+              <div class="legend-item"><span class="legend-dot" style="background: #F59E0B;"></span> Rooftop Gen (PVGIS)</div>
+              <div class="legend-item"><span class="legend-dot" style="background: #10B981;"></span> OA Solar (PVGIS)</div>
               <div class="legend-item"><span class="legend-dot" style="background: #38BDF8;"></span> Grid</div>
               <div class="legend-item"><span class="legend-dot" style="background: #94A3B8; border: 1px dashed #FFFFFF;"></span> Sched</div>
             </div>
@@ -950,7 +950,7 @@
         <div class="scrubber-header">
           <div class="scrubber-title-box">
             <span class="block-indicator-pill" id="timeScrubberLabel">Block 49/96 (12:00 - 12:15)</span>
-            <span style="font-size: 0.74rem; color: var(--text-secondary); font-weight: 500;">Interactive 15-Minute Timeline Player</span>
+            <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">Interactive 15-Minute Timeline Player</span>
           </div>
           <div class="scrubber-controls">
             <button class="btn-ctrl" id="btnPlayScrubber" title="Play / Pause 24-Hour Timeline Scrub">
@@ -1008,7 +1008,7 @@
         </div>
 
         <!-- Status Message Banner -->
-        <div id="flowStatusText" style="margin-top: 0.45rem; font-size: 0.74rem; font-weight: 500; color: var(--text-secondary);">
+        <div id="flowStatusText" style="margin-top: 0.45rem; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary);">
           <span style="color: var(--status-ok)">✅ Balanced Dispatch:</span> Within SERC allowable tolerance band. Zero penalty.
         </div>
       </section>
@@ -1076,7 +1076,7 @@
         <div class="glass-panel" style="padding: 1rem; margin-bottom: 1rem;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem;">
             <span style="font-size: 0.88rem; font-weight: 700; color: #F8FAFC;">25-Year Pro-Forma Cash Flow &amp; Debt Service Schedule (INR Lakhs)</span>
-            <span style="font-size: 0.72rem; color: var(--text-muted);">Assumes 70:30 Debt-Equity • 12-Year Amortization @ 9.25% p.a. • 3% Tariff Escalation</span>
+            <span style="font-size: 0.75rem; color: var(--text-secondary);">Assumes 70:30 Debt-Equity • 12-Year Amortization @ 9.25% p.a. • 3% Tariff Escalation</span>
           </div>
           <div class="financial-table-scroll">
             <table class="financial-table">
@@ -1149,7 +1149,7 @@
             <h3 style="font-size: 0.95rem; font-weight: 700; color: #10B981; margin: 0 0 0.85rem 0;">
               Statutory Captive Eligibility Audit (Rule 3)
             </h3>
-            
+
             <div class="rule3-badge compliant" id="rule3Badge">
               <span id="rule3BadgeText">✅ 100% RULE 3 COMPLIANT (CAPTIVE STATUS VALIDATED)</span>
             </div>
@@ -1160,7 +1160,7 @@
                   <span>1. Equity Ownership Criterion (&ge; 26%):</span>
                   <span id="rule3EquityStatus" style="color: #34D399;">PASS (26.0% Held)</span>
                 </div>
-                <p style="font-size: 0.70rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
                   Consumer holds minimum 26% equity share capital with voting rights in the generator SPV.
                 </p>
               </div>
@@ -1170,15 +1170,15 @@
                   <span>2. Energy Consumption Criterion (&ge; 51%):</span>
                   <span id="rule3ConsumptionStatus" style="color: #34D399;">PASS (74.4% Consumed)</span>
                 </div>
-                <p style="font-size: 0.70rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.25rem 0 0 0;">
                   Captive consumer consumes at least 51% of aggregate electricity generated on an annual basis.
                 </p>
               </div>
             </div>
 
             <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 0.75rem;">
-              <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Retrospective CSS / AS Risk:</span>
-              <p id="rule3RiskText" style="font-size: 0.74rem; color: #CBD5E1; margin: 0.25rem 0 0 0;">
+              <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Retrospective CSS / AS Risk:</span>
+              <p id="rule3RiskText" style="font-size: 0.75rem; color: #CBD5E1; margin: 0.25rem 0 0 0;">
                 Zero CSS / AS liability. 100% Captive statutory exemption validated under Electricity Rules 2005/2023.
               </p>
             </div>
@@ -1318,11 +1318,11 @@
   <!-- ==========================================================================
        State Policy & Regulatory Knowledge Modal
        ========================================================================== -->
-  <div class="modal-overlay" id="policyModal">
+  <div class="modal-overlay" id="policyModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="policyModalTitle">
     <div class="modal-card">
       <div class="modal-header">
-        <h2 class="modal-title">Indian Solar PV Policy & Deviation Settlement (DSM) Guide</h2>
-        <button class="btn-close-modal" id="btnCloseModal" title="Close Modal">
+        <h2 class="modal-title" id="policyModalTitle">Indian Solar PV Policy & Deviation Settlement (DSM) Guide</h2>
+        <button class="btn-close-modal" id="btnCloseModal" title="Close Modal" aria-label="Close Indian Solar PV Policy & DSM Guide">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
@@ -1335,10 +1335,10 @@
   <!-- ==========================================================================
        Official SLDC Schedule Print Preview & Execution Modal
        ========================================================================== -->
-  <div class="modal-overlay" id="printModal">
+  <div class="modal-overlay" id="printModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="printModalTitle">
     <div class="modal-card print-preview-modal-card">
       <div class="modal-header">
-        <h2 class="modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+        <h2 class="modal-title" id="printModalTitle" style="display: flex; align-items: center; gap: 0.5rem;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
           SLDC 15-Minute Load Dispatch Schedule - Print Dossier
         </h2>
@@ -1347,7 +1347,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
             Print / Save to PDF
           </button>
-          <button class="btn-close-modal" id="btnClosePrintModal" title="Close Modal">
+          <button class="btn-close-modal" id="btnClosePrintModal" title="Close Modal" aria-label="Close SLDC Print Dossier">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
@@ -1367,10 +1367,10 @@
   <!-- ==========================================================================
        Bankable Detailed Project Report (DPR) Executive Modal
        ========================================================================== -->
-  <div class="modal-overlay" id="dprModal">
+  <div class="modal-overlay" id="dprModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="dprModalTitle">
     <div class="modal-card dpr-modal-card">
       <div class="modal-header">
-        <h2 class="modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+        <h2 class="modal-title" id="dprModalTitle" style="display: flex; align-items: center; gap: 0.5rem;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
           Bankable Detailed Project Report (DPR) Dossier
         </h2>
@@ -1379,7 +1379,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
             Print DPR / Save PDF
           </button>
-          <button class="btn-close-modal" id="btnCloseDPRModal" title="Close Modal">
+          <button class="btn-close-modal" id="btnCloseDPRModal" title="Close Modal" aria-label="Close Bankable DPR Dossier">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
@@ -1393,14 +1393,14 @@
   <!-- ==========================================================================
        Project Scenario Manager Modal
        ========================================================================== -->
-  <div class="modal-overlay" id="scenarioModal">
+  <div class="modal-overlay" id="scenarioModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="scenarioModalTitle">
     <div class="modal-card" style="max-width: 650px;">
       <div class="modal-header">
-        <h2 class="modal-title" style="display: flex; align-items: center; gap: 0.5rem;">
+        <h2 class="modal-title" id="scenarioModalTitle" style="display: flex; align-items: center; gap: 0.5rem;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
           Project Scenarios &amp; Institutional Templates
         </h2>
-        <button class="btn-close-modal" id="btnCloseScenarioModal" title="Close Modal">
+        <button class="btn-close-modal" id="btnCloseScenarioModal" title="Close Modal" aria-label="Close Scenario Manager">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>

@@ -361,40 +361,31 @@ class SolarModel {
       const normGen = Math.max(rooftopActualModel.profile[i], oaActualModel.profile[i]);
 
       // 3. Behind-The-Meter (BTM) Zero-Export Behavior
-      // Day-Ahead Planned BTM: Cannot export. Dispatched up to load.
+      // Day-Ahead Planned BTM: Cannot export to grid. Self-consumed up to load.
       const daBTMUtilized = Math.min(daRooftopGenPotential, scheduledConnectedLoad);
       const daBTMCurtailed = Math.max(0, daRooftopGenPotential - scheduledConnectedLoad);
 
-      // Real-Time Actual BTM: Reverse Power Relay restricts generation to instantaneous load!
+      // Real-Time Actual BTM: Reverse Power Relay restricts generation to instantaneous load
       const actualBTMUtilized = Math.min(actualRooftopGenPotential, actualConnectedLoad);
       const actualBTMCurtailed = Math.max(0, actualRooftopGenPotential - actualConnectedLoad);
 
       // 4. Net Demand remaining before Open Access
-      const daResidualDemand = scheduledConnectedLoad - daBTMUtilized;
-      const actualResidualDemand = actualConnectedLoad - actualBTMUtilized;
+      const daResidualDemand = Math.max(0, scheduledConnectedLoad - daBTMUtilized);
+      const actualResidualDemand = Math.max(0, actualConnectedLoad - actualBTMUtilized);
 
-      // 5. Day-Ahead Open Access Scheduled Delivery
-      // In Indian SLDC practice, consumer schedules OA drawl up to planned residual demand.
-      const daOAScheduledDrawl = Math.min(daOADelivered, daResidualDemand);
+      // 5. Day-Ahead Open Access Scheduled Delivery & Grid Drawl
+      // The remote solar park injects its forecasted generation (daOADelivered) into grid pool.
+      // Day-Ahead Scheduled Grid Drawl submitted to SLDC:
+      const scheduledGridDrawl = Math.max(0, daResidualDemand - daOADelivered);
 
-      // Day-Ahead Scheduled Grid Drawl (submitted to SLDC)
-      const scheduledGridDrawl = Math.max(0, daResidualDemand - daOAScheduledDrawl);
+      // 6. Real-Time Actual Grid Drawl & OA Green Energy Absorption
+      // Factory absorbs delivered OA solar up to its residual demand.
+      const actualOAConsumed = Math.min(actualOADelivered, actualResidualDemand);
+      const actualOASurplus = Math.max(0, actualOADelivered - actualResidualDemand);
 
-      // 6. Real-Time Actual Grid Drawl & OA Absorption
-      const effectiveOADelivery = Math.min(actualOADelivered, daOAScheduledDrawl);
-
-      let actualGridDrawl = 0;
-      let inadvertentExportKW = 0;
-
-      if (actualResidualDemand >= effectiveOADelivery) {
-        // Factory absorbs the green power and draws remaining deficit from Discom
-        actualGridDrawl = actualResidualDemand - effectiveOADelivery;
-        inadvertentExportKW = 0;
-      } else {
-        // Factory load dropped below scheduled OA delivery!
-        actualGridDrawl = 0;
-        inadvertentExportKW = effectiveOADelivery - actualResidualDemand;
-      }
+      // Discom grid drawl supplies remaining unserved deficit:
+      const actualGridDrawl = Math.max(0, actualResidualDemand - actualOADelivered);
+      const inadvertentExportKW = actualOASurplus;
 
       // 7. Deviation Calculation
       // Deviation = Actual Grid Drawl - Scheduled Grid Drawl
@@ -413,24 +404,24 @@ class SolarModel {
         startTime: timeInfo.startTime,
         hourDecimal: timeInfo.hourDecimal,
         isSolarHour: normGen > 0.005,
-        
+
         // Load metrics (kW)
         scheduledConnectedLoad: Math.round(scheduledConnectedLoad * 10) / 10,
         actualConnectedLoad: Math.round(actualConnectedLoad * 10) / 10,
         contractDemandBreachKW: Math.round(contractDemandBreachKW * 10) / 10,
 
-        // Site-Specific Solar Generation metrics (kW)
+        // Site-Specific Solar Generation metrics (kW) based on Plant Capacities & PVGIS
         normGenFactor: normGen,
         rooftopGenFactor: rooftopActualModel.profile[i],
         oaGenFactor: oaActualModel.profile[i],
         actualRooftopGenPotential: Math.round(actualRooftopGenPotential * 10) / 10,
         actualBTMUtilized: Math.round(actualBTMUtilized * 10) / 10,
         actualBTMCurtailed: Math.round(actualBTMCurtailed * 10) / 10,
-        
+
         actualOAGenAtSource: Math.round(actualOAGenAtSource * 10) / 10,
         actualOADelivered: Math.round(actualOADelivered * 10) / 10,
-        actualOAConsumed: Math.round(Math.min(actualOADelivered, actualResidualDemand) * 10) / 10,
-        actualOASurplus: Math.round(Math.max(0, actualOADelivered - actualResidualDemand) * 10) / 10,
+        actualOAConsumed: Math.round(actualOAConsumed * 10) / 10,
+        actualOASurplus: Math.round(actualOASurplus * 10) / 10,
         daOADelivered: Math.round(daOADelivered * 10) / 10,
 
         // Dispatch & Grid Drawl metrics (kW)
@@ -442,9 +433,13 @@ class SolarModel {
 
         // Energy for 15-minute block (kWh) = kW * 0.25
         energyActualLoadKWh: actualConnectedLoad * 0.25,
+        energyRooftopPotentialKWh: actualRooftopGenPotential * 0.25,
         energyBTMUtilizedKWh: actualBTMUtilized * 0.25,
         energyBTMCurtailedKWh: actualBTMCurtailed * 0.25,
-        energyOAConsumedKWh: Math.min(actualOADelivered, actualResidualDemand) * 0.25,
+        energyOAGenAtSourceKWh: actualOAGenAtSource * 0.25,
+        energyOADeliveredKWh: actualOADelivered * 0.25,
+        energyOAConsumedKWh: actualOAConsumed * 0.25,
+        energyOASurplusKWh: actualOASurplus * 0.25,
         energyActualGridImportKWh: actualGridDrawl * 0.25,
         energyScheduledGridImportKWh: scheduledGridDrawl * 0.25,
         energyDeviationKWh: Math.abs(deviationKW) * 0.25,
