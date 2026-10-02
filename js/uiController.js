@@ -177,6 +177,11 @@ class UIController {
     this.pvgisOAInsolationVal = document.getElementById("pvgisOAInsolationVal");
     this.pvgisOaCufVal = document.getElementById("pvgisOaCufVal");
 
+    // Weather Data Source Selector
+    this.weatherDataSourceSelect = document.getElementById("weatherDataSource");
+    this.weatherDataStatus = document.getElementById("weatherDataStatus");
+    this.weatherDataStatusText = document.getElementById("weatherDataStatusText");
+
     // Sliders
     this.loadSlider = document.getElementById("loadSlider");
     this.loadSliderVal = document.getElementById("loadSliderVal");
@@ -463,6 +468,13 @@ class UIController {
         });
       }
     });
+
+    // Weather Data Source change - fetch new data
+    if (this.weatherDataSourceSelect) {
+      this.weatherDataSourceSelect.addEventListener("change", async (e) => {
+        await this.handleWeatherDataSourceChange(e.target.value);
+      });
+    }
 
     // Live update for Customer Name in project banner
     if (this.custNameInput) {
@@ -938,6 +950,71 @@ class UIController {
 
     if (this.stateSelect && this.bannerStatePolicyName && this.stateSelect.selectedOptions && this.stateSelect.selectedOptions[0]) {
       this.bannerStatePolicyName.textContent = this.stateSelect.selectedOptions[0].text;
+    }
+  }
+
+  async handleWeatherDataSourceChange(source) {
+    // Show status
+    if (this.weatherDataStatus) {
+      this.weatherDataStatus.style.display = 'block';
+    }
+    if (this.weatherDataStatusText) {
+      this.weatherDataStatusText.textContent = '⏳ Fetching weather data...';
+    }
+
+    const rooftopLat = parseFloat(this.rooftopLatInput?.value) || 18.5204;
+    const rooftopLon = parseFloat(this.rooftopLonInput?.value) || 73.8567;
+    const oaLat = parseFloat(this.oaLatInput?.value) || 27.5385;
+    const oaLon = parseFloat(this.oaLonInput?.value) || 71.9168;
+
+    try {
+      const solarModel = this.app?.dsmEngine?.solarModel;
+      if (!solarModel) {
+        throw new Error('Solar model not initialized');
+      }
+
+      if (source === 'model') {
+        // Just use physics model - no fetch needed
+        if (this.weatherDataStatusText) {
+          this.weatherDataStatusText.textContent = '⚙️ Using physics-based solar model';
+          this.weatherDataStatusText.style.color = 'var(--text-muted)';
+        }
+        this.app.recalculate();
+        return;
+      }
+
+      // Fetch weather data from PVGIS or NASA
+      const weatherData = await solarModel.preloadWeatherData(
+        rooftopLat, rooftopLon,
+        oaLat, oaLon,
+        source
+      );
+
+      // Cache the weather data for use in simulation
+      solarModel.cachedWeatherData = weatherData;
+
+      if (this.weatherDataStatusText) {
+        const sourceName = source === 'pvgis' ? 'PVGIS TMY' : 'NASA POWER';
+        if (weatherData.rooftop && weatherData.oa) {
+          this.weatherDataStatusText.innerHTML = `✅ <strong>${sourceName}</strong> data loaded for both sites`;
+          this.weatherDataStatusText.style.color = 'var(--oa-emerald)';
+        } else {
+          this.weatherDataStatusText.innerHTML = `⚠️ <strong>${sourceName}</strong> fetch partial - using fallback model`;
+          this.weatherDataStatusText.style.color = 'var(--solar-gold)';
+        }
+      }
+
+      // Trigger recalculation with new data
+      this.app.recalculate();
+
+    } catch (err) {
+      console.error('Weather data fetch error:', err);
+      if (this.weatherDataStatusText) {
+        this.weatherDataStatusText.innerHTML = `❌ ${source.toUpperCase()} fetch failed - using physics model`;
+        this.weatherDataStatusText.style.color = 'var(--status-danger)';
+      }
+      // Fall back to physics model
+      this.app.recalculate();
     }
   }
 
@@ -1736,6 +1813,13 @@ class UIController {
     const custSubstation = this.custSubstationInput ? this.custSubstationInput.value : "";
     const custSignatory = this.custSignatoryInput ? this.custSignatoryInput.value : "Rajesh Sharma (Energy Mgr)";
 
+    // Weather Data Source
+    const weatherDataSource = this.weatherDataSourceSelect ? this.weatherDataSourceSelect.value : "model";
+
+    // Pre-fetched weather data (if using PVGIS or NASA)
+    const rooftopWeatherData = this.app?.dsmEngine?.solarModel?.cachedWeatherData?.rooftop || null;
+    const oaWeatherData = this.app?.dsmEngine?.solarModel?.cachedWeatherData?.oa || null;
+
     return {
       sanctionedLoadKW,
       baseConnectedLoadKW,
@@ -1764,7 +1848,10 @@ class UIController {
       custConsumerNo,
       custAddress,
       custSubstation,
-      custSignatory
+      custSignatory,
+      weatherDataSource,
+      rooftopWeatherData,
+      oaWeatherData
     };
   }
 

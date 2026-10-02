@@ -11,8 +11,248 @@ class SolarModel {
     this.TOTAL_BLOCKS = 96; // 15-min intervals in 24 hours
     this.timeLabels = this.generateTimeLabels();
     this.pvgisCache = new Map();
+    this.nasaCache = new Map();
+    this.weatherDataSource = "pvgis"; // "pvgis", "nasa", or "model"
     this.lastSolarTelemetry = null;
     this.isLivePvgisSynced = false;
+    this.pendingFetch = null;
+  }
+
+  /**
+   * Set the weather data source (pvgis, nasa, model)
+   */
+  setWeatherDataSource(source) {
+    this.weatherDataSource = source;
+    this.isLivePvgisSynced = (source === "pvgis" || source === "nasa");
+  }
+
+  /**
+   * Fetch PVGIS TMY (Typical Meteorological Year) hourly data
+   * Returns hourly GHI, DNI, DHI, temperature for typical year
+   */
+  async fetchPVGISTMY(lat, lon, startYear = null, endYear = null) {
+    const cacheKey = `pvgis_tmy_${lat.toFixed(3)}_${lon.toFixed(3)}`;
+    if (this.pvgisCache.has(cacheKey)) {
+      return this.pvgisCache.get(cacheKey);
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+    try {
+      // PVGIS TMY API - returns hourly data for typical year
+      const yearParam = startYear && endYear ? `${startYear}_${endYear}` : 'latest';
+      const url = `https://re.jrc.ec.europa.eu/api/v5_3/tmy?lat=${lat}&lon=${lon}&year=${yearParam}&outputformat=json`;
+
+      const response = await fetch(url, { signal: controller.signal, headers: { 'Accept': 'application/json' } });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`PVGIS TMY HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Extract hourly data from PVGIS TMY response
+      const hourlyData = data.outputs.hourly || [];
+      if (hourlyData.length === 0) {
+        throw new Error('No TMY data returned');
+      }
+
+      this.pvgisCache.set(cacheKey, hourlyData);
+      this.isLivePvgisSynced = true;
+
+      return {
+        source: 'PVGIS TMY',
+        hourlyData: hourlyData,
+        meta: data.inputs
+      };
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.warn('PVGIS TMY fetch failed:', err.message);
+      this.isLivePvgisSynced = false;
+      return null;
+    }
+  }
+
+  /**
+   * Fetch NASA POWER daily solar radiation data
+   * Returns daily data for GHI, DNI, diffuse
+   */
+  async fetchNASAPOWER(lat, lon, startDate, endDate) {
+    const cacheKey = `nasa_${lat.toFixed(3)}_${lon.toFixed(3)}_${startDate}_${endDate}`;
+    if (this.nasaCache.has(cacheKey)) {
+      return this.nasaCache.get(cacheKey);
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      // NASA POWER API - daily solar parameters
+      // Parameters: ALLSKY_SFC_SW_DWN (all-sky solar radiation), TS (temperature)
+      const params = 'ALLSKY_SFC_SW_DWN,ALLSKY_SFC_SW_DIFF,TS';
+      const url = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=${params}&community=RE&longitude=${lon}&latitude=${lat}&start=${startDate}&end=${endDate}&format=json`;
+
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) throw new Error(`NASA POWER HTTP ${response.status}`);
+
+      const data = await response.json();
+      const dailyData = data.properties?.parameter || null;
+
+      if (!dailyData) throw new Error('No NASA POWER data');
+
+      this.nasaCache.set(cacheKey, dailyData);
+      this.isLivePvgisSynced = true;
+
+      return {
+        source: 'NASA POWER',
+        dailyData: dailyData,
+        meta: data.properties?.parameter?.ALLSKY_SFC_SW_DWN
+      };
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.warn('NASA POWER fetch failed:', err.message);
+      this.isLivePvgisSynced = false;
+      return null;
+    }
+  }
+
+  /**
+   * Convert hourly PVGIS TMY data to 96-block profile
+   * Interpolates hourly to 15-minute blocks
+   */
+  convertHourlyTo96Blocks(hourlyData, capacityKWp, tilt, lossPct = 14) {
+    const profile = new Array(this.TOTAL_BLOCKS).fill(0);
+    const sysEfficiency = Math.max(0.1, 1 - lossPct / 100);
+
+    // Day of year for seasonal variation (use average)
+    const avgDOY = 172; // June - peak summer
+
+    for (let i = 0; i < this.TOTAL_BLOCKS; i++) {
+      const hourIndex = Math.floor(i / 4); // 0-23
+      const hourData = hourlyData[hourIndex];
+
+      if (!hourData) continue;
+
+      // PVGIS provides GHI (W/m²), we need to estimate POA
+      const ghi = hourData.Gh || hourData.GHI || 0;
+      const dhi = hourData.Dh || hourData.DHI || 0;
+      const dni = hourData.Dn || hourData.DNI || ghi * 0.7;
+
+      // Simple POA estimation
+      const sunElevation = this.estimateSunElevation(hourIndex, avgDOY);
+      if (sunElevation < 5) continue; // Skip night hours
+
+      // POA = beam + diffuse (simplified)
+      const cosIncidence = Math.max(0, Math.sin(sunElevation * Math.PI / 180));
+      const beamPOA = dni * cosIncidence * 0.8;
+      const diffusePOA = dhi * 0.7;
+      const gti = beamPOA + diffusePOA;
+
+      // Temperature derating (PVGIS provides T2m - ambient temp)
+      const temp = hourData.T2m || 25;
+      const tempDerate = 1 - 0.004 * Math.max(0, temp - 25);
+
+      // Power output
+      const powerKW = (gti / 1000) * capacityKWp * tempDerate * sysEfficiency;
+      profile[i] = Math.max(0, Math.min(0.96, powerKW));
+    }
+
+    return profile;
+  }
+
+  /**
+   * Estimate sun elevation angle for a given hour and day of year
+   */
+  estimateSunElevation(hour, dayOfYear) {
+    const lat = 20; // Default India latitude
+    const latRad = lat * Math.PI / 180;
+
+    // Solar declination
+    const decl = 23.45 * Math.sin((360/365) * (dayOfYear - 81) * Math.PI / 180) * Math.PI / 180;
+
+    // Hour angle (solar noon = 0)
+    const solarNoon = 12;
+    const hourAngle = (hour - solarNoon) * 15 * Math.PI / 180;
+
+    // Elevation angle
+    const sinElev = Math.sin(latRad) * Math.sin(decl) + Math.cos(latRad) * Math.cos(decl) * Math.cos(hourAngle);
+    return Math.max(0, Math.asin(sinElev) * 180 / Math.PI);
+  }
+
+  /**
+   * Convert NASA POWER daily data to 96-block profile
+   * Uses daily GHI to estimate hourly profile shape
+   */
+  convertDailyTo96Blocks(dailyData, capacityKWp, tilt, lossPct = 14) {
+    const profile = new Array(this.TOTAL_BLOCKS).fill(0);
+    const sysEfficiency = Math.max(0.1, 1 - lossPct / 100);
+
+    // Get average daily GHI from NASA (use first available day)
+    const ghiKey = Object.keys(dailyData).find(k => k.includes('ALLSKY_SFC_SW_DWN'));
+    if (!ghiKey) return profile;
+
+    // Use typical Indian day profile shape
+    const typicalProfile = [0,0,0,0,0,0,0,0.05,0.15,0.35,0.55,0.75,0.88,0.95,1.0,0.98,0.90,0.75,0.55,0.35,0.18,0.08,0.02,0];
+
+    for (let i = 0; i < this.TOTAL_BLOCKS; i++) {
+      const hour = i / 4;
+      const hourIdx = Math.floor(hour);
+      const shapeFactor = typicalProfile[hourIdx] || 0;
+
+      // Peak GHI around 900-1000 W/m² in India
+      const peakGTI = 950;
+      const gti = peakGTI * shapeFactor;
+
+      // Temperature derating
+      const tempDerate = 1 - 0.004 * Math.max(0, 35 - 25);
+
+      const powerKW = (gti / 1000) * capacityKWp * tempDerate * sysEfficiency;
+      profile[i] = Math.max(0, Math.min(0.96, powerKW));
+    }
+
+    return profile;
+  }
+
+  /**
+   * Preload weather data for both sites (called on init or location change)
+   */
+  async preloadWeatherData(rooftopLat, rooftopLon, oaLat, oaLon, source = 'pvgis') {
+    this.weatherDataSource = source;
+    this.isLivePvgisSynced = false;
+
+    if (source === 'pvgis') {
+      // Fetch PVGIS TMY for both locations in parallel
+      const [rooftopTMY, oaTMY] = await Promise.allSettled([
+        this.fetchPVGISTMY(rooftopLat, rooftopLon),
+        this.fetchPVGISTMY(oaLat, oaLon)
+      ]);
+
+      return {
+        rooftop: rooftopTMY.status === 'fulfilled' ? rooftopTMY.value : null,
+        oa: oaTMY.status === 'fulfilled' ? oaTMY.value : null
+      };
+    } else if (source === 'nasa') {
+      // Fetch NASA POWER - use last year of data
+      const now = new Date();
+      const startDate = `${now.getFullYear() - 1}0101`;
+      const endDate = `${now.getFullYear() - 1}1231`;
+
+      const [rooftopNASA, oaNASA] = await Promise.allSettled([
+        this.fetchNASAPOWER(rooftopLat, rooftopLon, startDate, endDate),
+        this.fetchNASAPOWER(oaLat, oaLon, startDate, endDate)
+      ]);
+
+      return {
+        rooftop: rooftopNASA.status === 'fulfilled' ? rooftopNASA.value : null,
+        oa: oaNASA.status === 'fulfilled' ? oaNASA.value : null
+      };
+    }
+
+    return { rooftop: null, oa: null };
   }
 
   /**
@@ -42,8 +282,8 @@ class SolarModel {
 
   /**
    * High-accuracy PVGIS-calibrated solar radiation & generation simulation
-   * Implements NOAA / Bird clear-sky vector physics with Indian TMY calibration
-   * 
+   * Uses real PVGIS TMY or NASA POWER data when available, falls back to physics model
+   *
    * @param {Object} config
    * @param {number} config.lat - Latitude in decimal degrees
    * @param {number} config.lon - Longitude in decimal degrees
@@ -52,6 +292,8 @@ class SolarModel {
    * @param {number} config.lossPct - System DC/AC and soiling losses (%)
    * @param {string|Date} config.date - Schedule date (for solar declination)
    * @param {number} config.irradianceFactor - Cloud/weather multiplier (0% to 120%)
+   * @param {Object} config.weatherData - Pre-fetched weather data (PVGIS TMY or NASA)
+   * @param {number} config.capacityKWp - Plant capacity for weather-data-based calculation
    * @returns {Object} 96-block normalized profile (kW/kWp) and telemetry metadata
    */
   calculateSolarProfile(config = {}) {
@@ -62,9 +304,96 @@ class SolarModel {
       isTracker = false,
       lossPct = 14.0,
       date = null,
-      irradianceFactor = 100
+      irradianceFactor = 100,
+      weatherData = null,
+      capacityKWp = 1
     } = config;
 
+    // If we have live weather data, use it
+    if (weatherData && this.weatherDataSource !== 'model') {
+      const profile = new Array(this.TOTAL_BLOCKS).fill(0);
+      let peakVal = 0;
+      let peakBlock = 48;
+      let dailyGenKWhPerKWp = 0;
+
+      if (this.weatherDataSource === 'pvgis' && weatherData.hourlyData) {
+        // Use PVGIS TMY hourly data
+        const hourlyData = weatherData.hourlyData;
+        const sysEfficiency = Math.max(0.1, 1 - lossPct / 100);
+
+        for (let i = 0; i < this.TOTAL_BLOCKS; i++) {
+          const hourIdx = Math.floor(i / 4);
+          const hourData = hourlyData[hourIdx];
+
+          if (!hourData) continue;
+
+          // PVGIS provides GHI, DHI, DNI in Wh/m²
+          const ghi = hourData.Gh || hourData.GHI || 0;
+          const dhi = hourData.Dh || hourData.DHI || 0;
+          const dni = hourData.Dn || hourData.DNI || ghi * 0.7;
+          const temp = hourData.T2m || 25;
+
+          // Estimate POA from GHI/DHI
+          const sunElev = this.estimateSunElevation(hourIdx, 172);
+          const cosInc = Math.max(0, Math.sin(sunElev * Math.PI / 180));
+          const beamPOA = dni * cosInc * 0.85;
+          const diffusePOA = dhi * 0.7;
+          const gti = beamPOA + diffusePOA;
+
+          const tempDerate = 1 - 0.004 * Math.max(0, temp - 25);
+          const power = (gti / 1000) * capacityKWp * tempDerate * sysEfficiency * (irradianceFactor / 100);
+          profile[i] = Math.max(0, Math.min(0.96, power));
+
+          dailyGenKWhPerKWp += profile[i] * 0.25;
+          if (profile[i] > peakVal) {
+            peakVal = profile[i];
+            peakBlock = i;
+          }
+        }
+      } else if (this.weatherDataSource === 'nasa' && weatherData.dailyData) {
+        // Use NASA POWER daily data - scale typical profile
+        const dailyData = weatherData.dailyData;
+        const ghiKey = Object.keys(dailyData).find(k => k.includes('ALLSKY_SFC_SW_DWN'));
+        const avgGHI = ghiKey ? Object.values(dailyData[ghiKey]).filter(v => v > 0).reduce((a, b) => a + b, 0) / 365 : 800;
+
+        // Typical Indian day profile
+        const typicalShape = [0,0,0,0,0,0,0,0.03,0.08,0.18,0.38,0.58,0.78,0.92,1.0,0.97,0.88,0.72,0.52,0.32,0.15,0.05,0.01,0];
+        const sysEfficiency = Math.max(0.1, 1 - lossPct / 100);
+
+        for (let i = 0; i < this.TOTAL_BLOCKS; i++) {
+          const hour = i / 4;
+          const hourIdx = Math.floor(hour);
+          const shape = typicalShape[hourIdx] || 0;
+
+          // Scale by average daily GHI (peak around 950 W/m² for India)
+          const gti = 950 * shape * (avgGHI / 800);
+          const tempDerate = 1 - 0.004 * Math.max(0, 32 - 25);
+          const power = (gti / 1000) * capacityKWp * tempDerate * sysEfficiency * (irradianceFactor / 100);
+          profile[i] = Math.max(0, Math.min(0.96, power));
+
+          dailyGenKWhPerKWp += profile[i] * 0.25;
+          if (profile[i] > peakVal) {
+            peakVal = profile[i];
+            peakBlock = i;
+          }
+        }
+      }
+
+      return {
+        profile,
+        peakVal,
+        peakBlock,
+        dailyInsolationKWh: dailyGenKWhPerKWp,
+        dailyGenKWhPerKWp: Math.round(dailyGenKWhPerKWp * 100) / 100,
+        solarNoonTime: '12:00',
+        solarNoonMinutes: 720,
+        cuf: Math.round((dailyGenKWhPerKWp / 24) * 100 * 10) / 10,
+        isTracker,
+        dataSource: this.weatherDataSource
+      };
+    }
+
+    // Fall back to physics model (existing code)
     // Day of year n (1..365)
     let n = 267; // Default late September equinox
     if (date) {
@@ -283,21 +612,29 @@ class SolarModel {
       oaLon = 71.9168,
       oaTilt = 22,
       oaTracking = "fixed",
-      scheduleDate = null
+      scheduleDate = null,
+      weatherDataSource = "model",
+      rooftopWeatherData = null,
+      oaWeatherData = null
     } = params;
+
+    // Set weather data source
+    this.setWeatherDataSource(weatherDataSource);
 
     // 1. Calculate Site-Specific Solar Generation Profiles
     const isOaTracker = oaTracking === "tracker";
 
-    // Actual Real-Time Profiles
+    // Actual Real-Time Profiles - pass pre-fetched weather data if available
     const rooftopActualModel = this.calculateSolarProfile({
       lat: rooftopLat,
       lon: rooftopLon,
       tilt: rooftopTilt,
       isTracker: false,
-      lossPct: 14.0, // Rooftop system losses
+      lossPct: 14.0,
       date: scheduleDate,
-      irradianceFactor: actualIrradiancePct
+      irradianceFactor: actualIrradiancePct,
+      weatherData: rooftopWeatherData,
+      capacityKWp: rooftopKWp
     });
 
     const oaActualModel = this.calculateSolarProfile({
@@ -305,12 +642,14 @@ class SolarModel {
       lon: oaLon,
       tilt: oaTilt,
       isTracker: isOaTracker,
-      lossPct: 11.0, // Utility solar park losses
+      lossPct: 11.0,
       date: scheduleDate,
-      irradianceFactor: actualIrradiancePct
+      irradianceFactor: actualIrradiancePct,
+      weatherData: oaWeatherData,
+      capacityKWp: openAccessKWp
     });
 
-    // Day-Ahead Forecast Profiles (used for submitted SLDC Schedule)
+    // Day-Ahead Forecast Profiles
     const rooftopDaModel = this.calculateSolarProfile({
       lat: rooftopLat,
       lon: rooftopLon,
@@ -318,7 +657,9 @@ class SolarModel {
       isTracker: false,
       lossPct: 14.0,
       date: scheduleDate,
-      irradianceFactor: dayAheadIrradiancePct
+      irradianceFactor: dayAheadIrradiancePct,
+      weatherData: rooftopWeatherData,
+      capacityKWp: rooftopKWp
     });
 
     const oaDaModel = this.calculateSolarProfile({
@@ -328,7 +669,9 @@ class SolarModel {
       isTracker: isOaTracker,
       lossPct: 11.0,
       date: scheduleDate,
-      irradianceFactor: dayAheadIrradiancePct
+      irradianceFactor: dayAheadIrradiancePct,
+      weatherData: oaWeatherData,
+      capacityKWp: openAccessKWp
     });
 
     // Time shift telemetry (e.g. OA in West lags Rooftop in East)

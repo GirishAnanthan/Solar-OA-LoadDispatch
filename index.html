@@ -237,7 +237,7 @@
           </div>
         </div>
 
-        <!-- Card 3: Solar Generation Assets & PVGIS Satellite Simulation -->
+        <!-- Card 3: Solar Generation Assets & Weather Data Source -->
         <div class="config-card" id="panelSolarMet">
           <div class="config-card-header">
             <h3 class="config-card-title">
@@ -252,9 +252,18 @@
                 <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
               </svg>
-              Solar Assets &amp; PVGIS Met
+              Solar Assets &amp; Met Data
             </h3>
-            <span class="badge-mini-accent" id="pvgisMetBadge">PVGIS Active</span>
+            <select id="weatherDataSource" class="select-control" style="font-size: 0.7rem; padding: 0.25rem 0.5rem; min-width: 100px;">
+              <option value="pvgis">PVGIS TMY</option>
+              <option value="nasa">NASA POWER</option>
+              <option value="model">Physics Model</option>
+            </select>
+          </div>
+
+          <!-- Weather Data Status -->
+          <div id="weatherDataStatus" class="policy-callout" style="padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; font-size: 0.72rem; display: none;">
+            <span id="weatherDataStatusText" style="color: var(--oa-emerald);">☀️ Fetching PVGIS TMY data...</span>
           </div>
 
           <!-- Capacities -->
