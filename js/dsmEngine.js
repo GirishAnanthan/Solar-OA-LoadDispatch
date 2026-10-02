@@ -337,7 +337,7 @@ class DSMEngine {
     const sizingRecommendations = this.solarModel.computeRecommendedSizing({
       sanctionedLoadKW: inputParams.sanctionedLoadKW || 1000,
       baseConnectedLoadKW: inputParams.baseConnectedLoadKW || 980,
-      loadMultiplier: inputParams.loadMultiplier || 100,
+      loadMultiplier: inputParams.loadMultiplier || 1.0,
       loadProfileType: inputParams.loadProfileType || "continuous",
       stateKey,
       oaTracking: inputParams.oaTracking || "fixed"

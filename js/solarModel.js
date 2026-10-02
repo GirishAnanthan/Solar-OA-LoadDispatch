@@ -814,7 +814,7 @@ class SolarModel {
   computeRecommendedSizing(params = {}) {
     const sanctionedLoadKW = parseFloat(params.sanctionedLoadKW) || 1000;
     const baseConnectedLoadKW = parseFloat(params.baseConnectedLoadKW) || 980;
-    const loadMultiplier = (parseFloat(params.loadMultiplier) || 100) / 100;
+    const loadMultiplier = parseFloat(params.loadMultiplier) || 1.0;
     const loadProfileType = params.loadProfileType || "continuous";
     const stateKey = params.stateKey || "maharashtra";
     const statePolicy = (typeof STATE_POLICIES !== "undefined" && STATE_POLICIES[stateKey])
