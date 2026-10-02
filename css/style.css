@@ -3618,6 +3618,366 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
 }
 
 /* ==========================================================================
+   AI & SERC Optimal Capacity Sizing Advisor Widget
+   ========================================================================== */
+.sizing-advisor-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.7) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.sizing-advisor-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--solar-gold) 0%, var(--oa-emerald) 50%, var(--grid-sky) 100%);
+}
+
+.sizing-advisor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.sizing-advisor-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-white);
+  letter-spacing: -0.01em;
+}
+
+.sizing-advisor-title svg {
+  color: var(--solar-gold);
+}
+
+.btn-apply-sizing {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.4));
+  border: 1px solid rgba(16, 185, 129, 0.6);
+  color: var(--oa-emerald-light);
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+}
+
+.btn-apply-sizing:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.45), rgba(5, 150, 105, 0.65));
+  border-color: var(--oa-emerald-light);
+  color: #FFFFFF;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-apply-sizing:active {
+  transform: translateY(0);
+}
+
+.btn-apply-sizing.applied {
+  background: rgba(16, 185, 129, 0.6) !important;
+  color: #FFFFFF !important;
+  border-color: var(--oa-emerald) !important;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.6) !important;
+}
+
+.sizing-rec-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  margin-bottom: 0.55rem;
+}
+
+@media (max-width: 600px) {
+  .sizing-rec-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sizing-rec-item {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.2s ease;
+}
+
+.sizing-rec-item.rooftop {
+  border-left: 3px solid var(--solar-gold);
+}
+
+.sizing-rec-item.oa {
+  border-left: 3px solid var(--oa-emerald);
+}
+
+.sizing-rec-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.sizing-rec-val {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-white);
+  line-height: 1.2;
+}
+
+.sizing-rec-item.rooftop .sizing-rec-val {
+  color: var(--solar-gold-light);
+}
+
+.sizing-rec-item.oa .sizing-rec-val {
+  color: var(--oa-emerald-light);
+}
+
+.sizing-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.sizing-rec-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  line-height: 1.25;
+}
+
+.sizing-rec-details {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.45rem;
+}
+
+.sizing-rec-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.sizing-rec-meta strong {
+  color: var(--text-white);
+  font-family: var(--font-mono);
+}
+
+/* ==========================================================================
+   Solar Energy Banking & TOD Settlement Ledger Panel
+   ========================================================================== */
+.banking-ledger-panel {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 12px;
+  padding: 1.1rem;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+}
+
+.banking-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 9999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--oa-emerald-light);
+}
+
+.banking-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.banking-metric-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.banking-metric-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.banking-metric-card.deduction {
+  border-left: 3px solid #F87171;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.banking-metric-card.highlight {
+  border-left: 3px solid var(--grid-sky);
+  background: rgba(56, 189, 248, 0.06);
+}
+
+.banking-metric-card.success {
+  border-left: 3px solid var(--oa-emerald);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.banking-metric-card.savings {
+  border-left: 3px solid var(--solar-gold);
+  background: rgba(245, 158, 11, 0.06);
+}
+
+.bm-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.bm-val {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-white);
+  line-height: 1.2;
+}
+
+.banking-metric-card.deduction .bm-val {
+  color: #F87171;
+}
+
+.banking-metric-card.highlight .bm-val {
+  color: var(--grid-sky-light);
+}
+
+.banking-metric-card.success .bm-val {
+  color: var(--oa-emerald-light);
+}
+
+.banking-metric-card.savings .bm-val {
+  color: var(--solar-gold-light);
+}
+
+.bm-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.bm-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  line-height: 1.25;
+}
+
+/* TOD Slot Banking Offset Breakdown */
+.tod-banking-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.tod-slot-item {
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 6px;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tod-slot-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.tod-slot-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.tod-slot-dot.night { background: #A78BFA; box-shadow: 0 0 6px rgba(167, 139, 250, 0.6); }
+.tod-slot-dot.morning { background: var(--solar-gold); box-shadow: 0 0 6px rgba(245, 158, 11, 0.6); }
+.tod-slot-dot.evening { background: #F87171; box-shadow: 0 0 6px rgba(248, 113, 113, 0.6); }
+.tod-slot-dot.day { background: var(--grid-sky); box-shadow: 0 0 6px rgba(56, 189, 248, 0.6); }
+
+.tod-slot-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.tod-slot-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.tod-slot-units {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text-white);
+}
+
+.tod-slot-rate {
+  font-size: 0.72rem;
+  color: var(--oa-emerald-light);
+  font-weight: 600;
+}
+
+/* Flash Animation when applying sizing */
+@keyframes sizingFlash {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.35); border-color: var(--oa-emerald); }
+  100% { box-shadow: none; }
+}
+
+.highlight-sizing-apply {
+  animation: sizingFlash 1.2s ease-out;
+}
+
+/* ==========================================================================
    Touch Hit Target Optimization (WCAG 2.1 / 2.2 AAA >= 44x44px Touch Targets)
    ========================================================================== */
 @media (pointer: coarse), (hover: none), (max-width: 1024px) {

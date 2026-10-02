@@ -459,6 +459,40 @@ class UIController {
 
     // Modal Focus State Management
     this.lastFocusedElement = null;
+
+    // Sizing Advisor Elements
+    this.btnApplyOptimalSizing = document.getElementById("btnApplyOptimalSizing");
+    this.recRooftopVal = document.getElementById("recRooftopVal");
+    this.recRooftopSub = document.getElementById("recRooftopSub");
+    this.recOAVal = document.getElementById("recOAVal");
+    this.recOASub = document.getElementById("recOASub");
+    this.recREShare = document.getElementById("recREShare");
+    this.recBankedUnits = document.getElementById("recBankedUnits");
+    this.recAnnualSavings = document.getElementById("recAnnualSavings");
+    this.lastRecommendedSizing = null;
+
+    // Banking Ledger Elements
+    this.bankingPolicySubtitle = document.getElementById("bankingPolicySubtitle");
+    this.bankingRegulatorLabel = document.getElementById("bankingRegulatorLabel");
+    this.bmGrossSurplus = document.getElementById("bmGrossSurplus");
+    this.bmBankingLoss = document.getElementById("bmBankingLoss");
+    this.bmBankingLossPct = document.getElementById("bmBankingLossPct");
+    this.bmBankingLossDesc = document.getElementById("bmBankingLossDesc");
+    this.bmNetBanked = document.getElementById("bmNetBanked");
+    this.bmBankedAdjusted = document.getElementById("bmBankedAdjusted");
+    this.bmBankedAdjustedSub = document.getElementById("bmBankedAdjustedSub");
+    this.bmNetBilledGrid = document.getElementById("bmNetBilledGrid");
+    this.bmRawGridCompare = document.getElementById("bmRawGridCompare");
+    this.bmDailySavings = document.getElementById("bmDailySavings");
+    this.bmMonthlySavings = document.getElementById("bmMonthlySavings");
+    this.todNightUnits = document.getElementById("todNightUnits");
+    this.todNightRate = document.getElementById("todNightRate");
+    this.todMorningUnits = document.getElementById("todMorningUnits");
+    this.todMorningRate = document.getElementById("todMorningRate");
+    this.todEveningUnits = document.getElementById("todEveningUnits");
+    this.todEveningRate = document.getElementById("todEveningRate");
+    this.todNormalUnits = document.getElementById("todNormalUnits");
+    this.todNormalRate = document.getElementById("todNormalRate");
   }
 
   attachEventListeners() {
@@ -950,6 +984,13 @@ class UIController {
           }
         };
         reader.readAsText(file);
+      });
+    }
+
+    // 1-Click Apply Recommended Sizing
+    if (this.btnApplyOptimalSizing) {
+      this.btnApplyOptimalSizing.addEventListener("click", () => {
+        this.applyOptimalSizing();
       });
     }
 
@@ -2794,6 +2835,134 @@ class UIController {
         `;
       }
       tbody.innerHTML = rowsHTML;
+    }
+  }
+
+  /**
+   * Renders AI & SERC Optimal Capacity Sizing Advisor Card
+   */
+  renderSizingAdvisor(results) {
+    if (!results || !results.sizingRecommendations) return;
+    const sizing = results.sizingRecommendations;
+    this.lastRecommendedSizing = sizing;
+
+    if (this.recRooftopVal) {
+      this.recRooftopVal.textContent = sizing.recommendedRooftopKWp.toLocaleString();
+    }
+    if (this.recRooftopSub) {
+      this.recRooftopSub.textContent = sizing.rationale ? sizing.rationale.rooftopReason : `0% BTM Curtailment (${sizing.netMeteringCapPct}% Sanctioned Cap)`;
+    }
+    if (this.recOAVal) {
+      const mwStr = sizing.recommendedOAEconomicKWp >= 1000
+        ? `${sizing.recommendedOAEconomicKWp.toLocaleString()} kWp (${(sizing.recommendedOAEconomicKWp / 1000).toFixed(2)} MWp)`
+        : `${sizing.recommendedOAEconomicKWp.toLocaleString()} kWp`;
+      this.recOAVal.textContent = mwStr;
+    }
+    if (this.recOASub) {
+      this.recOASub.textContent = sizing.rationale ? sizing.rationale.oaReason : `80% Economic RE • Rule 3 Compliant`;
+    }
+    if (this.recREShare) {
+      this.recREShare.textContent = `${sizing.expectedCleanSharePct.toFixed(1)}%`;
+    }
+    if (this.recBankedUnits) {
+      this.recBankedUnits.textContent = `${sizing.dailyNetBankedKWh.toLocaleString()} kWh/day`;
+    }
+    if (this.recAnnualSavings) {
+      this.recAnnualSavings.textContent = `₹${sizing.estimatedAnnualSavingsLakhs.toFixed(1)} L/yr`;
+    }
+  }
+
+  /**
+   * 1-Click Auto-Apply Recommended Rooftop and Open Access Solar Capacities
+   */
+  applyOptimalSizing() {
+    if (!this.lastRecommendedSizing) return;
+    const sizing = this.lastRecommendedSizing;
+
+    if (this.rooftopKWpInput) {
+      this.rooftopKWpInput.value = sizing.recommendedRooftopKWp;
+      this.rooftopKWpInput.classList.add("highlight-sizing-apply");
+      setTimeout(() => {
+        if (this.rooftopKWpInput) this.rooftopKWpInput.classList.remove("highlight-sizing-apply");
+      }, 1500);
+    }
+
+    if (this.openAccessKWpInput) {
+      this.openAccessKWpInput.value = sizing.recommendedOAEconomicKWp;
+      this.openAccessKWpInput.classList.add("highlight-sizing-apply");
+      setTimeout(() => {
+        if (this.openAccessKWpInput) this.openAccessKWpInput.classList.remove("highlight-sizing-apply");
+      }, 1500);
+    }
+
+    this.app.recalculate();
+  }
+
+  /**
+   * Renders Solar Energy Banking & TOD Settlement Ledger Panel
+   */
+  renderBankingLedger(results) {
+    if (!results || !results.bankingLedger) return;
+    const ledger = results.bankingLedger;
+    const state = results.statePolicy || {};
+
+    if (this.bankingPolicySubtitle) {
+      this.bankingPolicySubtitle.textContent = `${state.regulator || "SERC"} ${ledger.bankingType || "Monthly"} Banking • ${ledger.bankingChargePct.toFixed(1)}% In-Kind Deduction • Offsets Non-Solar Grid Tariffs`;
+    }
+    if (this.bankingRegulatorLabel) {
+      this.bankingRegulatorLabel.textContent = `${state.regulator || "SERC"} Regulatory Banking`;
+    }
+    if (this.bmGrossSurplus) {
+      this.bmGrossSurplus.textContent = ledger.totalGrossSurplusKWh.toLocaleString();
+    }
+    if (this.bmBankingLoss) {
+      this.bmBankingLoss.textContent = `-${ledger.totalInKindBankingDeductionKWh.toLocaleString()}`;
+    }
+    if (this.bmBankingLossPct) {
+      this.bmBankingLossPct.textContent = `kWh (-${ledger.bankingChargePct.toFixed(1)}%)`;
+    }
+    if (this.bmBankingLossDesc) {
+      this.bmBankingLossDesc.textContent = `${state.stateName || "State"} Discom InSTS Transmission Retained`;
+    }
+    if (this.bmNetBanked) {
+      this.bmNetBanked.textContent = ledger.totalNetBankedKWh.toLocaleString();
+    }
+    if (this.bmBankedAdjusted) {
+      this.bmBankedAdjusted.textContent = ledger.totalBankedEnergyAdjustedKWh.toLocaleString();
+    }
+    if (this.bmBankedAdjustedSub) {
+      const pctOffset = ledger.rawGridImportKWh > 0
+        ? ((ledger.totalBankedEnergyAdjustedKWh / ledger.rawGridImportKWh) * 100).toFixed(1)
+        : 0;
+      this.bmBankedAdjustedSub.textContent = `Offsets ${pctOffset}% of Non-Solar Grid Drawl`;
+    }
+    if (this.bmNetBilledGrid) {
+      this.bmNetBilledGrid.textContent = ledger.netBilledGridImportKWh.toLocaleString();
+    }
+    if (this.bmRawGridCompare) {
+      this.bmRawGridCompare.textContent = `Reduced from ${ledger.rawGridImportKWh.toLocaleString()} kWh raw drawl`;
+    }
+    if (this.bmDailySavings) {
+      this.bmDailySavings.textContent = `₹${ledger.bankingFinancialSavingsINR.toLocaleString()}`;
+    }
+    if (this.bmMonthlySavings) {
+      const monthlyLakhs = (ledger.monthlyProjectedSavingsINR / 100000).toFixed(2);
+      this.bmMonthlySavings.textContent = `₹${monthlyLakhs} Lakhs /month tariff offset`;
+    }
+
+    // TOD Slots breakdown
+    const tod = ledger.todBreakdown || {};
+    if (this.todNightUnits) {
+      this.todNightUnits.textContent = `${(tod.nightOffPeakAdjustedKWh || 0).toLocaleString()} kWh`;
+    }
+    if (this.todMorningUnits) {
+      this.todMorningUnits.textContent = tod.morningPeakAdjustedKWh > 0 ? `${tod.morningPeakAdjustedKWh.toLocaleString()} kWh` : "Direct Solar Absorbed";
+    }
+    if (this.todEveningUnits) {
+      this.todEveningUnits.textContent = `${(tod.eveningPeakAdjustedKWh || 0).toLocaleString()} kWh`;
+    }
+    if (this.todNormalUnits) {
+      this.todNormalUnits.textContent = `${(tod.normalDayAdjustedKWh || 0).toLocaleString()} kWh`;
     }
   }
 

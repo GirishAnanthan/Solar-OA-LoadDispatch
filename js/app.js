@@ -74,6 +74,14 @@ class SolarSchedulingApp {
     this.ui.renderBESSView(this.lastEvaluationResults);
     this.ui.renderAnnualView(this.lastEvaluationResults);
 
+    // Render Sizing Advisor & Solar Energy Banking Ledger
+    if (this.lastEvaluationResults && this.lastEvaluationResults.sizingRecommendations) {
+      this.ui.renderSizingAdvisor(this.lastEvaluationResults);
+    }
+    if (this.lastEvaluationResults && this.lastEvaluationResults.bankingLedger) {
+      this.ui.renderBankingLedger(this.lastEvaluationResults);
+    }
+
     // Trigger auto-save to ensure state persistence across sessions and shutdowns
     this.ui.triggerAutoSavePulse();
   }

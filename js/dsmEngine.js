@@ -200,31 +200,101 @@ class DSMEngine {
       };
     });
 
-    // 2. Financial & Energy Balance Calculations
+    // 2. Solar Energy Banking & Non-Solar Settlement Accounting
+    const bankingLossPct = statePolicy.bankingChargePct !== undefined ? statePolicy.bankingChargePct : 2.0;
+    const bankingType = statePolicy.bankingType || "Monthly banking";
+
+    let totalGrossSurplusKWh = 0;
+    let totalInKindBankingDeductionKWh = 0;
+    let totalNetBankedKWh = 0;
+
+    // First pass: compute total net banked energy generated during solar surplus blocks
+    evaluatedBlocks.forEach(b => {
+      const grossSurplus = b.energyOASurplusKWh || (b.actualOASurplus * 0.25);
+      if (grossSurplus > 0) {
+        const inKindLoss = grossSurplus * (bankingLossPct / 100);
+        const netBanked = grossSurplus - inKindLoss;
+        totalGrossSurplusKWh += grossSurplus;
+        totalInKindBankingDeductionKWh += inKindLoss;
+        totalNetBankedKWh += netBanked;
+        b.bankedInjectedGrossKWh = Math.round(grossSurplus * 10) / 10;
+        b.bankedInKindLossKWh = Math.round(inKindLoss * 10) / 10;
+        b.bankedInjectedNetKWh = Math.round(netBanked * 10) / 10;
+      } else {
+        b.bankedInjectedGrossKWh = 0;
+        b.bankedInKindLossKWh = 0;
+        b.bankedInjectedNetKWh = 0;
+      }
+    });
+
+    // Second pass: adjust banked solar credits against non-solar / grid import hours
+    let runningBankedPoolKWh = totalNetBankedKWh;
+    let totalBankedAdjustedKWh = 0;
+    let totalBankingSavingsINR = 0;
+    let todNightAdjustedKWh = 0;
+    let todMorningAdjustedKWh = 0;
+    let todEveningAdjustedKWh = 0;
+    let todNormalAdjustedKWh = 0;
+
+    evaluatedBlocks.forEach(b => {
+      const rawImportKWh = b.energyActualGridImportKWh;
+      if (rawImportKWh > 0 && runningBankedPoolKWh > 0) {
+        const adjustedKWh = Math.min(runningBankedPoolKWh, rawImportKWh);
+        runningBankedPoolKWh -= adjustedKWh;
+        totalBankedAdjustedKWh += adjustedKWh;
+        const savingsINR = adjustedKWh * b.blockGridTariff;
+        totalBankingSavingsINR += savingsINR;
+
+        b.bankedAdjustedKWh = Math.round(adjustedKWh * 10) / 10;
+        b.netBilledGridKWh = Math.round((rawImportKWh - adjustedKWh) * 10) / 10;
+        b.bankingTariffSavingsINR = Math.round(savingsINR * 10) / 10;
+
+        // Categorize by TOD slot
+        if (b.todSlotName.includes("Night")) {
+          todNightAdjustedKWh += adjustedKWh;
+        } else if (b.todSlotName.includes("Morning Peak")) {
+          todMorningAdjustedKWh += adjustedKWh;
+        } else if (b.todSlotName.includes("Evening Peak")) {
+          todEveningAdjustedKWh += adjustedKWh;
+        } else {
+          todNormalAdjustedKWh += adjustedKWh;
+        }
+      } else {
+        b.bankedAdjustedKWh = 0;
+        b.netBilledGridKWh = Math.round(rawImportKWh * 10) / 10;
+        b.bankingTariffSavingsINR = 0;
+      }
+    });
+
+    const residualBankedBalanceKWh = Math.max(0, runningBankedPoolKWh);
+    const totalNetBilledGridImportKWh = Math.max(0, totalActualGridImportKWh - totalBankedAdjustedKWh);
+    const netDiscomBillWithBankingINR = Math.max(0, totalActualDiscomCostINR - totalBankingSavingsINR);
+
+    // 3. Financial & Energy Balance Calculations
     // Baseline Cost without Solar (100% Discom import using TOD tariffs)
     const baselineDailyCostINR = totalBaselineDiscomCostINR;
 
     // Solar Cost (OA PPA rate for OA energy consumed; BTM has zero marginal cost after CAPEX)
     const dailyOASolarCostINR = totalOAConsumedKWh * oaPpaRate;
 
-    // Discom Grid Import Cost (TOD Weighted)
+    // Discom Grid Import Cost (TOD Weighted, before and after banking settlement)
     const dailyDiscomEnergyCostINR = totalActualDiscomCostINR;
 
     // Total Penalties
     const dailyTotalPenaltiesINR = totalDsmPenaltyINR + totalInadvertentExportPenaltyINR + totalDemandBreachPenaltyINR;
 
-    // Net Total Energy Bill with Solar, TOD & DSM
-    const netActualDailyCostINR = dailyOASolarCostINR + dailyDiscomEnergyCostINR + dailyTotalPenaltiesINR;
+    // Net Total Energy Bill with Solar, Banking, TOD & DSM
+    const netActualDailyCostINR = dailyOASolarCostINR + netDiscomBillWithBankingINR + dailyTotalPenaltiesINR;
 
-    // Net Daily Savings vs Baseline
+    // Net Daily Savings vs Baseline (inclusive of Solar Energy Banking credits)
     const netDailySavingsINR = Math.max(0, baselineDailyCostINR - netActualDailyCostINR);
     const savingsPct = baselineDailyCostINR > 0 ? (netDailySavingsINR / baselineDailyCostINR) * 100 : 0;
 
-    // Renewable Energy Share
-    const totalGreenEnergyKWh = totalBTMUtilizedKWh + totalOAConsumedKWh;
-    const greenEnergySharePct = totalActualConsumptionKWh > 0 ? (totalGreenEnergyKWh / totalActualConsumptionKWh) * 100 : 0;
+    // Renewable Energy Share (Direct absorption + Banked energy offset)
+    const totalGreenEnergyKWh = totalBTMUtilizedKWh + totalOAConsumedKWh + totalBankedAdjustedKWh;
+    const greenEnergySharePct = totalActualConsumptionKWh > 0 ? Math.min(100, (totalGreenEnergyKWh / totalActualConsumptionKWh) * 100) : 0;
 
-    // 3. Itemized Open Access Landed Cost Evaluation
+    // 4. Itemized Open Access Landed Cost Evaluation
     let landedCostReport = null;
     let rule3AuditReport = null;
     if (this.landedCostEngine) {
@@ -233,7 +303,7 @@ class DSMEngine {
         procurementType: inputParams.procurementType || "group_captive",
         basePpaRate: oaPpaRate,
         voltageLevel: inputParams.voltageLevel || "33",
-        annualOAEnergyKWh: totalOAConsumedKWh * 365,
+        annualOAEnergyKWh: (totalOAConsumedKWh + totalBankedAdjustedKWh) * 365,
         discomTariff: baseGridTariff
       });
 
@@ -241,12 +311,12 @@ class DSMEngine {
         equityPct: inputParams.captiveEquityPct || 26.0,
         plantCapacityMW: (inputParams.openAccessKWp || 1500) / 1000,
         annualGenerationMUs: ((inputParams.openAccessKWp || 1500) * 1620) / 1e6,
-        consumerOfftakeMUs: (totalOAConsumedKWh * 365) / 1e6,
+        consumerOfftakeMUs: ((totalOAConsumedKWh + totalBankedAdjustedKWh) * 365) / 1e6,
         stateKey
       });
     }
 
-    // 4. 25-Year Project Finance & DSCR/IRR Evaluation
+    // 5. 25-Year Project Finance & DSCR/IRR Evaluation
     let projectFinanceReport = null;
     if (this.financialModel) {
       projectFinanceReport = this.financialModel.evaluateProjectFinance({
@@ -255,13 +325,23 @@ class DSMEngine {
         bessKWh: inputParams.bessCapacityKWh || 0,
         procurementType: inputParams.procurementType || "group_captive",
         year1RooftopGenKWh: totalBTMUtilizedKWh * 365,
-        year1OAGenKWh: totalOAConsumedKWh * 365,
+        year1OAGenKWh: (totalOAConsumedKWh + totalBankedAdjustedKWh) * 365,
         discomTariff: baseGridTariff,
         oaPpaRate: oaPpaRate,
         oaLandedCost: landedCostReport ? landedCostReport.totalLandedCostPerKWh : (oaPpaRate * 1.25),
         customAssumptions: inputParams.customFinanceAssumptions || {}
       });
     }
+
+    // 6. Capacity Sizing Recommendations
+    const sizingRecommendations = this.solarModel.computeRecommendedSizing({
+      sanctionedLoadKW: inputParams.sanctionedLoadKW || 1000,
+      baseConnectedLoadKW: inputParams.baseConnectedLoadKW || 980,
+      loadMultiplier: inputParams.loadMultiplier || 100,
+      loadProfileType: inputParams.loadProfileType || "continuous",
+      stateKey,
+      oaTracking: inputParams.oaTracking || "fixed"
+    });
 
     return {
       statePolicy,
@@ -280,13 +360,14 @@ class DSMEngine {
         totalDeviationKWh: Math.round(totalDeviationKWh),
         totalInadvertentExportKWh: Math.round(totalInadvertentExportKWh),
         greenEnergySharePct: Math.round(greenEnergySharePct * 10) / 10,
-        
+
         // Financials (TOD Integrated)
         gridTariff: baseGridTariff,
         oaPpaRate,
         baselineDailyCostINR: Math.round(baselineDailyCostINR),
         dailyOASolarCostINR: Math.round(dailyOASolarCostINR),
         dailyDiscomEnergyCostINR: Math.round(dailyDiscomEnergyCostINR),
+        netDiscomBillWithBankingINR: Math.round(netDiscomBillWithBankingINR),
         dailyDsmPenaltyINR: Math.round(totalDsmPenaltyINR),
         dailyInadvertentExportPenaltyINR: Math.round(totalInadvertentExportPenaltyINR),
         dailyDemandBreachPenaltyINR: Math.round(totalDemandBreachPenaltyINR),
@@ -301,6 +382,27 @@ class DSMEngine {
         okBlockCount,
         complianceScorePct: Math.round((okBlockCount / 96) * 100)
       },
+      bankingLedger: {
+        bankingChargePct: bankingLossPct,
+        bankingType,
+        totalGrossSurplusKWh: Math.round(totalGrossSurplusKWh),
+        totalInKindBankingDeductionKWh: Math.round(totalInKindBankingDeductionKWh * 10) / 10,
+        totalNetBankedKWh: Math.round(totalNetBankedKWh),
+        totalBankedEnergyAdjustedKWh: Math.round(totalBankedAdjustedKWh),
+        residualBankedBalanceKWh: Math.round(residualBankedBalanceKWh),
+        rawGridImportKWh: Math.round(totalActualGridImportKWh),
+        netBilledGridImportKWh: Math.round(totalNetBilledGridImportKWh),
+        bankingFinancialSavingsINR: Math.round(totalBankingSavingsINR),
+        monthlyProjectedSavingsINR: Math.round(totalBankingSavingsINR * 30),
+        annualProjectedSavingsLakhs: Math.round((totalBankingSavingsINR * 365) / 100000),
+        todBreakdown: {
+          nightOffPeakAdjustedKWh: Math.round(todNightAdjustedKWh),
+          morningPeakAdjustedKWh: Math.round(todMorningAdjustedKWh),
+          eveningPeakAdjustedKWh: Math.round(todEveningAdjustedKWh),
+          normalDayAdjustedKWh: Math.round(todNormalAdjustedKWh)
+        }
+      },
+      sizingRecommendations,
       bessSummary,
       landedCostReport,
       rule3AuditReport,
