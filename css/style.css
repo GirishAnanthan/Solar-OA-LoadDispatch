@@ -2111,6 +2111,240 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   font-weight: 700;
 }
 
+/* Policy Dossier Specific Modal Styles */
+.policy-modal-card {
+  max-width: 1040px;
+  max-height: 92vh;
+}
+
+.policy-modal-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 1.25rem;
+}
+
+.policy-modal-state-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 260px;
+}
+
+.policy-modal-state-select {
+  flex: 1;
+  background: #0B132B;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  padding: 0.5rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.policy-kpi-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.policy-kpi-pill {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.policy-kpi-pill .pk-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.policy-kpi-pill .pk-val {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+}
+
+.policy-kpi-pill .pk-sub {
+  font-size: 0.72rem;
+  color: var(--solar-gold);
+}
+
+.settlement-models-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.35rem;
+}
+
+.settlement-model-card {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: var(--radius-md);
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.settlement-model-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.settlement-model-card.model-net-metering::before {
+  background: linear-gradient(90deg, #F59E0B, #FBBF24);
+}
+.settlement-model-card.model-geoa::before {
+  background: linear-gradient(90deg, #06B6D4, #3B82F6);
+}
+.settlement-model-card.model-group-captive::before {
+  background: linear-gradient(90deg, #10B981, #34D399);
+}
+.settlement-model-card.model-third-party::before {
+  background: linear-gradient(90deg, #8B5CF6, #A78BFA);
+}
+
+.sm-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.sm-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sm-card-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-exempt {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.badge-payable {
+  background: rgba(239, 68, 68, 0.18);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.badge-capped {
+  background: rgba(6, 182, 212, 0.2);
+  color: #38BDF8;
+  border: 1px solid rgba(6, 182, 212, 0.4);
+}
+
+.badge-btm {
+  background: rgba(245, 158, 11, 0.2);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.sm-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.sm-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 0.35rem;
+}
+
+.sm-detail-item .smd-label {
+  color: var(--text-muted);
+  flex: 1;
+}
+
+.sm-detail-item .smd-val {
+  color: #FFFFFF;
+  font-weight: 600;
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.sm-summary-box {
+  background: rgba(0, 0, 0, 0.25);
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 0.65rem;
+  font-size: 0.775rem;
+  line-height: 1.45;
+  color: #CBD5E1;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.losses-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.loss-chip {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 0.4rem 0.7rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.loss-chip .lc-volt {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.loss-chip .lc-val {
+  color: #38BDF8;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
 /* ==========================================================================
    Responsive Adaptations for Smaller Screens
    ========================================================================== */

@@ -1710,62 +1710,381 @@ class UIController {
     document.body.removeChild(link);
   }
 
-  populatePolicyModal() {
+  populatePolicyModal(stateKeyOverride = null) {
     const modalContent = document.getElementById("policyModalContent");
-    const stateKey = this.stateSelect.value;
-    const p = STATE_POLICIES[stateKey];
+    const stateKey = stateKeyOverride || this.stateSelect.value || "maharashtra";
+    const p = STATE_POLICIES[stateKey] || STATE_POLICIES.maharashtra;
     if (!p) return;
 
+    const fw = typeof StatePolicyDirectory !== "undefined" && StatePolicyDirectory.getSettlementFrameworks
+      ? StatePolicyDirectory.getSettlementFrameworks(stateKey)
+      : null;
+
+    // Generate state options grouped by region
+    const stateOptions = Object.keys(STATE_POLICIES).map(key => {
+      const stateObj = STATE_POLICIES[key];
+      const isSelected = key === stateKey ? "selected" : "";
+      return `<option value="${key}" ${isSelected}>${stateObj.stateName} (${stateObj.regulator})</option>`;
+    }).join("");
+
+    const cssRate = p.crossSubsidySurcharge || 0;
+    const asRate = p.additionalSurcharge || 0;
+    const totalSurchargesSaved = cssRate + asRate;
+    const wheelingRate = p.wheelingChargePerKWh || 0;
+    const transmissionRate = p.transmissionChargePerKWh || 0;
+    const dutyRate = p.electricityDutyPct || 0;
+
     let html = `
+      <!-- State Selector & Statutory Header -->
+      <div class="policy-modal-header-bar">
+        <div class="policy-modal-state-select-wrapper">
+          <label for="modalStateSelect" style="font-weight: 700; font-size: 0.825rem; color: var(--text-primary); white-space: nowrap;">
+            Select State / SERC:
+          </label>
+          <select id="modalStateSelect" class="policy-modal-state-select">
+            ${stateOptions}
+          </select>
+        </div>
+        <div style="font-size: 0.775rem; color: var(--text-secondary); text-align: right;">
+          <span style="display: block; font-weight: 700; color: #FFFFFF;">${p.sldcName || "SLDC"}</span>
+          <span style="color: var(--solar-gold);">${p.regulationName || "SERC Regulations"}</span>
+        </div>
+      </div>
+
+      <!-- Quick KPI Strip -->
+      <div class="policy-kpi-summary-grid">
+        <div class="policy-kpi-pill">
+          <span class="pk-label">Base HT Tariff</span>
+          <span class="pk-val">₹${p.baseIndustrialTariff.toFixed(2)}</span>
+          <span class="pk-sub">Discom Energy Charge</span>
+        </div>
+        <div class="policy-kpi-pill">
+          <span class="pk-label">Captive Solar PPA</span>
+          <span class="pk-val">₹${p.openAccessPpaRate.toFixed(2)}</span>
+          <span class="pk-sub">Benchmark PPA Rate</span>
+        </div>
+        <div class="policy-kpi-pill">
+          <span class="pk-label">Captive Surcharge Savings</span>
+          <span class="pk-val" style="color: #34D399;">₹${totalSurchargesSaved.toFixed(2)}/u</span>
+          <span class="pk-sub">100% CSS + AS Waiver</span>
+        </div>
+        <div class="policy-kpi-pill">
+          <span class="pk-label">DSM Tolerance Band</span>
+          <span class="pk-val">±${p.dsmToleranceBandPct.toFixed(1)}%</span>
+          <span class="pk-sub">APPC: ₹${p.dsmReferenceRate.toFixed(2)}/kWh</span>
+        </div>
+        <div class="policy-kpi-pill">
+          <span class="pk-label">Banking Deduction</span>
+          <span class="pk-val">${p.bankingChargePct.toFixed(1)}%</span>
+          <span class="pk-sub">${p.bankingType ? p.bankingType.split('(')[0].trim() : 'Monthly'}</span>
+        </div>
+        <div class="policy-kpi-pill">
+          <span class="pk-label">Net Metering Cap</span>
+          <span class="pk-val">${p.netMeteringCapKW} kW</span>
+          <span class="pk-sub">${p.netMeteringCapPctSanctioned}% Sanctioned Load</span>
+        </div>
+      </div>
+
+      <!-- Section 1: Four Solar Settlement Mechanisms Comparison -->
       <div class="modal-section">
         <h3>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          ${p.stateName} Regulatory Framework (${p.regulator})
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Solar Energy Settlement Mechanisms in ${p.stateName}
         </h3>
-        <p><strong>Governing Regulation:</strong> ${p.regulationName}</p>
-        <p>${p.policyNotes}</p>
+        <p style="font-size: 0.825rem; color: var(--text-secondary); margin-bottom: 0.85rem;">
+          Compare statutory rules, exemptions, wheeling and settlement frameworks across the four legal procurement structures in ${p.stateName}.
+        </p>
+
+        <div class="settlement-models-grid">
+          <!-- 1. Net Metering -->
+          <div class="settlement-model-card model-net-metering">
+            <div class="sm-card-header">
+              <span class="sm-card-title">1. Net Metering</span>
+              <span class="sm-card-badge badge-btm">${p.concurrentNetMeteringOA ? "OA Allowed" : "OA Restricted"}</span>
+            </div>
+            <div class="sm-detail-list">
+              <div class="sm-detail-item">
+                <span class="smd-label">Plant Capacity Cap:</span>
+                <span class="smd-val">${p.netMeteringCapKW} kW (${p.netMeteringCapPctSanctioned}% Load)</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">Concurrent Open Access:</span>
+                <span class="smd-val" style="color: ${p.concurrentNetMeteringOA ? '#34D399' : '#F87171'}">${p.concurrentNetMeteringOA ? 'Permitted' : 'Prohibited (BTM Zero-Export Needed)'}</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">RPR Zero-Export Relay:</span>
+                <span class="smd-val">${p.rprMandatory ? 'Mandatory for BTM' : 'Standard'}</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">Surplus Buyback Rate:</span>
+                <span class="smd-val">₹${p.dsmReferenceRate.toFixed(2)}/kWh (APPC)</span>
+              </div>
+            </div>
+            <div class="sm-summary-box">
+              ${fw ? fw.netMetering.summary : `Solar generation offsets retail Discom bill on 1:1 basis. Surplus at FY end settled at APPC.`}
+            </div>
+          </div>
+
+          <!-- 2. Green Energy Open Access (GEOA) -->
+          <div class="settlement-model-card model-geoa">
+            <div class="sm-card-header">
+              <span class="sm-card-title">2. Green Energy OA (GEOA)</span>
+              <span class="sm-card-badge badge-capped">MoP Rules 2022/23</span>
+            </div>
+            <div class="sm-detail-list">
+              <div class="sm-detail-item">
+                <span class="smd-label">Minimum Contract Demand:</span>
+                <span class="smd-val">100 kW</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">Cross Subsidy Surcharge (CSS):</span>
+                <span class="smd-val">₹${Math.min(cssRate * 1.5, cssRate).toFixed(2)}/kWh (Capped)</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">Additional Surcharge (AS):</span>
+                <span class="smd-val" style="color: #34D399;">₹0.00/kWh (100% Exempt)</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">Monthly Energy Banking:</span>
+                <span class="smd-val">Allowed (${p.bankingChargePct.toFixed(1)}% fee)</span>
+              </div>
+            </div>
+            <div class="sm-summary-box">
+              ${fw ? fw.geoa.summary : `Central GEOA rules reduce threshold to 100 kW with capped CSS, zero AS, and mandatory monthly banking.`}
+            </div>
+          </div>
+
+          <!-- 3. Group Captive (Rule 3) -->
+          <div class="settlement-model-card model-group-captive">
+            <div class="sm-card-header">
+              <span class="sm-card-title">3. Group Captive (Rule 3)</span>
+              <span class="sm-card-badge badge-exempt">100% CSS + AS Exempt</span>
+            </div>
+            <div class="sm-detail-list">
+              <div class="sm-detail-item">
+                <span class="smd-label">Rule 3 Equity Requirement:</span>
+                <span class="smd-val">≥ 26% Equity in SPV</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">Rule 3 Consumption Requirement:</span>
+                <span class="smd-val">≥ 51% Generation</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">Cross Subsidy Surcharge (CSS):</span>
+                <span class="smd-val" style="color: #34D399;">₹0.00/kWh (100% Exempt)</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">Additional Surcharge (AS):</span>
+                <span class="smd-val" style="color: #34D399;">₹0.00/kWh (100% Exempt)</span>
+              </div>
+            </div>
+            <div class="sm-summary-box">
+              ${fw ? fw.groupCaptive.summary : `Group Captive saves ₹${totalSurchargesSaved.toFixed(2)}/kWh in statutory surcharges under Section 42 of Electricity Act 2003.`}
+            </div>
+          </div>
+
+          <!-- 4. Third-Party Open Access -->
+          <div class="settlement-model-card model-third-party">
+            <div class="sm-card-header">
+              <span class="sm-card-title">4. Third-Party Open Access</span>
+              <span class="sm-card-badge badge-payable">Full Surcharges</span>
+            </div>
+            <div class="sm-detail-list">
+              <div class="sm-detail-item">
+                <span class="smd-label">Equity Investment:</span>
+                <span class="smd-val">0% (Pure Bilateral PPA)</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">Cross Subsidy Surcharge (CSS):</span>
+                <span class="smd-val" style="color: #F87171;">₹${cssRate.toFixed(2)}/kWh (Payable)</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">Additional Surcharge (AS):</span>
+                <span class="smd-val" style="color: #F87171;">₹${asRate.toFixed(2)}/kWh (Payable)</span>
+              </div>
+              <div class="sm-detail-item">
+                <span class="smd-label">Electricity Duty:</span>
+                <span class="smd-val">${dutyRate.toFixed(1)}%</span>
+              </div>
+            </div>
+            <div class="sm-summary-box">
+              ${fw ? fw.thirdPartyOA.summary : `Zero equity investment, but incurs full CSS + AS (₹${totalSurchargesSaved.toFixed(2)}/kWh), reducing savings.`}
+            </div>
+          </div>
+        </div>
       </div>
 
+      <!-- Section 2: Open Access Statutory Charges & Energy Banking Breakdown -->
       <div class="modal-section">
-        <h3>Why Convert Rooftop Solar to Behind-The-Meter (BTM) Zero Export?</h3>
-        <p>In most Indian states (including ${p.stateName}), DISCOMs do not permit an industrial consumer to operate simultaneous <strong>Net Metering</strong> and <strong>Open Access (Captive / Group Captive)</strong> on the exact same consumer connection. This is because Net Metering solar feed-in credits directly clash with Open Access 15-minute energy settlement accounts and wheeling banking rules.</p>
-        <p>By installing a certified <strong>Reverse Power Relay (RPR)</strong>, the rooftop plant is transformed into a zero-export captive generator. It supplies 100% of daytime factory loads directly behind the meter, while the scheduled Open Access solar covers remaining daytime and non-solar baseloads without regulatory conflicts.</p>
-      </div>
-
-      <div class="modal-section">
-        <h3>SERC Deviation Settlement Mechanism (DSM) Penalty Structure</h3>
-        <p>Under ${p.regulator} DSM regulations, deviation is measured as the delta between Actual Grid Drawl and Day-Ahead Scheduled Grid Drawl submitted to SLDC.</p>
+        <h3>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          Applicable Statutory Open Access &amp; Banking Charges Matrix
+        </h3>
         <table class="modal-matrix-table">
           <thead>
             <tr>
-              <th>Deviation Range</th>
+              <th>Statutory Component</th>
+              <th>Rate / Unit in ${p.stateName}</th>
+              <th>Group Captive (Rule 3)</th>
+              <th>Green Energy OA (GEOA)</th>
+              <th>Third-Party OA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Cross-Subsidy Surcharge (CSS)</strong></td>
+              <td><strong>₹${cssRate.toFixed(2)}</strong> / kWh</td>
+              <td style="color: #34D399; font-weight: 700;">EXEMPT (₹0.00)</td>
+              <td style="color: #38BDF8; font-weight: 600;">₹${Math.min(cssRate * 1.5, cssRate).toFixed(2)} / kWh</td>
+              <td style="color: #F87171; font-weight: 700;">₹${cssRate.toFixed(2)} / kWh</td>
+            </tr>
+            <tr>
+              <td><strong>Additional Surcharge (AS)</strong></td>
+              <td><strong>₹${asRate.toFixed(2)}</strong> / kWh</td>
+              <td style="color: #34D399; font-weight: 700;">EXEMPT (₹0.00)</td>
+              <td style="color: #34D399; font-weight: 700;">EXEMPT (₹0.00)</td>
+              <td style="color: #F87171; font-weight: 700;">₹${asRate.toFixed(2)} / kWh</td>
+            </tr>
+            <tr>
+              <td><strong>Wheeling Charges</strong></td>
+              <td><strong>₹${wheelingRate.toFixed(2)}</strong> / kWh</td>
+              <td>₹${wheelingRate.toFixed(2)} / kWh</td>
+              <td>₹${wheelingRate.toFixed(2)} / kWh</td>
+              <td>₹${wheelingRate.toFixed(2)} / kWh</td>
+            </tr>
+            <tr>
+              <td><strong>Transmission Charges (InSTS)</strong></td>
+              <td><strong>₹${transmissionRate.toFixed(2)}</strong> / kWh</td>
+              <td>₹${transmissionRate.toFixed(2)} / kWh</td>
+              <td>₹${transmissionRate.toFixed(2)} / kWh</td>
+              <td>₹${transmissionRate.toFixed(2)} / kWh</td>
+            </tr>
+            <tr>
+              <td><strong>SLDC Operating &amp; Scheduling Fee</strong></td>
+              <td><strong>₹${(p.sldcFeesPerDay || 1200).toLocaleString()}</strong> / day</td>
+              <td>Pro-rata (~₹0.05/kWh)</td>
+              <td>Pro-rata (~₹0.05/kWh)</td>
+              <td>Pro-rata (~₹0.05/kWh)</td>
+            </tr>
+            <tr>
+              <td><strong>State Electricity Duty</strong></td>
+              <td><strong>${dutyRate.toFixed(1)}%</strong> on landed cost</td>
+              <td>${dutyRate.toFixed(1)}% Applicable</td>
+              <td>${dutyRate.toFixed(1)}% Applicable</td>
+              <td>${dutyRate.toFixed(1)}% Applicable</td>
+            </tr>
+            <tr>
+              <td><strong>Solar Energy Banking In-Kind Fee</strong></td>
+              <td><strong>${p.bankingChargePct.toFixed(1)}%</strong> energy deduction</td>
+              <td>${p.bankingType || "Monthly banking"}</td>
+              <td>Mandatory Monthly Banking</td>
+              <td>Subject to Discom approval</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Section 3: Technical Losses by Voltage Level -->
+      <div class="modal-section">
+        <h3>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          Technical Transmission &amp; Wheeling Losses by Voltage in ${p.stateName}
+        </h3>
+        <p style="font-size: 0.8125rem;">
+          Higher interconnection voltage directly minimizes energy dissipation across the STU/Discom network:
+        </p>
+        <div class="losses-chips-grid">
+          ${Object.keys(p.transmissionLossesByVoltage || {}).map(v => `
+            <div class="loss-chip">
+              <span class="lc-volt">${v} kV:</span>
+              <span class="lc-val">${p.transmissionLossesByVoltage[v].toFixed(2)}%</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Section 4: Deviation Settlement Mechanism (DSM) & Multi-Tier Schedule -->
+      <div class="modal-section">
+        <h3>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          SERC Deviation Settlement Mechanism (DSM) Schedule (${p.regulator})
+        </h3>
+        <p style="font-size: 0.8125rem;">
+          DSM measures delta between Actual Grid Drawl and 15-Minute Scheduled Drawl submitted to SLDC. Reference APPC: <strong>₹${p.dsmReferenceRate.toFixed(2)}/kWh</strong>.
+        </p>
+        <table class="modal-matrix-table">
+          <thead>
+            <tr>
+              <th>Deviation Error Band</th>
               <th>Tolerance / Surcharge Factor</th>
-              <th>Impact on Industrial Consumer</th>
+              <th>Financial Settlement &amp; Penalty Impact</th>
             </tr>
           </thead>
           <tbody>
             ${p.penaltyTiers.map(t => `
               <tr>
-                <td><strong>${t.label}</strong></td>
-                <td>${(t.penaltyFactor * 100).toFixed(0)}% Surcharge</td>
-                <td>${t.penaltyFactor === 0 ? "Allowed free band without DSM surcharge" : `Penal levy of ${(t.penaltyFactor * 100).toFixed(0)}% applied on reference APPC (₹${p.dsmReferenceRate}/kWh)`}</td>
+                <td><strong>${t.label || `${t.minDeviationPct}% - ${t.maxDeviationPct}%`}</strong></td>
+                <td>${(t.penaltyFactor * 100).toFixed(0)}% Surcharge Factor</td>
+                <td>${t.penaltyFactor === 0 ? "Allowed free tolerance band without DSM penal surcharge" : `Penal levy of ${(t.penaltyFactor * 100).toFixed(0)}% applied on reference APPC (₹${p.dsmReferenceRate}/kWh)`}</td>
               </tr>
             `).join('')}
+            <tr>
+              <td><strong>Inadvertent Grid Export (Zero-Export Breach)</strong></td>
+              <td style="color: #F87171; font-weight: 700;">₹${p.inadvertentExportPenaltyRate.toFixed(2)}/kWh Penalty</td>
+              <td>Zero tariff credit + ₹${p.inadvertentExportPenaltyRate.toFixed(2)}/kWh penalty for unauthorized backfeeding into Discom network</td>
+            </tr>
           </tbody>
         </table>
       </div>
 
+      <!-- Section 5: Time-of-Day (TOD) Industrial Tariff Slots -->
       <div class="modal-section">
-        <h3>Technical Mandates for Zero Export BTM Systems</h3>
-        <ul style="padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
-          <li><strong>Reverse Power Relay (RPR):</strong> Trip setting within 0.1 - 0.2 seconds upon sensing active power flow towards the distribution grid transformer.</li>
-          <li><strong>Dynamic Inverter Throttling:</strong> RS485 / Modbus RTU telemetry linking the feeder multifunction power meter to solar inverter dispatch controllers to throttle generation within milliseconds of load drop.</li>
-          <li><strong>Inadvertent Injection Penalties:</strong> If power enters the grid without schedule, ${p.stateName} charges ₹${p.inadvertentExportPenaltyRate.toFixed(2)}/kWh plus 0 tariff credit.</li>
-        </ul>
+        <h3>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          Time-of-Day (TOD) Industrial Tariff Structure (${p.regulator})
+        </h3>
+        <table class="modal-matrix-table">
+          <thead>
+            <tr>
+              <th>TOD Time Block</th>
+              <th>Hours Window</th>
+              <th>Tariff Multiplier / Surcharge</th>
+              <th>Effective Energy Rate (₹/kWh)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${(p.todSlabs || []).map(s => {
+              const effectiveRate = p.baseIndustrialTariff * (1 + s.surchargePct / 100);
+              const sign = s.surchargePct > 0 ? "+" : "";
+              const color = s.surchargePct > 0 ? "#F87171" : (s.surchargePct < 0 ? "#34D399" : "#94A3B8");
+              return `
+                <tr>
+                  <td><strong>${s.name}</strong></td>
+                  <td>${String(s.startHour).padStart(2, '0')}:00 - ${String(s.endHour).padStart(2, '0')}:00</td>
+                  <td style="color: ${color}; font-weight: 700;">${sign}${s.surchargePct}% ${s.surchargePct < 0 ? 'Rebate' : (s.surchargePct > 0 ? 'Peak Surcharge' : 'Normal')}</td>
+                  <td><strong>₹${effectiveRate.toFixed(2)}</strong> / kWh</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
       </div>
     `;
 
     modalContent.innerHTML = html;
+
+    // Attach listener to state dropdown within modal for instant live exploration
+    const modalStateSelect = document.getElementById("modalStateSelect");
+    if (modalStateSelect) {
+      modalStateSelect.addEventListener("change", (e) => {
+        const newKey = e.target.value;
+        if (this.stateSelect) {
+          this.stateSelect.value = newKey;
+          this.handleStateChange();
+        }
+        this.populatePolicyModal(newKey);
+      });
+    }
   }
 
   openPolicyModal(triggerEl = null) {
