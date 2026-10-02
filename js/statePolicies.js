@@ -1449,6 +1449,123 @@ const STATE_POLICIES = {
     captiveExemptions: { cssExempt: true, asExempt: true, rule3EquityMinPct: 26.0, rule3ConsumptionMinPct: 51.0 },
     transmissionLossesByVoltage: { "11": 6.50, "33": 4.50, "66": 3.60, "132": 3.00 },
     policyNotes: "Hydro-rich state with growing rooftop and pharmaceutical C&I solar interest."
+  },
+
+  ladakh: {
+    stateName: "Ladakh (UT)",
+    regulator: "JERC (UTs)",
+    sldcName: "LADAKH POWER LOAD DESPATCH CENTRE (LPDD, LEH)",
+    regulationName: "JERC (Open Access Regulations) & Solar Development Directives",
+    netMeteringCapKW: 1000,
+    netMeteringCapPctSanctioned: 100,
+    concurrentNetMeteringOA: true,
+    btmZeroExportAllowed: true,
+    rprMandatory: false,
+    baseIndustrialTariff: 6.50,
+    openAccessPpaRate: 3.30,
+    dsmToleranceBandPct: 15.0,
+    dsmReferenceRate: 3.10,
+    penaltyTiers: [
+      { minDeviationPct: 0, maxDeviationPct: 15.0, penaltyFactor: 0.0, label: "Band 1: Free Tolerance (±15%)" },
+      { minDeviationPct: 15.0, maxDeviationPct: 30.0, penaltyFactor: 0.10, label: "Band 2: 15% - 30%" },
+      { minDeviationPct: 30.0, maxDeviationPct: 999.0, penaltyFactor: 0.20, label: "Band 3: > 30%" }
+    ],
+    inadvertentExportPenaltyRate: 1.50,
+    contractDemandExceedancePenaltyMultiplier: 1.4,
+    crossSubsidySurcharge: 1.20,
+    additionalSurcharge: 0.80,
+    wheelingChargePerKWh: 0.30,
+    transmissionChargePerKWh: 0.35,
+    sldcFeesPerDay: 800,
+    electricityDutyPct: 4.0,
+    bankingChargePct: 2.0,
+    bankingType: "Monthly banking (2% deduction)",
+    todSlabs: [
+      { name: "Night", startHour: 22, endHour: 6, surchargePct: -15 },
+      { name: "Peak", startHour: 18, endHour: 22, surchargePct: 15 },
+      { name: "Normal", startHour: 6, endHour: 18, surchargePct: 0 }
+    ],
+    captiveExemptions: { cssExempt: true, asExempt: true, rule3EquityMinPct: 26.0, rule3ConsumptionMinPct: 51.0 },
+    transmissionLossesByVoltage: { "11": 7.00, "33": 4.80, "66": 3.80, "132": 3.20 },
+    policyNotes: "Pang Mega Solar Hub zone with world-class DNI solar irradiance (2200+ kWh/m²)."
+  },
+
+  andaman: {
+    stateName: "Andaman & Nicobar Islands (UT)",
+    regulator: "JERC (UTs)",
+    sldcName: "ANDAMAN & NICOBAR SLDC (ELECTRICITY DEPT, PORT BLAIR)",
+    regulationName: "JERC (Electricity Distribution & OA) Regulations",
+    netMeteringCapKW: 500,
+    netMeteringCapPctSanctioned: 80,
+    concurrentNetMeteringOA: false,
+    btmZeroExportAllowed: true,
+    rprMandatory: true,
+    baseIndustrialTariff: 8.20,
+    openAccessPpaRate: 4.50,
+    dsmToleranceBandPct: 12.0,
+    dsmReferenceRate: 4.00,
+    penaltyTiers: [
+      { minDeviationPct: 0, maxDeviationPct: 12.0, penaltyFactor: 0.0 },
+      { minDeviationPct: 12.0, maxDeviationPct: 25.0, penaltyFactor: 0.12 },
+      { minDeviationPct: 25.0, maxDeviationPct: 999.0, penaltyFactor: 0.25 }
+    ],
+    inadvertentExportPenaltyRate: 2.20,
+    contractDemandExceedancePenaltyMultiplier: 1.6,
+    crossSubsidySurcharge: 2.20,
+    additionalSurcharge: 1.50,
+    wheelingChargePerKWh: 0.55,
+    transmissionChargePerKWh: 0.60,
+    sldcFeesPerDay: 1000,
+    electricityDutyPct: 6.0,
+    bankingChargePct: 3.0,
+    bankingType: "Monthly banking (3% deduction)",
+    todSlabs: [
+      { name: "Night", startHour: 22, endHour: 6, surchargePct: -12 },
+      { name: "Peak", startHour: 17, endHour: 22, surchargePct: 20 },
+      { name: "Normal", startHour: 6, endHour: 17, surchargePct: 0 }
+    ],
+    captiveExemptions: { cssExempt: true, asExempt: true, rule3EquityMinPct: 26.0, rule3ConsumptionMinPct: 51.0 },
+    transmissionLossesByVoltage: { "11": 6.80, "33": 4.60 },
+    policyNotes: "Island grid system with high diesel displacement value for rooftop solar."
+  },
+
+  lakshadweep: {
+    stateName: "Lakshadweep (UT)",
+    regulator: "JERC (UTs)",
+    sldcName: "LAKSHADWEEP SLDC (ELECTRICITY DEPT, KAVARATTI)",
+    regulationName: "JERC (Distribution & Green Power) Regulations",
+    netMeteringCapKW: 250,
+    netMeteringCapPctSanctioned: 80,
+    concurrentNetMeteringOA: false,
+    btmZeroExportAllowed: true,
+    rprMandatory: true,
+    baseIndustrialTariff: 8.50,
+    openAccessPpaRate: 4.80,
+    dsmToleranceBandPct: 15.0,
+    dsmReferenceRate: 4.20,
+    penaltyTiers: [
+      { minDeviationPct: 0, maxDeviationPct: 15.0, penaltyFactor: 0.0 },
+      { minDeviationPct: 15.0, maxDeviationPct: 30.0, penaltyFactor: 0.12 },
+      { minDeviationPct: 30.0, maxDeviationPct: 999.0, penaltyFactor: 0.25 }
+    ],
+    inadvertentExportPenaltyRate: 2.50,
+    contractDemandExceedancePenaltyMultiplier: 1.6,
+    crossSubsidySurcharge: 2.30,
+    additionalSurcharge: 1.60,
+    wheelingChargePerKWh: 0.60,
+    transmissionChargePerKWh: 0.65,
+    sldcFeesPerDay: 800,
+    electricityDutyPct: 5.0,
+    bankingChargePct: 3.0,
+    bankingType: "Monthly banking (3% deduction)",
+    todSlabs: [
+      { name: "Night", startHour: 22, endHour: 6, surchargePct: -10 },
+      { name: "Peak", startHour: 18, endHour: 22, surchargePct: 18 },
+      { name: "Normal", startHour: 6, endHour: 18, surchargePct: 0 }
+    ],
+    captiveExemptions: { cssExempt: true, asExempt: true, rule3EquityMinPct: 26.0, rule3ConsumptionMinPct: 51.0 },
+    transmissionLossesByVoltage: { "11": 6.50 },
+    policyNotes: "Microgrid system prioritizing solar-BESS hybrid to replace diesel generation."
   }
 };
 

@@ -117,6 +117,153 @@ const INDIA_REGIONAL_GEO = [
   { keywords: ["delhi", "ncr", "gurugram", "gurgaon", "manesar", "noida", "faridabad"], lat: 28.6139, lon: 77.2090, region: "Delhi NCR / Manesar IMT Hub", substation: "IMT Manesar 66kV HVPNL Substation" }
 ];
 
+const STATE_DEFAULT_SITES = {
+  maharashtra: {
+    rooftop: { name: "Chakan MIDC Industrial Corridor, Pune, Maharashtra", lat: 18.5204, lon: 73.8567, address: "Plot B-14, Phase-II, MIDC Chakan Industrial Corridor, Pune, Maharashtra - 410501", substation: "Chakan 33/11kV MSEDCL Substation" },
+    oa: { name: "Bhadla Solar Park, Phalodi/Jodhpur, Rajasthan", lat: 27.5385, lon: 71.9168, substation: "Bhadla-II 765/400kV PGCIL Substation (ISTS)" }
+  },
+  gujarat: {
+    rooftop: { name: "Sanand GIDC Industrial Estate, Ahmedabad, Gujarat", lat: 22.9868, lon: 72.3787, address: "Plot G-22, GIDC Industrial Estate, Sanand-II, Ahmedabad, Gujarat - 382170", substation: "Sanand 66/11kV GETCO Substation" },
+    oa: { name: "Charanka Solar Park, Patan, Gujarat", lat: 23.9056, lon: 71.2008, substation: "Charanka 400/220kV GETCO Substation" }
+  },
+  karnataka: {
+    rooftop: { name: "Peenya Industrial Area, Bengaluru, Karnataka", lat: 13.0285, lon: 77.5197, address: "Plot 48, 4th Phase, Peenya Industrial Area, Bengaluru, Karnataka - 560058", substation: "Peenya 66/11kV KPTCL Substation" },
+    oa: { name: "Pavagada Solar Park (Shakti Sthala), Tumakuru, Karnataka", lat: 14.2811, lon: 77.2758, substation: "Pavagada 400/220kV KSPDCL Pooling Substation" }
+  },
+  tamilnadu: {
+    rooftop: { name: "Sriperumbudur SIPCOT Industrial Complex, Chennai, Tamil Nadu", lat: 12.9675, lon: 79.9436, address: "SIPCOT Industrial Complex, Phase-II, Sriperumbudur, Tamil Nadu - 602105", substation: "Sriperumbudur 110/33kV TANTRANSCO Substation" },
+    oa: { name: "Kamuthi Solar Power Project, Ramanathapuram, Tamil Nadu", lat: 9.3510, lon: 78.3960, substation: "Kamuthi 400/230kV TANTRANSCO Substation" }
+  },
+  rajasthan: {
+    rooftop: { name: "Sitapura Industrial Area, Jaipur, Rajasthan", lat: 26.9124, lon: 75.7873, address: "RIICO Industrial Area, Phase-III, Sitapura, Jaipur, Rajasthan - 302022", substation: "Sitapura 132/33kV JVVNL Substation" },
+    oa: { name: "Bhadla Solar Park, Phalodi/Jodhpur, Rajasthan", lat: 27.5385, lon: 71.9168, substation: "Bhadla-II 765/400kV PGCIL Substation (ISTS)" }
+  },
+  uttarpradesh: {
+    rooftop: { name: "Noida Phase-II Industrial Sector-80, Uttar Pradesh", lat: 28.5355, lon: 77.3910, address: "Phase-II Industrial Area, Sector-80, Noida, Gautam Buddha Nagar, UP - 201305", substation: "Noida 33/11kV UPPCL Substation" },
+    oa: { name: "Rewa Ultra Mega Solar (RUMSL), Gurh, MP", lat: 24.4789, lon: 81.5768, substation: "Rewa 400/220kV PGCIL Pooling Station" }
+  },
+  haryana: {
+    rooftop: { name: "Manesar IMT Sector-8, Gurugram, Haryana", lat: 28.3548, lon: 76.9377, address: "HSIIDC Industrial Model Township (IMT), Sector-8, Manesar, Gurugram, Haryana - 122051", substation: "IMT Manesar 66kV HVPNL Substation" },
+    oa: { name: "Bhadla Solar Park, Phalodi/Jodhpur, Rajasthan", lat: 27.5385, lon: 71.9168, substation: "Bhadla-II 765/400kV PGCIL Substation (ISTS)" }
+  },
+  telangana: {
+    rooftop: { name: "Cherlapally Industrial Development Area, Hyderabad, Telangana", lat: 17.4589, lon: 78.5833, address: "Cherlapally Industrial Area, Phase-I, Hyderabad, Telangana - 500051", substation: "Cherlapally 33/11kV TSSPDCL Substation" },
+    oa: { name: "Kurnool Ultra Mega Solar Park, AP", lat: 15.6822, lon: 78.2861, substation: "Gani 400/220kV APTRANSCO Pooling Substation" }
+  },
+  andhrapradesh: {
+    rooftop: { name: "Sri City Industrial Zone, Tirupati / Nellore, Andhra Pradesh", lat: 13.5284, lon: 80.0270, address: "Expressway Central, Sri City Industrial Zone, Satyavedu, AP - 517646", substation: "Sri City 132/33kV APTRANSCO Substation" },
+    oa: { name: "Kurnool Ultra Mega Solar Park, Gani/Sakunala, AP", lat: 15.6822, lon: 78.2861, substation: "Gani 400/220kV APTRANSCO Pooling Substation" }
+  },
+  madhyapradesh: {
+    rooftop: { name: "Pithampur Industrial Growth Centre, Sector-3, Indore, MP", lat: 22.6146, lon: 75.6888, address: "Pithampur Industrial Area, Sector-3, Dhar/Indore, Madhya Pradesh - 454775", substation: "Pithampur 132/33kV MPPTCL Substation" },
+    oa: { name: "Rewa Ultra Mega Solar (RUMSL), Gurh, MP", lat: 24.4789, lon: 81.5768, substation: "Rewa 400/220kV PGCIL Pooling Station" }
+  },
+  punjab: {
+    rooftop: { name: "Focal Point Phase-VIII, Ludhiana, Punjab", lat: 30.9010, lon: 75.8573, address: "Focal Point Industrial Estate, Phase-VIII, Dhandari Kalan, Ludhiana, Punjab - 141010", substation: "Focal Point 66/11kV PSPCL Substation" },
+    oa: { name: "Bhadla Solar Park, Phalodi/Jodhpur, Rajasthan", lat: 27.5385, lon: 71.9168, substation: "Bhadla-II 765/400kV PGCIL Substation (ISTS)" }
+  },
+  westbengal: {
+    rooftop: { name: "Dankuni Industrial Complex, Howrah/Hooghly, West Bengal", lat: 22.6860, lon: 88.2980, address: "Dankuni Industrial Zone, Delhi Road, Hooghly, West Bengal - 712311", substation: "Dankuni 33/11kV WBSEDCL Substation" },
+    oa: { name: "Purulia Solar PV Project, West Bengal", lat: 23.4975, lon: 86.7025, substation: "Purulia 220/132kV WBSETCL Substation" }
+  },
+  odisha: {
+    rooftop: { name: "Kalinga Nagar Industrial Complex, Jajpur, Odisha", lat: 20.9560, lon: 86.0120, address: "Kalinga Nagar Industrial Zone, Duburi, Jajpur, Odisha - 755026", substation: "Kalinga Nagar 132/33kV OPTCL Substation" },
+    oa: { name: "Manmunda / Boudh Solar Park, Odisha", lat: 20.8400, lon: 84.3200, substation: "Boudh 220/132kV OPTCL Substation" }
+  },
+  bihar: {
+    rooftop: { name: "Patliputra Industrial Area, Patna, Bihar", lat: 25.6260, lon: 85.0930, address: "Patliputra Industrial Area, Phase-I, Patna, Bihar - 800013", substation: "Patliputra 33/11kV BSPHCL Substation" },
+    oa: { name: "Kajra Mega Solar Park, Lakhisarai, Bihar", lat: 25.2100, lon: 86.1300, substation: "Kajra 220/132kV BSPTCL Substation" }
+  },
+  jharkhand: {
+    rooftop: { name: "Adityapur Industrial Area, Jamshedpur, Jharkhand", lat: 22.8046, lon: 86.2029, address: "Adityapur Industrial Area, Phase-IV, Jamshedpur, Jharkhand - 832109", substation: "Adityapur 132/33kV JUVNL Substation" },
+    oa: { name: "Koderma / Bokaro Solar Project, Jharkhand", lat: 23.7957, lon: 85.9609, substation: "Koderma 220/132kV JUSNL Substation" }
+  },
+  chhattisgarh: {
+    rooftop: { name: "Urla & Siltara Industrial Growth Centre, Raipur, Chhattisgarh", lat: 21.3200, lon: 81.6000, address: "Urla Industrial Growth Centre, Raipur, Chhattisgarh - 493221", substation: "Urla 132/33kV CSPTCL Substation" },
+    oa: { name: "Rajnandgaon Solar Park, Chhattisgarh", lat: 21.0970, lon: 81.0350, substation: "Rajnandgaon 220kV CSPTCL Substation" }
+  },
+  uttarakhand: {
+    rooftop: { name: "Integrated Industrial Estate (SIDCUL), Pantnagar/Rudrapur, Uttarakhand", lat: 28.9800, lon: 79.4000, address: "SIDCUL Industrial Sector, Pantnagar, Udham Singh Nagar, Uttarakhand - 263153", substation: "SIDCUL 132/33kV UPCL Substation" },
+    oa: { name: "Sitarganj Renewable Solar Hub, Uttarakhand", lat: 28.9200, lon: 79.7000, substation: "Sitarganj 220/132kV PTCUL Substation" }
+  },
+  kerala: {
+    rooftop: { name: "Kinfra Hi-Tech Park, Kalamassery, Kochi, Kerala", lat: 10.0550, lon: 76.3250, address: "Kinfra Hi-Tech Park, HMT Colony, Kalamassery, Kochi, Kerala - 683503", substation: "Kalamassery 110/11kV KSEB Substation" },
+    oa: { name: "Kasaragod Ultra Mega Solar Park, Ambalathara, Kerala", lat: 12.4300, lon: 75.1200, substation: "Ambalathara 220/110kV KSEBL Substation" }
+  },
+  goa: {
+    rooftop: { name: "Verna Industrial Estate, Salcete, Goa", lat: 15.3580, lon: 73.9350, address: "Verna Industrial Estate, Phase-II, Salcete, Goa - 403722", substation: "Verna 33/11kV Goa Electricity Dept Substation" },
+    oa: { name: "Pavagada Solar Park (Shakti Sthala), Tumakuru, Karnataka", lat: 14.2811, lon: 77.2758, substation: "Pavagada 400/220kV KSPDCL Pooling Substation" }
+  },
+  chandigarh: {
+    rooftop: { name: "Industrial Area Phase-I, Chandigarh", lat: 30.7050, lon: 76.8010, address: "Industrial Area Phase-I, Chandigarh - 160002", substation: "Industrial Area 66/11kV CED Substation" },
+    oa: { name: "Bhadla Solar Park, Phalodi/Jodhpur, Rajasthan", lat: 27.5385, lon: 71.9168, substation: "Bhadla-II 765/400kV PGCIL Substation (ISTS)" }
+  },
+  assam: {
+    rooftop: { name: "Amingaon EPIP Industrial Park, Guwahati, Assam", lat: 26.1850, lon: 91.6850, address: "Export Promotion Industrial Park (EPIP), Amingaon, Guwahati, Assam - 781031", substation: "Amingaon 33/11kV APDCL Substation" },
+    oa: { name: "Amguri 70MW Solar Park, Sivasagar, Assam", lat: 26.8100, lon: 94.5700, substation: "Amguri 132/33kV AEGCL Substation" }
+  },
+  hp: {
+    rooftop: { name: "Baddi Industrial Area, Solan, Himachal Pradesh", lat: 30.9578, lon: 76.7914, address: "Baddi-Barotiwala-Nalagarh (BBN) Industrial Area, Solan, HP - 173205", substation: "Baddi 66/11kV HPSEBL Substation" },
+    oa: { name: "Bilaspur Solar Energy Hub, Himachal Pradesh", lat: 31.3300, lon: 76.7500, substation: "Bilaspur 132/33kV HPPTCL Substation" }
+  },
+  delhi: {
+    rooftop: { name: "Okhla Industrial Area Phase-III, New Delhi", lat: 28.5355, lon: 77.2730, address: "Okhla Industrial Area, Phase-III, New Delhi - 110020", substation: "Okhla 66/11kV BSES / DTL Substation" },
+    oa: { name: "Bhadla Solar Park, Phalodi/Jodhpur, Rajasthan", lat: 27.5385, lon: 71.9168, substation: "Bhadla-II 765/400kV PGCIL Substation (ISTS)" }
+  },
+  jnk: {
+    rooftop: { name: "SIDCO Industrial Complex, Bari Brahmana, Jammu, J&K", lat: 32.6400, lon: 74.9300, address: "SIDCO Industrial Complex, Phase-I, Bari Brahmana, Jammu, J&K - 181133", substation: "Bari Brahmana 66/11kV JPDCL Substation" },
+    oa: { name: "Kathua / Samba Solar Energy Hub, J&K", lat: 32.5500, lon: 75.1200, substation: "Samba 132/33kV JKPTCL Substation" }
+  },
+  puducherry: {
+    rooftop: { name: "PIPDIC Industrial Estate, Sedarapet, Puducherry", lat: 11.9950, lon: 79.7450, address: "PIPDIC Industrial Estate, Sedarapet, Puducherry - 605111", substation: "Sedarapet 110/22kV PED Substation" },
+    oa: { name: "Kamuthi Solar Power Project, Ramanathapuram, Tamil Nadu", lat: 9.3510, lon: 78.3960, substation: "Kamuthi 400/230kV TANTRANSCO Substation" }
+  },
+  dnh_dd: {
+    rooftop: { name: "Piparia Industrial Estate, Silvassa, DNH & DD", lat: 20.2760, lon: 73.0160, address: "Piparia Industrial Estate, Silvassa, Dadra & Nagar Haveli - 396230", substation: "Piparia 66/11kV DNH-PDD Substation" },
+    oa: { name: "Charanka Solar Park, Patan, Gujarat", lat: 23.9056, lon: 71.2008, substation: "Charanka 400/220kV GETCO Substation" }
+  },
+  arunachal: {
+    rooftop: { name: "Naharlagun Industrial Area, Papum Pare, Arunachal Pradesh", lat: 27.1050, lon: 93.6950, address: "Naharlagun Industrial Estate, Itanagar Capital Complex, Papum Pare, AP - 791110", substation: "Naharlagun 33/11kV APEDA Substation" },
+    oa: { name: "Itanagar Clean Energy Solar Hub, Arunachal Pradesh", lat: 27.0800, lon: 93.6000, substation: "Nirjuli 132/33kV Power Dept Substation" }
+  },
+  meghalaya: {
+    rooftop: { name: "Umiam EPIP Industrial Area, Ri-Bhoi, Meghalaya", lat: 25.6700, lon: 91.8900, address: "Export Promotion Industrial Park, Umiam, Ri-Bhoi, Meghalaya - 793103", substation: "Umiam 33/11kV MePDCL Substation" },
+    oa: { name: "Byrnihat Renewable Solar Farm, Meghalaya", lat: 26.0500, lon: 91.8500, substation: "Byrnihat 132/33kV MePTCL Substation" }
+  },
+  manipur: {
+    rooftop: { name: "Takyelpat Industrial Estate, Imphal West, Manipur", lat: 24.8100, lon: 93.9100, address: "Takyelpat Industrial Estate, Imphal West, Manipur - 795001", substation: "Takyel 33/11kV MSPDCL Substation" },
+    oa: { name: "Imphal Green Energy Solar Park, Manipur", lat: 24.7800, lon: 93.9300, substation: "Imphal 132/33kV MSPCL Substation" }
+  },
+  mizoram: {
+    rooftop: { name: "Luangmual Industrial Estate, Aizawl, Mizoram", lat: 23.7300, lon: 92.7000, address: "Luangmual Industrial Complex, Aizawl, Mizoram - 796009", substation: "Luangmual 33/11kV P&ED Substation" },
+    oa: { name: "Vankal Solar Park (20MW), Champhai, Mizoram", lat: 23.4500, lon: 93.3000, substation: "Khawzawl 132/33kV P&ED Substation" }
+  },
+  nagaland: {
+    rooftop: { name: "Ganeshnagar Industrial Growth Centre, Dimapur, Nagaland", lat: 25.8500, lon: 93.7200, address: "Ganeshnagar Industrial Growth Centre, Dimapur, Nagaland - 797112", substation: "Dimapur 33/11kV Power Dept Substation" },
+    oa: { name: "Dimapur Solar Energy Hub, Nagaland", lat: 25.9000, lon: 93.7500, substation: "Nagarjan 132/33kV Substation" }
+  },
+  tripura: {
+    rooftop: { name: "Bodhjungnagar Industrial Growth Centre, Agartala, Tripura", lat: 23.8900, lon: 91.3500, address: "Bodhjungnagar Industrial Growth Centre, Agartala, Tripura - 799008", substation: "Bodhjungnagar 33/11kV TSECL Substation" },
+    oa: { name: "Rokhia Renewable Solar Project, West Tripura", lat: 23.6300, lon: 91.2200, substation: "Rokhia 132/33kV TSECL Substation" }
+  },
+  sikkim: {
+    rooftop: { name: "Topakhani Industrial Area, Singtam, East Sikkim", lat: 27.2300, lon: 88.5000, address: "Topakhani Industrial Area, Singtam, East Sikkim - 737134", substation: "Singtam 66/11kV Sikkim Power Substation" },
+    oa: { name: "Rangpo Solar Farm, Sikkim", lat: 27.1700, lon: 88.5200, substation: "Rangpo 132/66kV Substation" }
+  },
+  ladakh: {
+    rooftop: { name: "Choglamsar Industrial Zone, Leh, Ladakh", lat: 34.1350, lon: 77.5600, address: "Choglamsar Industrial Area, Leh, Union Territory of Ladakh - 194101", substation: "Choglamsar 66/11kV LPDD Substation" },
+    oa: { name: "Pang Ultra Mega Renewable Solar Park (10 GW), Ladakh", lat: 32.8900, lon: 77.8500, substation: "Pang 765/400kV ISTS Pooling Substation" }
+  },
+  andaman: {
+    rooftop: { name: "Garacharma Industrial Cluster, Port Blair, Andaman & Nicobar", lat: 11.6200, lon: 92.7100, address: "Garacharma Industrial Area, South Andaman, Port Blair - 744105", substation: "Garacharma 33/11kV ED Substation" },
+    oa: { name: "Dollygunj Solar PV Project, Port Blair, Andaman & Nicobar", lat: 11.6400, lon: 92.7200, substation: "Port Blair 33kV Pooling Station" }
+  },
+  lakshadweep: {
+    rooftop: { name: "Kavaratti Commercial & Port Area, Lakshadweep", lat: 10.5650, lon: 72.6410, address: "Main Jetty Road, Kavaratti Island, UT of Lakshadweep - 682555", substation: "Kavaratti Central 11kV Power House" },
+    oa: { name: "Agatti Island Solar-BESS Renewable Facility, Lakshadweep", lat: 10.8500, lon: 72.1900, substation: "Agatti 11kV Renewable Hub" }
+  }
+};
+
 class UIController {
   constructor(app) {
     this.app = app;
@@ -882,41 +1029,33 @@ class UIController {
       headerStateBadge.textContent = `${policy.regulator} Regulations (${policy.stateName})`;
     }
 
-    // Auto-align location presets based on state
-    let rPreset = "pune";
-    let oaPreset = "bhadla";
-    if (stateKey === "gujarat") { rPreset = "sanand"; oaPreset = "charanka"; }
-    else if (stateKey === "karnataka") { rPreset = "peenya"; oaPreset = "pavagada"; }
-    else if (stateKey === "tamilnadu") { rPreset = "chennai"; oaPreset = "pavagada"; }
-    else if (stateKey === "rajasthan") { rPreset = "manesar"; oaPreset = "bhadla"; }
-    else if (stateKey === "haryana") { rPreset = "manesar"; oaPreset = "bhadla"; }
-    else if (stateKey === "andhrapradesh") { rPreset = "chennai"; oaPreset = "kurnool"; }
-    else if (stateKey === "telangana") { rPreset = "pune"; oaPreset = "kurnool"; }
-    else if (stateKey === "uttarpradesh") { rPreset = "manesar"; oaPreset = "rewa"; }
-
-    const rData = ROOFTOP_PRESETS[rPreset];
-    if (rData) {
-      if (this.rooftopAddressSearchInput) this.rooftopAddressSearchInput.value = rData.name || rData.address;
-      if (this.rooftopLatInput) this.rooftopLatInput.value = rData.lat.toFixed(4);
-      if (this.rooftopLonInput) this.rooftopLonInput.value = rData.lon.toFixed(4);
-      const optTilt = calculateOptimalTilt(rData.lat);
-      if (this.rooftopTiltInput) this.rooftopTiltInput.value = optTilt;
-      if (this.rooftopTiltBadge) this.rooftopTiltBadge.textContent = `Opt: ${optTilt}°`;
-      if (this.custAddressInput && (!this.custAddressInput.value || this.custAddressInput.value.includes("Industrial") || this.custAddressInput.value.includes("MIDC") || this.custAddressInput.value.includes("SIPCOT") || this.custAddressInput.value.includes("GIDC") || this.custAddressInput.value.includes("Peenya") || this.custAddressInput.value.includes("HSIIDC"))) {
-        this.custAddressInput.value = rData.address;
+    // Auto-align location presets for the selected state/UT
+    const sitePreset = STATE_DEFAULT_SITES[stateKey] || STATE_DEFAULT_SITES.maharashtra;
+    if (sitePreset) {
+      const rData = sitePreset.rooftop;
+      if (rData) {
+        if (this.rooftopAddressSearchInput) this.rooftopAddressSearchInput.value = rData.name || rData.address;
+        if (this.rooftopLatInput) this.rooftopLatInput.value = rData.lat.toFixed(4);
+        if (this.rooftopLonInput) this.rooftopLonInput.value = rData.lon.toFixed(4);
+        const optTilt = calculateOptimalTilt(rData.lat);
+        if (this.rooftopTiltInput) this.rooftopTiltInput.value = optTilt;
+        if (this.rooftopTiltBadge) this.rooftopTiltBadge.textContent = `Opt: ${optTilt}°`;
+        if (this.custAddressInput) {
+          this.custAddressInput.value = rData.address;
+        }
+        if (this.custSubstationInput) {
+          this.custSubstationInput.value = rData.substation;
+        }
       }
-      if (this.custSubstationInput && (!this.custSubstationInput.value || this.custSubstationInput.value.includes("Substation"))) {
-        this.custSubstationInput.value = rData.substation;
-      }
-    }
 
-    const oaData = OA_PRESETS[oaPreset];
-    if (oaData) {
-      if (this.oaAddressSearchInput) this.oaAddressSearchInput.value = oaData.name;
-      if (this.oaLatInput) this.oaLatInput.value = oaData.lat.toFixed(4);
-      if (this.oaLonInput) this.oaLonInput.value = oaData.lon.toFixed(4);
-      const oaOptTilt = calculateOptimalTilt(oaData.lat);
-      this.updateOaOptimalTilt(oaOptTilt);
+      const oaData = sitePreset.oa;
+      if (oaData) {
+        if (this.oaAddressSearchInput) this.oaAddressSearchInput.value = oaData.name;
+        if (this.oaLatInput) this.oaLatInput.value = oaData.lat.toFixed(4);
+        if (this.oaLonInput) this.oaLonInput.value = oaData.lon.toFixed(4);
+        const oaOptTilt = calculateOptimalTilt(oaData.lat);
+        this.updateOaOptimalTilt(oaOptTilt);
+      }
     }
 
     this.updateProjectBanner();
