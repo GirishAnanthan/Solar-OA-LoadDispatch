@@ -355,7 +355,10 @@ class FinancialModel {
   }
 }
 
-// Export to window
+// Export to window and module
 if (typeof window !== "undefined") {
   window.FinancialModel = FinancialModel;
+}
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = FinancialModel;
 }

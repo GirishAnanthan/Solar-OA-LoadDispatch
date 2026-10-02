@@ -1,8 +1,36 @@
 /**
  * UI Controller & Interactivity Manager
  * Manages slider reactivity, 24-hr time scrubber animation, scenario presets,
- * table filtering, and CSV dispatch schedule download.
+ * table filtering, dynamic address search autocomplete, and CSV dispatch schedule download.
  */
+
+/**
+ * Escapes HTML characters to prevent XSS injection in dynamic search highlights.
+ */
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/**
+ * Highlights matching query terms in text using bold/accented mark tags.
+ */
+function highlightMatches(text, query) {
+  if (!text) return "";
+  const safeText = escapeHtml(text);
+  if (!query) return safeText;
+  const q = String(query).trim();
+  if (!q) return safeText;
+  const words = q.split(/\s+/).filter(w => w.length > 0).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  if (words.length === 0) return safeText;
+  const regex = new RegExp(`(${words.join('|')})`, 'gi');
+  return safeText.replace(regex, '<span class="geo-match-highlight">$1</span>');
+}
 
 /**
  * Calculates optimal solar PV tilt angle for annual maximum generation
@@ -38,7 +66,13 @@ const INDIAN_GEO_DIRECTORY = [
   { name: "Hyderabad Genome Valley / Cherlapally, Telangana", aliases: ["hyderabad", "cherlapally", "jeedimetla", "patancheru", "genome valley"], lat: 17.3850, lon: 78.4867, address: "Cherlapally Industrial Development Area, Hyderabad, Telangana", substation: "Cherlapally 33/11kV TSSPDCL Substation" },
   { name: "Jaipur Sitapura Industrial Area, Rajasthan", aliases: ["jaipur", "sitapura", "vishwakarma"], lat: 26.9124, lon: 75.7873, address: "RIICO Industrial Area, Sitapura, Jaipur, Rajasthan", substation: "Sitapura 132/33kV JVVNL Substation" },
   { name: "Kolkata Howrah / Dankuni, West Bengal", aliases: ["kolkata", "calcutta", "howrah", "dankuni"], lat: 22.5726, lon: 88.3639, address: "Dankuni Industrial Complex, Howrah/Hooghly, West Bengal", substation: "Dankuni 33/11kV WBSEDCL Substation" },
-  { name: "Coimbatore SIDCO Industrial Estate, Tamil Nadu", aliases: ["coimbatore", "kurichi", "malumichampatti"], lat: 11.0168, lon: 76.9558, address: "SIDCO Industrial Estate, Kurichi, Coimbatore, Tamil Nadu", substation: "Kurichi 110/11kV TANGEDCO Substation" }
+  { name: "Coimbatore SIDCO Industrial Estate, Tamil Nadu", aliases: ["coimbatore", "kurichi", "malumichampatti"], lat: 11.0168, lon: 76.9558, address: "SIDCO Industrial Estate, Kurichi, Coimbatore, Tamil Nadu", substation: "Kurichi 110/11kV TANGEDCO Substation" },
+  { name: "Ambad MIDC, Nashik, Maharashtra", aliases: ["nashik", "ambad", "satpur", "sinnar"], lat: 19.9570, lon: 73.7420, address: "MIDC Industrial Estate, Ambad, Nashik, Maharashtra", substation: "Ambad 33/11kV MSEDCL Substation" },
+  { name: "Whitefield EPIP Zone, Bengaluru, Karnataka", aliases: ["whitefield", "epip", "itpb", "hoodi", "kadugodi"], lat: 12.9800, lon: 77.7300, address: "EPIP Industrial Area, Whitefield, Bengaluru, Karnataka", substation: "Whitefield 66/11kV BESCOM Substation" },
+  { name: "Sri City SEZ / Integrated City, Andhra Pradesh", aliases: ["sri city", "sricity", "tada", "satyavedu", "tirupati"], lat: 13.5300, lon: 80.0200, address: "Sri City Multi-Product SEZ, Tirupati District, Andhra Pradesh", substation: "Sri City 220/33kV APTRANSCO Substation" },
+  { name: "Haridwar SIDCUL Industrial Area, Uttarakhand", aliases: ["haridwar", "sidcul", "roorkee"], lat: 29.9300, lon: 78.0700, address: "Integrated Industrial Estate (SIDCUL), Haridwar, Uttarakhand", substation: "SIDCUL 132/33kV UPCL Substation" },
+  { name: "Urla Industrial Complex, Raipur, Chhattisgarh", aliases: ["urla", "raipur", "siltara", "bhilai"], lat: 21.3200, lon: 81.6100, address: "Urla Industrial Growth Centre, Raipur, Chhattisgarh", substation: "Urla 132/33kV CSPTCL Substation" },
+  { name: "Mandideep Industrial Area, Bhopal, MP", aliases: ["mandideep", "bhopal", "raisen"], lat: 23.0700, lon: 77.5200, address: "Mandideep Industrial Area, Phase-II, Bhopal/Raisen, MP", substation: "Mandideep 132/33kV MPPTCL Substation" }
 ];
 
 const ROOFTOP_PRESETS = {
@@ -63,8 +97,17 @@ const OA_SOLAR_PARK_DIRECTORY = [
   { name: "Tirunelveli Solar Hub, Tamil Nadu", aliases: ["tirunelveli", "gangaikondan", "tuticorin", "thoothukudi"], lat: 8.7139, lon: 77.7567, substation: "Kayathar 400/230kV TANTRANSCO Substation" },
   { name: "Kamuthi Solar Power Project, Ramanathapuram, Tamil Nadu", aliases: ["kamuthi", "ramanathapuram"], lat: 9.3510, lon: 78.3960, substation: "Kamuthi 400/230kV TANTRANSCO Substation" },
   { name: "Neemuch Solar Park, Madhya Pradesh", aliases: ["neemuch", "mandsaur"], lat: 24.4600, lon: 74.8700, substation: "Neemuch 220kV MPPTCL Substation" },
+  { name: "Agar & Shajapur Solar Park, Madhya Pradesh", aliases: ["agar", "shajapur", "susner"], lat: 23.7100, lon: 76.0200, substation: "Agar 220kV MPPTCL Substation" },
   { name: "Nokh Solar Park, Jaisalmer, Rajasthan", aliases: ["nokh"], lat: 27.5600, lon: 72.2500, substation: "Nokh 765kV Pooling Station" },
-  { name: "Rajnandgaon Solar Park, Chhattisgarh", aliases: ["rajnandgaon", "chhattisgarh"], lat: 21.0970, lon: 81.0350, substation: "Rajnandgaon 220kV CSPTCL Substation" }
+  { name: "Rajnandgaon Solar Park, Chhattisgarh", aliases: ["rajnandgaon", "chhattisgarh"], lat: 21.0970, lon: 81.0350, substation: "Rajnandgaon 220kV CSPTCL Substation" },
+  { name: "Jalaun / Bundelkhand Solar Park, Uttar Pradesh", aliases: ["jalaun", "orai", "jhansi", "bundelkhand"], lat: 25.9200, lon: 79.3300, substation: "Orai 400/220kV UPPTCL Substation" },
+  { name: "Kadapa Ultra Mega Solar Park, Galiveedu, AP", aliases: ["kadapa", "galiveedu", "rayachoty"], lat: 14.0500, lon: 78.5200, substation: "Galiveedu 400/220kV APTRANSCO Pooling Substation" },
+  { name: "Sakri Solar Plant, Dhule, Maharashtra", aliases: ["sakri", "dhule", "khandesh"], lat: 20.9042, lon: 74.7749, substation: "Dhule 400/220kV MSETCL Substation" },
+  { name: "Dondaicha Solar Park, Dhule, Maharashtra", aliases: ["dondaicha", "shindkheda"], lat: 21.3300, lon: 74.5700, substation: "Dondaicha 220kV MSETCL Substation" },
+  { name: "Shirsuphal Solar Project, Baramati/Pune, Maharashtra", aliases: ["shirsuphal", "baramati", "daund"], lat: 18.2500, lon: 74.5800, substation: "Baramati 220kV MSETCL Substation" },
+  { name: "Pang Mega Solar Project, Leh, Ladakh", aliases: ["pang", "leh", "ladakh"], lat: 33.1200, lon: 77.8000, substation: "Pang 765kV HVDC Terminal Substation" },
+  { name: "Raghanesda Solar Park, Banaskantha, Gujarat", aliases: ["raghanesda", "vav", "banaskantha"], lat: 24.2800, lon: 71.1800, substation: "Raghanesda 400/220kV GETCO Substation" },
+  { name: "Kasaragod Ultra Mega Solar Park, Kerala", aliases: ["kasaragod", "ambalathara", "paivalike"], lat: 12.4300, lon: 75.1200, substation: "Ambalathara 220/110kV KSEBL Substation" }
 ];
 
 const OA_PRESETS = {
@@ -297,6 +340,7 @@ class UIController {
 
     // Solar Site Coordinates & PVGIS Met Elements
     this.rooftopAddressSearchInput = document.getElementById("rooftopAddressSearch");
+    this.rooftopSuggestionsEl = document.getElementById("rooftopAddressSuggestions");
     this.btnGeocodeRooftop = document.getElementById("btnGeocodeRooftop");
     this.rooftopGeoStatus = document.getElementById("rooftopGeoStatus");
     this.rooftopTiltBadge = document.getElementById("rooftopTiltBadge");
@@ -307,6 +351,7 @@ class UIController {
     this.btnDetectRooftopGPS = document.getElementById("btnDetectRooftopGPS");
 
     this.oaAddressSearchInput = document.getElementById("oaAddressSearch");
+    this.oaSuggestionsEl = document.getElementById("oaAddressSuggestions");
     this.btnGeocodeOA = document.getElementById("btnGeocodeOA");
     this.oaGeoStatus = document.getElementById("oaGeoStatus");
     this.oaSearchIcon = document.getElementById("oaSearchIcon");
@@ -462,6 +507,8 @@ class UIController {
 
     // Sizing Advisor Elements
     this.btnApplyOptimalSizing = document.getElementById("btnApplyOptimalSizing");
+    this.btnSizingModeDaytime = document.getElementById("btnSizingModeDaytime");
+    this.btnSizingModeBanking = document.getElementById("btnSizingModeBanking");
     this.recRooftopVal = document.getElementById("recRooftopVal");
     this.recRooftopSub = document.getElementById("recRooftopSub");
     this.recOAVal = document.getElementById("recOAVal");
@@ -469,6 +516,7 @@ class UIController {
     this.recREShare = document.getElementById("recREShare");
     this.recBankedUnits = document.getElementById("recBankedUnits");
     this.recAnnualSavings = document.getElementById("recAnnualSavings");
+    this.currentSizingMode = "daytime_only";
     this.lastRecommendedSizing = null;
 
     // Banking Ledger Elements
@@ -667,18 +715,8 @@ class UIController {
       });
     }
 
-    // Rooftop Address Geocoding Search (Google Maps style)
-    if (this.rooftopAddressSearchInput) {
-      this.rooftopAddressSearchInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          this.geocodeRooftopAddress(this.rooftopAddressSearchInput.value);
-        }
-      });
-      this.rooftopAddressSearchInput.addEventListener("change", () => {
-        this.geocodeRooftopAddress(this.rooftopAddressSearchInput.value);
-      });
-    }
+    // Dynamic Address Search Autocomplete for Rooftop and Open Access Solar
+    this.setupAddressAutocomplete();
 
     if (this.btnGeocodeRooftop) {
       this.btnGeocodeRooftop.addEventListener("click", () => {
@@ -709,19 +747,6 @@ class UIController {
       };
       this.rooftopLatInput.addEventListener("input", handleRooftopLatChange);
       this.rooftopLatInput.addEventListener("change", handleRooftopLatChange);
-    }
-
-    // Open Access Solar Park Address Geocoding Search (Google Maps style)
-    if (this.oaAddressSearchInput) {
-      this.oaAddressSearchInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          this.geocodeOAAddress(this.oaAddressSearchInput.value);
-        }
-      });
-      this.oaAddressSearchInput.addEventListener("change", () => {
-        this.geocodeOAAddress(this.oaAddressSearchInput.value);
-      });
     }
 
     if (this.btnGeocodeOA) {
@@ -987,6 +1012,18 @@ class UIController {
       });
     }
 
+    // Sizing Mode Toggle (Daytime Only vs Daytime + Banking)
+    if (this.btnSizingModeDaytime) {
+      this.btnSizingModeDaytime.addEventListener("click", () => {
+        this.setSizingMode("daytime_only");
+      });
+    }
+    if (this.btnSizingModeBanking) {
+      this.btnSizingModeBanking.addEventListener("click", () => {
+        this.setSizingMode("daytime_plus_banking");
+      });
+    }
+
     // 1-Click Apply Recommended Sizing
     if (this.btnApplyOptimalSizing) {
       this.btnApplyOptimalSizing.addEventListener("click", () => {
@@ -1202,6 +1239,586 @@ class UIController {
     if (this.oaFixedOption) {
       this.oaFixedOption.textContent = `Fixed (${tilt}° Optimal)`;
     }
+  }
+
+  /**
+   * Sets up dynamic address search autocomplete dropdowns for Rooftop and OA Solar
+   */
+  setupAddressAutocomplete() {
+    // Attach for Rooftop Solar
+    this.createAutocompleteInstance({
+      inputEl: this.rooftopAddressSearchInput,
+      dropdownEl: this.rooftopSuggestionsEl,
+      searchLocalFn: (query, stateKey) => this.queryLocalRooftopLocations(query, stateKey),
+      onSelectFn: (item) => this.applyRooftopLocation(item),
+      type: "rooftop"
+    });
+
+    // Attach for Open Access Solar
+    this.createAutocompleteInstance({
+      inputEl: this.oaAddressSearchInput,
+      dropdownEl: this.oaSuggestionsEl,
+      searchLocalFn: (query, stateKey) => this.queryLocalOALocations(query, stateKey),
+      onSelectFn: (item) => this.applyOALocation(item),
+      type: "oa"
+    });
+  }
+  renderGeoDropdown(dropdownEl, suggestions, query, activeIndex, type, isLoadingOnline, onSelect, onHover) {
+    if (!suggestions || suggestions.length === 0) {
+      if (isLoadingOnline) {
+        dropdownEl.innerHTML = `
+          <div class="geo-dropdown-loading">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation: pvgis-spin 1s linear infinite;"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg>
+            <span>Searching location map...</span>
+          </div>
+        `;
+        dropdownEl.style.display = "block";
+        return true;
+      }
+      if (query && query.trim().length > 1) {
+        dropdownEl.innerHTML = `
+          <div class="geo-dropdown-empty">
+            No matching locations for "${escapeHtml(query)}".<br>
+            <span style="font-size: 0.68rem; color: #64748B;">Press Enter ↵ to geocode online or edit Lat/Lon manually.</span>
+          </div>
+        `;
+        dropdownEl.style.display = "block";
+        return true;
+      }
+      dropdownEl.style.display = "none";
+      return false;
+    }
+
+    let html = "";
+    suggestions.forEach((item, idx) => {
+      const isActive = idx === activeIndex;
+      const optTilt = calculateOptimalTilt(item.lat);
+      const titleHtml = highlightMatches(item.name || item.address, query);
+      const subHtml = highlightMatches(item.address || item.region || item.substation || "", query);
+      const badgeClass = item.badgeClass || (type === "oa" ? "badge-solarpark" : "badge-industrial");
+      const badgeText = item.badge || (type === "oa" ? "Solar Park" : "Industrial");
+      const icon = item.icon || (type === "oa" ? "☀️" : "🏭");
+
+      html += `
+        <div class="geo-suggestion-item ${isActive ? 'active' : ''}" data-index="${idx}">
+          <div class="geo-item-icon">${icon}</div>
+          <div class="geo-item-body">
+            <div class="geo-item-header">
+              <div class="geo-item-title">${titleHtml}</div>
+              <span class="geo-badge ${badgeClass}">${escapeHtml(badgeText)}</span>
+            </div>
+            ${subHtml ? `<div class="geo-item-sub">${subHtml}</div>` : ''}
+            <div class="geo-item-meta">
+              <span>📍 ${parseFloat(item.lat).toFixed(4)}°N, ${parseFloat(item.lon).toFixed(4)}°E</span>
+              ${item.substation ? `<span>• ⚡ ${escapeHtml(item.substation)}</span>` : ''}
+              <span>• 📐 Opt: ${optTilt}°</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    if (isLoadingOnline) {
+      html += `
+        <div class="geo-dropdown-loading" style="border-top: 1px solid rgba(255,255,255,0.06); padding: 4px 8px; font-size: 0.7rem;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="animation: pvgis-spin 1s linear infinite;"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg>
+          <span>Searching online map...</span>
+        </div>
+      `;
+    }
+
+    html += `
+      <div class="geo-dropdown-footer">
+        <span>${suggestions.length} dynamic match${suggestions.length === 1 ? '' : 'es'}</span>
+        <span>↑↓ Navigate • ↵ Select • Esc Close</span>
+      </div>
+    `;
+
+    dropdownEl.innerHTML = html;
+    dropdownEl.style.display = "block";
+
+    const itemEls = dropdownEl.querySelectorAll(".geo-suggestion-item");
+    itemEls.forEach(el => {
+      el.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        const idx = parseInt(el.getAttribute("data-index"), 10);
+        onSelect(idx);
+      });
+      el.addEventListener("mouseenter", () => {
+        const idx = parseInt(el.getAttribute("data-index"), 10);
+        onHover(idx);
+      });
+    });
+
+    return true;
+  }
+  createAutocompleteInstance({ inputEl, dropdownEl, searchLocalFn, onSelectFn, type }) {
+    if (!inputEl || !dropdownEl) return;
+
+    let activeIndex = -1;
+    let currentSuggestions = [];
+    let debounceTimer = null;
+    let abortController = null;
+    let isOpen = false;
+
+    const updateActiveVisual = () => {
+      const itemEls = dropdownEl.querySelectorAll(".geo-suggestion-item");
+      itemEls.forEach((el, idx) => {
+        if (idx === activeIndex) {
+          el.classList.add("active");
+          el.scrollIntoView({ block: "nearest" });
+        } else {
+          el.classList.remove("active");
+        }
+      });
+    };
+
+    const selectItem = (idx) => {
+      if (idx >= 0 && idx < currentSuggestions.length) {
+        const chosen = currentSuggestions[idx];
+        inputEl.value = chosen.name;
+        dropdownEl.style.display = "none";
+        isOpen = false;
+        activeIndex = -1;
+        onSelectFn(chosen);
+      }
+    };
+
+    const hideDropdown = () => {
+      dropdownEl.style.display = "none";
+      isOpen = false;
+      activeIndex = -1;
+      if (abortController) {
+        abortController.abort();
+        abortController = null;
+      }
+    };
+
+    const performSearch = (query) => {
+      const q = (query || "").trim();
+      if (!q) {
+        const stateKey = this.stateSelect ? this.stateSelect.value : "maharashtra";
+        const defaults = searchLocalFn("", stateKey);
+        activeIndex = -1;
+        currentSuggestions = defaults.slice(0, 6);
+        isOpen = this.renderGeoDropdown(
+          dropdownEl,
+          currentSuggestions,
+          "",
+          activeIndex,
+          type,
+          false,
+          (idx) => selectItem(idx),
+          (idx) => { activeIndex = idx; updateActiveVisual(); }
+        );
+        return;
+      }
+
+      activeIndex = -1;
+      const localMatches = searchLocalFn(q);
+      currentSuggestions = localMatches;
+      isOpen = this.renderGeoDropdown(
+        dropdownEl,
+        localMatches,
+        q,
+        activeIndex,
+        type,
+        q.length >= 3,
+        (idx) => selectItem(idx),
+        (idx) => { activeIndex = idx; updateActiveVisual(); }
+      );
+
+      if (debounceTimer) clearTimeout(debounceTimer);
+      if (abortController) abortController.abort();
+
+      if (q.length >= 3) {
+        debounceTimer = setTimeout(async () => {
+          abortController = new AbortController();
+          try {
+            const onlineResults = await this.fetchOnlineSuggestions(q, type, abortController.signal);
+            if (onlineResults && onlineResults.length > 0) {
+              const merged = [...localMatches];
+              for (const onlineItem of onlineResults) {
+                const isDuplicate = merged.some(m => 
+                  (Math.abs(m.lat - onlineItem.lat) < 0.01 && Math.abs(m.lon - onlineItem.lon) < 0.01) ||
+                  (m.name.toLowerCase() === onlineItem.name.toLowerCase())
+                );
+                if (!isDuplicate) {
+                  merged.push(onlineItem);
+                }
+              }
+              currentSuggestions = merged.slice(0, 10);
+              isOpen = this.renderGeoDropdown(
+                dropdownEl,
+                currentSuggestions,
+                q,
+                activeIndex,
+                type,
+                false,
+                (idx) => selectItem(idx),
+                (idx) => { activeIndex = idx; updateActiveVisual(); }
+              );
+            } else {
+              isOpen = this.renderGeoDropdown(
+                dropdownEl,
+                localMatches,
+                q,
+                activeIndex,
+                type,
+                false,
+                (idx) => selectItem(idx),
+                (idx) => { activeIndex = idx; updateActiveVisual(); }
+              );
+            }
+          } catch (err) {
+            isOpen = this.renderGeoDropdown(
+              dropdownEl,
+              localMatches,
+              q,
+              activeIndex,
+              type,
+              false,
+              (idx) => selectItem(idx),
+              (idx) => { activeIndex = idx; updateActiveVisual(); }
+            );
+          }
+        }, 280);
+      }
+    };
+
+    inputEl.addEventListener("input", (e) => {
+      performSearch(e.target.value);
+    });
+
+    inputEl.addEventListener("focus", (e) => {
+      performSearch(e.target.value);
+    });
+
+    inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") {
+        if (!isOpen) {
+          performSearch(inputEl.value);
+        } else if (currentSuggestions.length > 0) {
+          e.preventDefault();
+          activeIndex = (activeIndex + 1) % currentSuggestions.length;
+          updateActiveVisual();
+        }
+      } else if (e.key === "ArrowUp") {
+        if (isOpen && currentSuggestions.length > 0) {
+          e.preventDefault();
+          activeIndex = (activeIndex - 1 + currentSuggestions.length) % currentSuggestions.length;
+          updateActiveVisual();
+        }
+      } else if (e.key === "Enter") {
+        if (isOpen && activeIndex >= 0 && activeIndex < currentSuggestions.length) {
+          e.preventDefault();
+          selectItem(activeIndex);
+        } else if (isOpen && currentSuggestions.length > 0 && activeIndex === -1) {
+          e.preventDefault();
+          selectItem(0);
+        } else {
+          hideDropdown();
+        }
+      } else if (e.key === "Escape" || e.key === "Tab") {
+        hideDropdown();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!inputEl.contains(e.target) && !dropdownEl.contains(e.target)) {
+        hideDropdown();
+      }
+    });
+  }
+  queryLocalRooftopLocations(rawQuery, stateKey) {
+    const q = (rawQuery || "").trim().toLowerCase();
+    const results = [];
+
+    // 1. Check if user typed numeric coordinates: "18.5204, 73.8567"
+    const coordMatch = q.match(/^([-+]?\d{1,2}(?:\.\d+)?)[,\s]+([-+]?\d{1,3}(?:\.\d+)?)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lon = parseFloat(coordMatch[2]);
+      if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        results.push({
+          name: `GPS Coordinates (${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E)`,
+          address: `Custom Site Coordinates: ${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`,
+          lat,
+          lon,
+          substation: "Local Interconnection Substation",
+          badge: "GPS Coords",
+          badgeClass: "badge-gps",
+          icon: "📌"
+        });
+        return results;
+      }
+    }
+
+    if (!q) {
+      if (stateKey && STATE_DEFAULT_SITES[stateKey]) {
+        const s = STATE_DEFAULT_SITES[stateKey].rooftop;
+        if (s) {
+          results.push({
+            name: s.name,
+            address: s.address,
+            lat: s.lat,
+            lon: s.lon,
+            substation: s.substation,
+            badge: "State Default",
+            badgeClass: "badge-industrial",
+            icon: "🏭"
+          });
+        }
+      }
+      INDIAN_GEO_DIRECTORY.slice(0, 5).forEach(item => {
+        if (!results.some(r => r.name === item.name)) {
+          results.push({
+            ...item,
+            badge: "Industrial Hub",
+            badgeClass: "badge-industrial",
+            icon: "🏭"
+          });
+        }
+      });
+      return results;
+    }
+
+    // 2. Search INDIAN_GEO_DIRECTORY
+    INDIAN_GEO_DIRECTORY.forEach(item => {
+      const nameMatch = item.name.toLowerCase().includes(q);
+      const addressMatch = item.address && item.address.toLowerCase().includes(q);
+      const aliasMatch = item.aliases && item.aliases.some(a => a.toLowerCase().includes(q) || q.includes(a.toLowerCase()));
+      if (nameMatch || addressMatch || aliasMatch) {
+        let score = 0;
+        if (item.name.toLowerCase().startsWith(q)) score += 10;
+        if (nameMatch) score += 5;
+        if (aliasMatch) score += 4;
+        if (addressMatch) score += 2;
+        results.push({
+          ...item,
+          badge: "Industrial Zone",
+          badgeClass: "badge-industrial",
+          icon: "🏭",
+          score
+        });
+      }
+    });
+
+    // 3. Search STATE_DEFAULT_SITES rooftop entries
+    Object.keys(STATE_DEFAULT_SITES).forEach(k => {
+      const site = STATE_DEFAULT_SITES[k].rooftop;
+      if (site) {
+        const nameMatch = site.name.toLowerCase().includes(q);
+        const addrMatch = site.address && site.address.toLowerCase().includes(q);
+        const stateMatch = k.includes(q) || q.includes(k);
+        if (nameMatch || addrMatch || stateMatch) {
+          if (!results.some(r => r.name === site.name || (Math.abs(r.lat - site.lat) < 0.001 && Math.abs(r.lon - site.lon) < 0.001))) {
+            results.push({
+              name: site.name,
+              address: site.address,
+              lat: site.lat,
+              lon: site.lon,
+              substation: site.substation,
+              badge: "State Site",
+              badgeClass: "badge-district",
+              icon: "📍",
+              score: (nameMatch ? 6 : 0) + (stateMatch ? 4 : 0)
+            });
+          }
+        }
+      }
+    });
+
+    // 4. Search INDIA_REGIONAL_GEO
+    INDIA_REGIONAL_GEO.forEach(item => {
+      const regionMatch = item.region.toLowerCase().includes(q);
+      const keywordMatch = item.keywords && item.keywords.some(k => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()));
+      if (regionMatch || keywordMatch) {
+        if (!results.some(r => r.name === item.region || (Math.abs(r.lat - item.lat) < 0.01 && Math.abs(r.lon - item.lon) < 0.01))) {
+          results.push({
+            name: item.region,
+            address: `${item.region} • ${item.substation}`,
+            lat: item.lat,
+            lon: item.lon,
+            substation: item.substation,
+            badge: "Regional Hub",
+            badgeClass: "badge-district",
+            icon: "📍",
+            score: (regionMatch ? 5 : 0) + (keywordMatch ? 3 : 0)
+          });
+        }
+      }
+    });
+
+    results.sort((a, b) => (b.score || 0) - (a.score || 0));
+    return results.slice(0, 8);
+  }
+
+  async fetchOnlineSuggestions(query, type, signal) {
+    try {
+      const cleanQuery = query.trim();
+      if (!cleanQuery) return [];
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cleanQuery)}&countrycodes=in&limit=5&addressdetails=1`;
+      const res = await fetch(url, {
+        headers: { "Accept-Language": "en" },
+        signal
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      if (!Array.isArray(data)) return [];
+
+      return data.map(item => {
+        const parts = item.display_name.split(",").map(p => p.trim());
+        const title = parts.slice(0, 2).join(", ");
+        const sub = parts.slice(2, 5).join(", ");
+        const lat = parseFloat(item.lat);
+        const lon = parseFloat(item.lon);
+        return {
+          name: title,
+          address: item.display_name,
+          lat,
+          lon,
+          substation: type === "oa" ? `${title} Pooling Substation` : `${title} 33/11kV Substation`,
+          badge: type === "oa" ? "Live Geocoded" : "Live Map",
+          badgeClass: "badge-live",
+          icon: type === "oa" ? "☀️" : "📍",
+          isOnline: true
+        };
+      });
+    } catch (err) {
+      return [];
+    }
+  }
+  queryLocalOALocations(rawQuery, stateKey) {
+    const q = (rawQuery || "").trim().toLowerCase();
+    const results = [];
+
+    // 1. Check if user typed numeric coordinates: "27.5385, 71.9168"
+    const coordMatch = q.match(/^([-+]?\d{1,2}(?:\.\d+)?)[,\s]+([-+]?\d{1,3}(?:\.\d+)?)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lon = parseFloat(coordMatch[2]);
+      if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        results.push({
+          name: `GPS Coordinates (${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E)`,
+          address: `Custom Solar Park Coordinates: ${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`,
+          lat,
+          lon,
+          substation: "ISTS / STU Pooling Substation",
+          badge: "GPS Coords",
+          badgeClass: "badge-gps",
+          icon: "📌"
+        });
+        return results;
+      }
+    }
+
+    if (!q) {
+      if (stateKey && STATE_DEFAULT_SITES[stateKey]) {
+        const s = STATE_DEFAULT_SITES[stateKey].oa;
+        if (s) {
+          results.push({
+            name: s.name,
+            address: s.substation || "State Grid Solar Park",
+            lat: s.lat,
+            lon: s.lon,
+            substation: s.substation,
+            badge: "State Default",
+            badgeClass: "badge-solarpark",
+            icon: "☀️"
+          });
+        }
+      }
+      OA_SOLAR_PARK_DIRECTORY.slice(0, 5).forEach(item => {
+        if (!results.some(r => r.name === item.name)) {
+          results.push({
+            name: item.name,
+            address: item.substation || "Solar Park Pooling Station",
+            lat: item.lat,
+            lon: item.lon,
+            substation: item.substation,
+            badge: "Solar Park (ISTS)",
+            badgeClass: "badge-solarpark",
+            icon: "☀️"
+          });
+        }
+      });
+      return results;
+    }
+
+    // 2. Search OA_SOLAR_PARK_DIRECTORY
+    OA_SOLAR_PARK_DIRECTORY.forEach(item => {
+      const nameMatch = item.name.toLowerCase().includes(q);
+      const subMatch = item.substation && item.substation.toLowerCase().includes(q);
+      const aliasMatch = item.aliases && item.aliases.some(a => a.toLowerCase().includes(q) || q.includes(a.toLowerCase()));
+      if (nameMatch || subMatch || aliasMatch) {
+        let score = 0;
+        if (item.name.toLowerCase().startsWith(q)) score += 10;
+        if (nameMatch) score += 6;
+        if (aliasMatch) score += 4;
+        if (subMatch) score += 2;
+        results.push({
+          name: item.name,
+          address: item.substation || "Solar Park Pooling Station",
+          lat: item.lat,
+          lon: item.lon,
+          substation: item.substation,
+          badge: "Solar Park",
+          badgeClass: "badge-solarpark",
+          icon: "☀️",
+          score
+        });
+      }
+    });
+
+    // 3. Search STATE_DEFAULT_SITES oa entries
+    Object.keys(STATE_DEFAULT_SITES).forEach(k => {
+      const site = STATE_DEFAULT_SITES[k].oa;
+      if (site) {
+        const nameMatch = site.name.toLowerCase().includes(q);
+        const subMatch = site.substation && site.substation.toLowerCase().includes(q);
+        const stateMatch = k.includes(q) || q.includes(k);
+        if (nameMatch || subMatch || stateMatch) {
+          if (!results.some(r => r.name === site.name || (Math.abs(r.lat - site.lat) < 0.001 && Math.abs(r.lon - site.lon) < 0.001))) {
+            results.push({
+              name: site.name,
+              address: site.substation || "State Grid Solar Park",
+              lat: site.lat,
+              lon: site.lon,
+              substation: site.substation,
+              badge: "RE Zone",
+              badgeClass: "badge-solarpark",
+              icon: "☀️",
+              score: (nameMatch ? 6 : 0) + (stateMatch ? 4 : 0)
+            });
+          }
+        }
+      }
+    });
+
+    // 4. Search INDIA_REGIONAL_GEO for solar hubs
+    INDIA_REGIONAL_GEO.forEach(item => {
+      const regionMatch = item.region.toLowerCase().includes(q);
+      const keywordMatch = item.keywords && item.keywords.some(k => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()));
+      if (regionMatch || keywordMatch) {
+        if (!results.some(r => r.name === item.region || (Math.abs(r.lat - item.lat) < 0.01 && Math.abs(r.lon - item.lon) < 0.01))) {
+          results.push({
+            name: item.region,
+            address: item.substation,
+            lat: item.lat,
+            lon: item.lon,
+            substation: item.substation,
+            badge: "Solar Corridor",
+            badgeClass: "badge-district",
+            icon: "☀️",
+            score: (regionMatch ? 5 : 0) + (keywordMatch ? 3 : 0)
+          });
+        }
+      }
+    });
+
+    results.sort((a, b) => (b.score || 0) - (a.score || 0));
+    return results.slice(0, 8);
   }
 
   async geocodeRooftopAddress(rawQuery) {
@@ -1510,11 +2127,15 @@ class UIController {
 
   updateLossFromVoltage() {
     const stateKey = this.stateSelect.value;
-    const policy = STATE_POLICIES[stateKey];
+    const policy = STATE_POLICIES[stateKey] || STATE_POLICIES.maharashtra;
     const voltage = this.voltageSelect.value;
-    if (policy && policy.transmissionLossesByVoltage[voltage]) {
+    if (policy && policy.transmissionLossesByVoltage && policy.transmissionLossesByVoltage[voltage]) {
       this.transmissionLossInput.value = policy.transmissionLossesByVoltage[voltage].toFixed(2);
       this.policyMetaLoss.textContent = `${policy.transmissionLossesByVoltage[voltage].toFixed(2)}% (${voltage} kV)`;
+    } else if (policy && policy.transmissionLossesByVoltage) {
+      const fallbackLoss = policy.transmissionLossesByVoltage["33"] || Object.values(policy.transmissionLossesByVoltage)[0] || 4.10;
+      this.transmissionLossInput.value = Number(fallbackLoss).toFixed(2);
+      this.policyMetaLoss.textContent = `${Number(fallbackLoss).toFixed(2)}% (${voltage} kV)`;
     }
   }
 
@@ -2350,7 +2971,8 @@ class UIController {
       custSignatory,
       weatherDataSource,
       rooftopWeatherData,
-      oaWeatherData
+      oaWeatherData,
+      sizingMode: this.currentSizingMode || "daytime_only"
     };
   }
 
@@ -2839,12 +3461,35 @@ class UIController {
   }
 
   /**
+   * Sets active Sizing Mode (Daytime Only vs Daytime + Banking)
+   */
+  setSizingMode(mode = "daytime_only") {
+    this.currentSizingMode = mode;
+    if (this.btnSizingModeDaytime) {
+      this.btnSizingModeDaytime.classList.toggle("active", mode === "daytime_only");
+    }
+    if (this.btnSizingModeBanking) {
+      this.btnSizingModeBanking.classList.toggle("active", mode === "daytime_plus_banking");
+    }
+    if (this.app) {
+      this.app.recalculate();
+    }
+  }
+
+  /**
    * Renders AI & SERC Optimal Capacity Sizing Advisor Card
    */
   renderSizingAdvisor(results) {
     if (!results || !results.sizingRecommendations) return;
     const sizing = results.sizingRecommendations;
     this.lastRecommendedSizing = sizing;
+
+    // Update Mode Button Active States
+    if (this.btnSizingModeDaytime && this.btnSizingModeBanking) {
+      const isBanking = (sizing.sizingMode === "daytime_plus_banking");
+      this.btnSizingModeDaytime.classList.toggle("active", !isBanking);
+      this.btnSizingModeBanking.classList.toggle("active", isBanking);
+    }
 
     if (this.recRooftopVal) {
       this.recRooftopVal.textContent = sizing.recommendedRooftopKWp.toLocaleString();
@@ -3244,7 +3889,19 @@ class UIController {
   }
 }
 
-// Export to window
+// Export to window & Node.js environment
 if (typeof window !== "undefined") {
   window.UIController = UIController;
+}
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    UIController,
+    calculateOptimalTilt,
+    highlightMatches,
+    escapeHtml,
+    INDIAN_GEO_DIRECTORY,
+    OA_SOLAR_PARK_DIRECTORY,
+    STATE_DEFAULT_SITES,
+    INDIA_REGIONAL_GEO
+  };
 }

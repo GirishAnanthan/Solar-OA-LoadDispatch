@@ -34,12 +34,15 @@ class LandedCostEngine {
 
     const state = this.statePolicies[stateKey] || this.statePolicies.maharashtra;
 
+    // For 100% Captive (Self-Owned / Customer CAPEX), developer PPA tariff is ₹0.00/kWh
+    const effectivePpaRate = (procurementType === "captive_100") ? 0.00 : basePpaRate;
+
     // Transmission & Wheeling loss for chosen voltage
     const lossPct = (state.transmissionLossesByVoltage && state.transmissionLossesByVoltage[String(voltageLevel)]) || 4.10;
     const lossFactor = lossPct / 100;
 
     // Losses increase the effective energy needed at injection: 1 / (1 - loss)
-    const lossCostPerKWh = basePpaRate * (lossFactor / (1 - lossFactor));
+    const lossCostPerKWh = effectivePpaRate > 0 ? (effectivePpaRate * (lossFactor / (1 - lossFactor))) : 0;
 
     // Base open access wire charges
     const transmissionCharge = state.transmissionChargePerKWh || 0.44;
@@ -62,7 +65,7 @@ class LandedCostEngine {
 
     // Banking charges (in-kind conversion to ₹/kWh)
     const bankingChargePct = state.bankingChargePct || 0;
-    const bankingCostPerKWh = basePpaRate * (bankingChargePct / 100);
+    const bankingCostPerKWh = effectivePpaRate * (bankingChargePct / 100);
 
     // SLDC Operating & Scheduling fees per kWh
     const dailyVolume = annualOAEnergyKWh > 0 ? (annualOAEnergyKWh / 365) : 7000;
@@ -70,18 +73,18 @@ class LandedCostEngine {
 
     // Electricity Duty on Open Access Consumption (state-specific)
     const dutyPct = state.electricityDutyPct || 7.5;
-    const dutyCostPerKWh = (basePpaRate + transmissionCharge + wheelingCharge) * (dutyPct / 100);
+    const dutyCostPerKWh = (effectivePpaRate + transmissionCharge + wheelingCharge) * (dutyPct / 100);
 
     // Sum of all components
-    const totalLandedCostPerKWh = 
-      basePpaRate + 
-      transmissionCharge + 
-      wheelingCharge + 
-      lossCostPerKWh + 
-      cssApplicable + 
-      asApplicable + 
-      bankingCostPerKWh + 
-      sldcFeePerKWh + 
+    const totalLandedCostPerKWh =
+      effectivePpaRate +
+      transmissionCharge +
+      wheelingCharge +
+      lossCostPerKWh +
+      cssApplicable +
+      asApplicable +
+      bankingCostPerKWh +
+      sldcFeePerKWh +
       dutyCostPerKWh;
 
     // Compare with Discom Tariff (including Discom duty)
@@ -204,7 +207,10 @@ class LandedCostEngine {
   }
 }
 
-// Export to window
+// Export to window and module
 if (typeof window !== "undefined") {
   window.LandedCostEngine = LandedCostEngine;
+}
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = LandedCostEngine;
 }

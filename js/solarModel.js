@@ -821,6 +821,8 @@ class SolarModel {
       ? STATE_POLICIES[stateKey]
       : (typeof STATE_POLICIES !== "undefined" ? STATE_POLICIES.maharashtra : {});
     const isTracker = params.oaTracking === "tracker" || params.oaTracking === "single_axis";
+    const sizingMode = params.sizingMode || "daytime_only"; // "daytime_only" | "daytime_plus_banking"
+    const bankingOffsetPct = params.bankingOffsetPct !== undefined ? parseFloat(params.bankingOffsetPct) : 30.0;
 
     const baseShape = this.getBaseLoadShape(loadProfileType);
     const deliveryLossPct = (statePolicy.transmissionLossesByVoltage && statePolicy.transmissionLossesByVoltage["33"])
@@ -852,24 +854,32 @@ class SolarModel {
       irradianceFactor: 100
     });
 
-    // 1. Calculate 24-hour total energy demand & block-by-block loads
+    // 1. Calculate 24-hour total energy demand & partition into solar (daytime) and non-solar hours
     let totalDailyLoadKWh = 0;
+    let daytimeLoadKWh = 0;
+    let nonDaytimeLoadKWh = 0;
     const blockLoads = [];
     const daytimeLoadBlocks = [];
 
     for (let i = 0; i < this.TOTAL_BLOCKS; i++) {
       const blockLoadKW = baseConnectedLoadKW * baseShape[i] * loadMultiplier;
       blockLoads.push(blockLoadKW);
-      totalDailyLoadKWh += blockLoadKW * 0.25;
-      if (i >= 36 && i <= 66) {
+      const blockEnergy = blockLoadKW * 0.25;
+      totalDailyLoadKWh += blockEnergy;
+
+      const isSolarBlock = (rooftopModel.profile[i] > 0.02 || oaModel.profile[i] > 0.02);
+      if (isSolarBlock) {
+        daytimeLoadKWh += blockEnergy;
         daytimeLoadBlocks.push(blockLoadKW);
+      } else {
+        nonDaytimeLoadKWh += blockEnergy;
       }
     }
 
     const minDaytimeLoadKW = daytimeLoadBlocks.length > 0 ? Math.min(...daytimeLoadBlocks) : baseConnectedLoadKW * 0.7;
     const avgDaytimeLoadKW = daytimeLoadBlocks.length > 0 ? (daytimeLoadBlocks.reduce((a, b) => a + b, 0) / daytimeLoadBlocks.length) : baseConnectedLoadKW;
 
-    // 2. Rooftop Solar (BTM) Regulatory Caps & Sizing
+    // 2. Rooftop Solar (BTM) Regulatory Caps & Sizing (0% curtailment target)
     const netCapKW = statePolicy.netMeteringCapKW !== undefined ? statePolicy.netMeteringCapKW : 1000;
     const netCapPct = statePolicy.netMeteringCapPctSanctioned !== undefined ? statePolicy.netMeteringCapPctSanctioned : 100;
     const sanctionBasedCapKW = (netCapPct / 100) * sanctionedLoadKW;
@@ -886,26 +896,41 @@ class SolarModel {
       }
     }
 
+    // In Mode B (Day + Banking) or full BTM: maximize rooftop up to regulatory cap (1,000 kWp / sanctioned demand)
+    // In Mode A (Daytime Zero Export): co-optimize BTM rooftop and OA solar to fit daytime peak
+    const optBankingRooftopKWp = Math.min(regulatoryMaxRooftopKW, sanctionedLoadKW);
+
     let recommendedRooftopKWp;
     let rooftopRationale;
 
-    if (statePolicy.concurrentNetMeteringOA) {
-      recommendedRooftopKWp = Math.min(regulatoryMaxRooftopKW, sanctionedLoadKW, Math.round(maxRooftopWithoutCurtailment / 50) * 50);
-      recommendedRooftopKWp = Math.max(50, recommendedRooftopKWp);
-      rooftopRationale = `Sized at ${recommendedRooftopKWp} kWp (Net-Metering cap: ${netCapPct}% of Sanctioned Demand, max ${netCapKW} kW). Full 1:1 retail grid offset.`;
+    if (sizingMode === "daytime_plus_banking" || statePolicy.concurrentNetMeteringOA) {
+      recommendedRooftopKWp = optBankingRooftopKWp;
+      rooftopRationale = `Sized at ${recommendedRooftopKWp} kWp (Net-Metering regulatory cap: ${netCapPct}% of Sanctioned Demand, max ${netCapKW} kW). Full 1:1 retail grid offset.`;
     } else {
-      // Co-optimized BTM sizing: cover ~40% of daytime peak to leave headroom for Open Access solar
+      // Co-optimized BTM sizing for Mode A: cover ~40-50% of daytime peak to leave headroom for Open Access solar
       const targetRooftopKWp = Math.min(
         regulatoryMaxRooftopKW,
         sanctionedLoadKW,
-        maxRooftopWithoutCurtailment * 0.40
+        maxRooftopWithoutCurtailment * 0.45
       );
       recommendedRooftopKWp = Math.max(50, Math.round(targetRooftopKWp / 25) * 25);
       const rooftopPeakGenKW = Math.round(recommendedRooftopKWp * Math.max(...rooftopModel.profile));
       rooftopRationale = `Sized at ${recommendedRooftopKWp} kWp for 100% on-site self-consumption with 0% curtailment (${rooftopPeakGenKW} kW peak vs ${Math.round(minDaytimeLoadKW)} kW min daytime demand).`;
     }
 
-    // 3. Open Access Solar Sizing — 96-Block Constraint Solver for 0 kW Inadvertent Export
+    const rooftopSpecificYieldKWhPerKWp = 4.0;
+    const oaSpecificYieldAtSource = isTracker ? 4.5 : 4.0;
+    const oaSpecificYieldDelivered = oaSpecificYieldAtSource * deliveryLossFactor;
+    const rooftopDailyGenKWh = recommendedRooftopKWp * rooftopSpecificYieldKWhPerKWp;
+
+    const discomTariff = statePolicy.baseIndustrialTariff || 7.85;
+    const oaPpaRate = statePolicy.openAccessPpaRate || 3.80;
+    const landedCostDelta = Math.max(1.5, discomTariff - (oaPpaRate * 1.25));
+    const bankingChargePct = statePolicy.bankingChargePct !== undefined ? statePolicy.bankingChargePct : 2.0;
+
+    // =========================================================================
+    // OPTION 1: Mode A — 100% Daytime Demand Only (Zero Export / Direct Absorption)
+    // =========================================================================
     let maxOAWithoutSurplus = Infinity;
     for (let i = 0; i < this.TOTAL_BLOCKS; i++) {
       if (oaModel.profile[i] > 0.05) {
@@ -919,38 +944,72 @@ class SolarModel {
       }
     }
 
-    // Apply a 5% conservative engineering safety buffer to absorb minor grid/load variations
+    // Apply 5% engineering safety buffer to absorb minor grid/load variations
     const safeOAKWp = maxOAWithoutSurplus * 0.95;
-    let recommendedOAEconomicKWp = Math.max(50, Math.floor(safeOAKWp / 50) * 50);
-    let recommendedOANetZeroKWp = recommendedOAEconomicKWp;
+    const optDaytimeOAKWp = Math.max(50, Math.floor(safeOAKWp / 50) * 50);
+    const optDaytimeOAGenKWh = optDaytimeOAKWp * oaSpecificYieldDelivered;
+    const optDaytimeTotalCleanKWh = rooftopDailyGenKWh + optDaytimeOAGenKWh;
+    const optDaytimeRESharePct = Math.min(100, Math.round((optDaytimeTotalCleanKWh / totalDailyLoadKWh) * 1000) / 10);
+    const optDaytimeAnnualSavingsLakhs = Math.round(((rooftopDailyGenKWh * discomTariff + optDaytimeOAGenKWh * landedCostDelta) * 365) / 100000);
 
-    // 4. Solar Yields & Metrics
-    const rooftopSpecificYieldKWhPerKWp = 4.2;
-    const oaSpecificYieldAtSource = isTracker ? 4.9 : 4.4;
-    const oaSpecificYieldDelivered = oaSpecificYieldAtSource * deliveryLossFactor;
-
-    const rooftopDailyGenKWh = recommendedRooftopKWp * rooftopSpecificYieldKWhPerKWp;
-    const dailyOAGenEconomicKWh = recommendedOAEconomicKWp * oaSpecificYieldDelivered;
-    const dailyTotalCleanGenEconomicKWh = rooftopDailyGenKWh + dailyOAGenEconomicKWh;
-    const reShareEconomicPct = Math.min(100, Math.round((dailyTotalCleanGenEconomicKWh / totalDailyLoadKWh) * 1000) / 10);
-
-    const discomTariff = statePolicy.baseIndustrialTariff || 7.85;
-    const oaPpaRate = statePolicy.openAccessPpaRate || 3.80;
-    const landedCostDelta = Math.max(1.5, discomTariff - (oaPpaRate * 1.25));
-    const annualSavingsEconomicLakhs = Math.round(((rooftopDailyGenKWh * discomTariff + dailyOAGenEconomicKWh * landedCostDelta) * 365) / 100000);
-
-    // Rule 3 Captive Compliance
-    const annualLoadKWh = totalDailyLoadKWh * 365;
-    const annualEconomicPlantGenKWh = (recommendedOAEconomicKWp * oaSpecificYieldAtSource) * 365;
-    const annualEconomicConsumerOfftakeKWh = Math.min(annualLoadKWh, (recommendedOAEconomicKWp * oaSpecificYieldDelivered) * 365);
-    const captiveOfftakePctEconomic = annualEconomicPlantGenKWh > 0
-      ? Math.round((annualEconomicConsumerOfftakeKWh / annualEconomicPlantGenKWh) * 1000) / 10
+    const optDaytimeAnnualGenSource = (optDaytimeOAKWp * oaSpecificYieldAtSource) * 365;
+    const optDaytimeAnnualOfftake = Math.min(totalDailyLoadKWh * 365, (optDaytimeOAKWp * oaSpecificYieldDelivered) * 365);
+    const optDaytimeCaptiveOfftakePct = optDaytimeAnnualGenSource > 0
+      ? Math.min(100, Math.round((optDaytimeAnnualOfftake / optDaytimeAnnualGenSource) * 1000) / 10)
       : 100;
 
     const rooftopPeakGenKW = Math.round(recommendedRooftopKWp * Math.max(...rooftopModel.profile));
-    const oaPeakDeliveredKW = Math.round(recommendedOAEconomicKWp * Math.max(...oaModel.profile) * deliveryLossFactor);
-    const totalDaytimeSolarKW = Math.round(rooftopPeakGenKW + oaPeakDeliveredKW);
-    const oaRationale = `Sized at ${recommendedOAEconomicKWp} kWp (${(recommendedOAEconomicKWp/1000).toFixed(2)} MWp) for 100% direct daytime absorption (Total solar: ${totalDaytimeSolarKW} kW vs ${Math.round(minDaytimeLoadKW)} kW min demand). Zero export penalties. Rule 3 Offtake: ${captiveOfftakePctEconomic}% (≥51% compliant).`;
+    const optDaytimeOAPeakDeliveredKW = Math.round(optDaytimeOAKWp * Math.max(...oaModel.profile) * deliveryLossFactor);
+    const totalDaytimeSolarKW = Math.round(rooftopPeakGenKW + optDaytimeOAPeakDeliveredKW);
+    const optDaytimeOARationale = `100% Daytime Absorption: Sized at ${optDaytimeOAKWp} kWp (${(optDaytimeOAKWp/1000).toFixed(2)} MWp) for direct real-time load matching (Total solar: ${totalDaytimeSolarKW} kW vs ${Math.round(minDaytimeLoadKW)} kW min demand). 0 kW inadvertent export, 0 banking reliance. Rule 3 Offtake: ${optDaytimeCaptiveOfftakePct}%.`;
+
+    // =========================================================================
+    // OPTION 2: Mode B — 100% Daytime Demand + 30% Non-Solar Banking Offset
+    // (Aligned with Standard 6-hr Solar Window + 18-hr Non-Solar Banking Rule)
+    // =========================================================================
+    // Solar Window (10:00 - 16:00, 6 hours) & Non-Solar Window (18 hours)
+    const effectiveOperatingLoadKW = baseConnectedLoadKW * loadMultiplier;
+    const solarHoursConsumptionKWh = effectiveOperatingLoadKW * 6; // 6 solar hours
+    const nonSolarHoursConsumptionKWh = effectiveOperatingLoadKW * 18; // 18 non-solar hours
+    const targetBankedUsefulKWh = (bankingOffsetPct / 100) * nonSolarHoursConsumptionKWh;
+    const targetTotalDailySolarEnergyKWh = solarHoursConsumptionKWh + targetBankedUsefulKWh;
+
+    // Standard specific yield = 4.0 kWh/kWp/day
+    const standardYieldKWhPerKWp = isTracker ? 4.5 : 4.0;
+    const totalRequiredSolarKWp = Math.round((targetTotalDailySolarEnergyKWh / standardYieldKWhPerKWp) / 5) * 5;
+
+    // Rooftop capped at 1,000 kWp (or Sanctioned Load), balance through Open Access
+    const optBankingRooftopAllocatedKWp = Math.min(regulatoryMaxRooftopKW, sanctionedLoadKW);
+    const rawOABankingKWp = Math.max(50, totalRequiredSolarKWp - optBankingRooftopAllocatedKWp);
+    const optBankingOAKWp = Math.round(rawOABankingKWp / 5) * 5;
+
+    const optBankingOAGenDeliveredKWh = optBankingOAKWp * standardYieldKWhPerKWp * deliveryLossFactor;
+    const optBankingRooftopGenKWh = optBankingRooftopAllocatedKWp * standardYieldKWhPerKWp;
+    const optBankingGrossSurplusKWh = Math.max(0, (optBankingRooftopGenKWh + optBankingOAGenDeliveredKWh) - daytimeLoadKWh);
+    const optBankingNetBankedKWh = optBankingGrossSurplusKWh * (1 - (bankingChargePct / 100));
+    const optBankingTotalCleanKWh = Math.min(totalDailyLoadKWh, daytimeLoadKWh + Math.min(nonDaytimeLoadKWh, optBankingNetBankedKWh));
+    const optBankingRESharePct = Math.min(100, Math.round((optBankingTotalCleanKWh / totalDailyLoadKWh) * 1000) / 10);
+
+    const bankingUnitTariffSavings = Math.max(1.8, discomTariff - (oaPpaRate * 1.15));
+    const optBankingAnnualSavingsLakhs = Math.round(((optBankingRooftopGenKWh * discomTariff + (daytimeLoadKWh - optBankingRooftopGenKWh) * landedCostDelta + optBankingNetBankedKWh * bankingUnitTariffSavings) * 365) / 100000);
+
+    const optBankingAnnualGenSource = (optBankingOAKWp * oaSpecificYieldAtSource) * 365;
+    const optBankingAnnualOfftake = Math.min(totalDailyLoadKWh * 365, (optBankingOAKWp * oaSpecificYieldDelivered) * 365);
+    const optBankingCaptiveOfftakePct = optBankingAnnualGenSource > 0
+      ? Math.min(100, Math.round((optBankingAnnualOfftake / optBankingAnnualGenSource) * 1000) / 10)
+      : 100;
+
+    const optBankingOARationale = `100% Day + ${bankingOffsetPct}% Night Banking: Sized at ${optBankingOAKWp} kWp (${(optBankingOAKWp/1000).toFixed(2)} MWp). Supplies 100% daytime demand (${Math.round(solarHoursConsumptionKWh).toLocaleString()} kWh) + banks ${Math.round(targetBankedUsefulKWh).toLocaleString()} kWh/day to offset ${bankingOffsetPct}% of non-solar grid drawl. Rule 3 Offtake: ${optBankingCaptiveOfftakePct}%.`;
+
+    // Active Selection based on sizingMode
+    const isBankingMode = (sizingMode === "daytime_plus_banking");
+    const activeRooftopKWp = isBankingMode ? optBankingRooftopAllocatedKWp : recommendedRooftopKWp;
+    const activeOAKWp = isBankingMode ? optBankingOAKWp : optDaytimeOAKWp;
+    const activeRESharePct = isBankingMode ? optBankingRESharePct : optDaytimeRESharePct;
+    const activeBankedUnits = isBankingMode ? Math.round(optBankingNetBankedKWh) : 0;
+    const activeAnnualSavingsLakhs = isBankingMode ? optBankingAnnualSavingsLakhs : optDaytimeAnnualSavingsLakhs;
+    const activeOARationale = isBankingMode ? optBankingOARationale : optDaytimeOARationale;
+    const activeCaptiveOfftakePct = isBankingMode ? optBankingCaptiveOfftakePct : optDaytimeCaptiveOfftakePct;
 
     return {
       sanctionedLoadKW,
@@ -962,27 +1021,61 @@ class SolarModel {
       netMeteringCapKW: netCapKW,
       netMeteringCapPct: netCapPct,
       totalDailyLoadKWh: Math.round(totalDailyLoadKWh),
-      recommendedRooftopKWp,
-      recommendedOAEconomicKWp,
-      recommendedOANetZeroKWp,
-      expectedCleanSharePct: reShareEconomicPct,
-      dailyNetBankedKWh: 0,
-      estimatedAnnualSavingsLakhs: annualSavingsEconomicLakhs,
+      daytimeLoadKWh: Math.round(daytimeLoadKWh),
+      nonDaytimeLoadKWh: Math.round(nonDaytimeLoadKWh),
+      sizingMode,
+      bankingOffsetPct,
+
+      // Active recommendations (feeds UI & 1-click apply)
+      recommendedRooftopKWp: activeRooftopKWp,
+      recommendedOAEconomicKWp: activeOAKWp,
+      recommendedOANetZeroKWp: optBankingOAKWp,
+      expectedCleanSharePct: activeRESharePct,
+      dailyNetBankedKWh: activeBankedUnits,
+      estimatedAnnualSavingsLakhs: activeAnnualSavingsLakhs,
       rooftopRationale,
-      oaRationale,
+      oaRationale: activeOARationale,
+
       rationale: {
         rooftopReason: rooftopRationale,
-        oaReason: oaRationale
+        oaReason: activeOARationale
       },
+
+      // Preset options for dual-mode toggle
+      modes: {
+        daytimeOnly: {
+          name: "100% Daytime Only (Zero Export)",
+          rooftopKWp: recommendedRooftopKWp,
+          openAccessKWp: optDaytimeOAKWp,
+          reSharePct: optDaytimeRESharePct,
+          dailyBankedKWh: 0,
+          annualSavingsLakhs: optDaytimeAnnualSavingsLakhs,
+          captiveOfftakePct: optDaytimeCaptiveOfftakePct,
+          oaRationale: optDaytimeOARationale
+        },
+        daytimePlusBanking: {
+          name: `100% Daytime + ${bankingOffsetPct}% Night Banking`,
+          rooftopKWp: optBankingRooftopAllocatedKWp,
+          openAccessKWp: optBankingOAKWp,
+          reSharePct: optBankingRESharePct,
+          dailyBankedKWh: Math.round(optBankingNetBankedKWh),
+          annualSavingsLakhs: optBankingAnnualSavingsLakhs,
+          captiveOfftakePct: optBankingCaptiveOfftakePct,
+          oaRationale: optBankingOARationale
+        }
+      },
+
       metrics: {
         totalDailyLoadKWh: Math.round(totalDailyLoadKWh),
+        daytimeLoadKWh: Math.round(daytimeLoadKWh),
+        nonDaytimeLoadKWh: Math.round(nonDaytimeLoadKWh),
         rooftopDailyGenKWh: Math.round(rooftopDailyGenKWh),
-        oaDailyGenEconomicKWh: Math.round(dailyOAGenEconomicKWh),
-        reShareEconomicPct,
-        dailyBankedEconomicKWh: 0,
-        annualSavingsEconomicLakhs,
-        captiveOfftakePctEconomic,
-        isRule3Compliant: captiveOfftakePctEconomic >= 51.0
+        oaDailyGenEconomicKWh: Math.round(activeOAKWp * oaSpecificYieldDelivered),
+        reShareEconomicPct: activeRESharePct,
+        dailyBankedEconomicKWh: activeBankedUnits,
+        annualSavingsEconomicLakhs: activeAnnualSavingsLakhs,
+        captiveOfftakePctEconomic: activeCaptiveOfftakePct,
+        isRule3Compliant: activeCaptiveOfftakePct >= 51.0
       }
     };
   }

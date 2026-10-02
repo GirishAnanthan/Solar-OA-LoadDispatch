@@ -280,6 +280,21 @@
                 <span>1-Click Apply Sizing</span>
               </button>
             </div>
+
+            <!-- Sizing Objective Mode Toggle -->
+            <div class="sizing-mode-selector" id="sizingModeSelector">
+              <button type="button" class="btn-sizing-mode active" data-mode="daytime_only" id="btnSizingModeDaytime" title="Size strictly for 100% daytime demand (0 kW inadvertent export, 0 banking reliance)">
+                <span class="mode-icon">☀️</span>
+                <span class="mode-text">100% Daytime Only</span>
+                <span class="mode-tag">0 Export</span>
+              </button>
+              <button type="button" class="btn-sizing-mode" data-mode="daytime_plus_banking" id="btnSizingModeBanking" title="Size to meet 100% daytime load + 30% non-solar night/evening hours banked energy offset">
+                <span class="mode-icon">⚡</span>
+                <span class="mode-text">100% Day + 30% Banking</span>
+                <span class="mode-tag">High-RE</span>
+              </button>
+            </div>
+
             <div class="sizing-rec-grid">
               <div class="sizing-rec-item rooftop">
                 <div class="sizing-rec-label">Recommended Rooftop</div>
@@ -340,17 +355,18 @@
             <div class="form-group address-search-group" style="margin-bottom: 0.4rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
                 <label class="form-label" for="rooftopAddressSearch" style="margin-bottom: 0;">Address Search</label>
-                <span class="label-hint" id="rooftopGeoStatus" style="font-size: 0.75rem; color: var(--text-accent);">Enter ↵ to Locate</span>
+                <span class="label-hint" id="rooftopGeoStatus" style="font-size: 0.75rem; color: var(--text-accent);">Type to search or Enter ↵</span>
               </div>
               <div class="map-search-bar">
                 <span class="map-pin-icon">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                 </span>
-                <input type="text" id="rooftopAddressSearch" class="input-control map-search-input" value="Pune MIDC, Maharashtra" autocomplete="off">
+                <input type="text" id="rooftopAddressSearch" class="input-control map-search-input" value="Pune MIDC, Maharashtra" autocomplete="off" placeholder="Search city, industrial park, PIN or address...">
                 <button type="button" class="btn-map-search" id="btnGeocodeRooftop" title="Locate on Map">
                   <svg id="geoSearchIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </button>
               </div>
+              <div id="rooftopAddressSuggestions" class="geo-autocomplete-dropdown" style="display: none;"></div>
             </div>
 
             <div class="input-grid-3">
@@ -391,17 +407,18 @@
             <div class="form-group address-search-group" style="margin-bottom: 0.4rem;">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
                 <label class="form-label" for="oaAddressSearch" style="margin-bottom: 0;">Address Search</label>
-                <span class="label-hint" id="oaGeoStatus" style="font-size: 0.75rem; color: var(--oa-emerald);">Enter ↵ to Locate</span>
+                <span class="label-hint" id="oaGeoStatus" style="font-size: 0.75rem; color: var(--oa-emerald);">Type to search or Enter ↵</span>
               </div>
               <div class="map-search-bar">
                 <span class="map-pin-icon" style="color: #F59E0B;">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
                 </span>
-                <input type="text" id="oaAddressSearch" class="input-control map-search-input" value="Bhadla Solar Park, Rajasthan" autocomplete="off">
+                <input type="text" id="oaAddressSearch" class="input-control map-search-input" value="Bhadla Solar Park, Rajasthan" autocomplete="off" placeholder="Search solar park, region, PIN or address...">
                 <button type="button" class="btn-map-search" id="btnGeocodeOA" title="Locate Solar Park">
                   <svg id="oaSearchIcon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </button>
               </div>
+              <div id="oaAddressSuggestions" class="geo-autocomplete-dropdown" style="display: none;"></div>
             </div>
 
             <div class="input-grid-3">

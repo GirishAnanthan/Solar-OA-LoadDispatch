@@ -6,12 +6,18 @@
  * and coordinates 25-Year Project Finance and Landed Cost analytics.
  */
 
+const _SolarModel = typeof SolarModel !== "undefined" ? SolarModel : (typeof require !== "undefined" ? require("./solarModel.js") : null);
+const _BESSModel = typeof BESSModel !== "undefined" ? BESSModel : (typeof require !== "undefined" ? require("./bessModel.js") : null);
+const _LandedCostEngine = typeof LandedCostEngine !== "undefined" ? LandedCostEngine : (typeof require !== "undefined" ? require("./landedCostEngine.js") : null);
+const _FinancialModel = typeof FinancialModel !== "undefined" ? FinancialModel : (typeof require !== "undefined" ? require("./financialModel.js") : null);
+const _STATE_POLICIES = typeof STATE_POLICIES !== "undefined" ? STATE_POLICIES : (typeof require !== "undefined" ? require("./statePolicies.js") : {});
+
 class DSMEngine {
   constructor() {
-    this.solarModel = new SolarModel();
-    this.bessModel = typeof BESSModel !== "undefined" ? new BESSModel() : null;
-    this.landedCostEngine = typeof LandedCostEngine !== "undefined" ? new LandedCostEngine() : null;
-    this.financialModel = typeof FinancialModel !== "undefined" ? new FinancialModel() : null;
+    this.solarModel = _SolarModel ? new _SolarModel() : null;
+    this.bessModel = _BESSModel ? new _BESSModel() : null;
+    this.landedCostEngine = _LandedCostEngine ? new _LandedCostEngine() : null;
+    this.financialModel = _FinancialModel ? new _FinancialModel() : null;
   }
 
   /**
@@ -22,7 +28,8 @@ class DSMEngine {
    * @returns {Object} Comprehensive evaluation results (blocks, KPIs, financial totals, 25-yr model)
    */
   evaluateDispatch(inputParams, stateKey = "maharashtra") {
-    const statePolicy = STATE_POLICIES[stateKey] || STATE_POLICIES.maharashtra;
+    const policies = (typeof STATE_POLICIES !== "undefined" && STATE_POLICIES[stateKey]) ? STATE_POLICIES : _STATE_POLICIES;
+    const statePolicy = policies[stateKey] || policies.maharashtra || {};
     let rawBlocks = this.solarModel.compute96BlockDispatch(inputParams);
 
     // 1. Dispatch BESS (Battery Energy Storage System) if configured
@@ -274,8 +281,10 @@ class DSMEngine {
     // Baseline Cost without Solar (100% Discom import using TOD tariffs)
     const baselineDailyCostINR = totalBaselineDiscomCostINR;
 
-    // Solar Cost (OA PPA rate for OA energy consumed; BTM has zero marginal cost after CAPEX)
-    const dailyOASolarCostINR = totalOAConsumedKWh * oaPpaRate;
+    // Solar Cost (OA PPA rate for OA energy consumed; BTM has zero marginal cost after CAPEX; 100% captive has 0 PPA rate)
+    const is100Captive = inputParams.procurementType === "captive_100";
+    const effectiveOaPpaRate = is100Captive ? 0.00 : oaPpaRate;
+    const dailyOASolarCostINR = totalOAConsumedKWh * effectiveOaPpaRate;
 
     // Discom Grid Import Cost (TOD Weighted, before and after banking settlement)
     const dailyDiscomEnergyCostINR = totalActualDiscomCostINR;
@@ -333,14 +342,16 @@ class DSMEngine {
       });
     }
 
-    // 6. Capacity Sizing Recommendations
+    // 6. Capacity Sizing Recommendations (Modes A & B)
     const sizingRecommendations = this.solarModel.computeRecommendedSizing({
       sanctionedLoadKW: inputParams.sanctionedLoadKW || 1000,
       baseConnectedLoadKW: inputParams.baseConnectedLoadKW || 980,
       loadMultiplier: inputParams.loadMultiplier || 1.0,
       loadProfileType: inputParams.loadProfileType || "continuous",
       stateKey,
-      oaTracking: inputParams.oaTracking || "fixed"
+      oaTracking: inputParams.oaTracking || "fixed",
+      sizingMode: inputParams.sizingMode || "daytime_only",
+      bankingOffsetPct: inputParams.bankingOffsetPct !== undefined ? inputParams.bankingOffsetPct : 30.0
     });
 
     return {
@@ -412,7 +423,10 @@ class DSMEngine {
   }
 }
 
-// Export to window
+// Export to window and module
 if (typeof window !== "undefined") {
   window.DSMEngine = DSMEngine;
+}
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = DSMEngine;
 }

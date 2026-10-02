@@ -2732,6 +2732,10 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
 }
 
 /* Google Maps Style Address Search Bar */
+.address-search-group {
+  position: relative;
+}
+
 .map-search-bar {
   display: flex;
   align-items: center;
@@ -2801,6 +2805,192 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
 
 .btn-map-search.searching svg {
   animation: pvgis-spin 1s linear infinite;
+}
+
+/* Dynamic Address Search Autocomplete Dropdown */
+.geo-autocomplete-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: rgba(13, 20, 36, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: var(--radius-sm, 6px);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75), 0 0 14px rgba(56, 189, 248, 0.2);
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 1200;
+  padding: 0.35rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.4) transparent;
+}
+
+#oaAddressSuggestions {
+  border-color: rgba(16, 185, 129, 0.45);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.75), 0 0 14px rgba(16, 185, 129, 0.2);
+  scrollbar-color: rgba(16, 185, 129, 0.4) transparent;
+}
+
+.geo-suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  user-select: none;
+}
+
+.geo-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.geo-suggestion-item:hover,
+.geo-suggestion-item.active {
+  background: rgba(56, 189, 248, 0.18);
+  border-color: transparent;
+}
+
+#oaAddressSuggestions .geo-suggestion-item:hover,
+#oaAddressSuggestions .geo-suggestion-item.active {
+  background: rgba(16, 185, 129, 0.18);
+}
+
+.geo-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 0.85rem;
+}
+
+.geo-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.geo-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-bottom: 0.15rem;
+}
+
+.geo-item-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #F8FAFC;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.geo-item-sub {
+  font-size: 0.72rem;
+  color: #94A3B8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.geo-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+  color: #64748B;
+}
+
+.geo-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.badge-industrial {
+  background: rgba(56, 189, 248, 0.18);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.badge-solarpark {
+  background: rgba(245, 158, 11, 0.2);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.badge-district {
+  background: rgba(168, 85, 247, 0.18);
+  color: #C084FC;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.badge-live {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-gps {
+  background: rgba(239, 68, 68, 0.18);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.geo-match-highlight {
+  color: #38BDF8;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(56, 189, 248, 0.5);
+}
+
+#oaAddressSuggestions .geo-match-highlight {
+  color: #FBBF24;
+  text-decoration-color: rgba(245, 158, 11, 0.5);
+}
+
+.geo-dropdown-footer {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.68rem;
+  color: #64748B;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.2rem;
+}
+
+.geo-dropdown-empty {
+  padding: 0.75rem;
+  font-size: 0.75rem;
+  color: #94A3B8;
+  text-align: center;
+}
+
+.geo-dropdown-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  color: #38BDF8;
 }
 
 .badge-opt-tilt {
@@ -3697,6 +3887,71 @@ input[type="range"].slider-solar::-webkit-slider-thumb:hover {
   color: #FFFFFF !important;
   border-color: var(--oa-emerald) !important;
   box-shadow: 0 0 16px rgba(16, 185, 129, 0.6) !important;
+}
+
+.sizing-mode-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.25rem;
+}
+
+.btn-sizing-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+}
+
+.btn-sizing-mode:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-white);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn-sizing-mode.active {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+  border-color: rgba(16, 185, 129, 0.5);
+  color: var(--text-white);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), inset 0 0 8px rgba(16, 185, 129, 0.1);
+}
+
+.btn-sizing-mode .mode-icon {
+  font-size: 0.85rem;
+}
+
+.btn-sizing-mode .mode-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.btn-sizing-mode .mode-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+}
+
+.btn-sizing-mode.active .mode-tag {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--oa-emerald-light);
+  border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
 .sizing-rec-grid {
